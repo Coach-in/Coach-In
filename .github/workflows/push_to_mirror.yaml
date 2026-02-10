@@ -6,7 +6,7 @@ on:
 
 jobs:
   push_to_mirror:
-    if: github.repository == '${{ vars.MAIN_URL }}'
+    if: ${{ github.repository == '${{ vars.MAIN_URL }}' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
