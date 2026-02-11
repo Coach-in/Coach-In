@@ -6,9 +6,10 @@
 
 Authorization: None
 
-Body:
-
-{ "provider": "google", "oauthtoken": "" }
+```json
+{ "provider": "google",
+"oauthtoken": "" }
+```
 
 ​
 
@@ -20,8 +21,11 @@ Body:
 
 Authorization: None
 
-{ "username": "user", "email": "email@gmail.com", "password": "test1234" }
-
+```json
+{ "username": "user",
+"email": "email@gmail.com",
+"password": "test1234" }
+```
 ​
 
 #### Get user (me)
@@ -46,8 +50,9 @@ Authorization: Depends on the account privacy
 
 Authorization: User
 
+```json
 { "user\_id": 3 }
-
+```
 ​
 
 #### Get my connections
@@ -72,8 +77,11 @@ Authorization: User
 
 Authorization: User
 
-{ "name": "programme1", "length": "4 weeks", "client\_id": 5 }
-
+```json
+{ "name": "programme1",
+"length": "4 weeks",
+"client\_id": 5 }
+```
 ​
 
 ### Exercises
@@ -104,8 +112,10 @@ Authorization: None
 
 Authorization: User
 
-{ "exercise\_typeid": 7, "specific\_instructions": "4x10, slow tempo" }
-
+```json
+{ "exercise\_typeid": 7,
+"specific\_instructions": "4x10, slow tempo" }
+```
 ​
 
 ### Chat
@@ -120,8 +130,9 @@ Authorization: User
 
 Authorization: User
 
+```json
 { "receiver\_id": 8, "message": "Push HARDER" }
-
+```
 ​
 
 #### Get conversation
