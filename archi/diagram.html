@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Architecture Diagram</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; padding: 32px; color: #1a202c; }
+  h1 { text-align: center; font-size: 22px; font-weight: 700; color: #2d3748; margin-bottom: 6px; letter-spacing: 0.5px; }
+  .subtitle { text-align: center; font-size: 13px; color: #718096; margin-bottom: 32px; }
+  .diagram { display: flex; flex-direction: column; align-items: center; gap: 0; }
+  .layer { width: 100%; max-width: 960px; display: flex; flex-direction: column; align-items: center; }
+  .layer-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #a0aec0; margin-bottom: 8px; align-self: flex-start; padding-left: 4px; }
+  .row { display: flex; justify-content: center; gap: 16px; width: 100%; }
+  .box { border-radius: 10px; padding: 14px 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-width: 130px; box-shadow: 0 2px 8px rgba(0,0,0,0.10); position: relative; }
+  .box .tech { font-size: 15px; font-weight: 700; }
+  .box .role { font-size: 11px; margin-top: 3px; opacity: 0.8; }
+  .box .badge { position: absolute; top: -9px; right: -9px; background: #fff; border: 1.5px solid currentColor; border-radius: 20px; font-size: 9px; font-weight: 700; padding: 1px 7px; letter-spacing: 0.5px; }
+  .flutter { background: #e3f2fd; color: #1565c0; border: 2px solid #90caf9; }
+  .flutter .badge { color: #1565c0; border-color: #90caf9; }
+  .nextjs  { background: #f3e5f5; color: #6a1b9a; border: 2px solid #ce93d8; }
+  .nextjs .badge  { color: #6a1b9a; border-color: #ce93d8; }
+  .gateway { background: #fff8e1; color: #e65100; border: 2px solid #ffcc80; min-width: 300px; }
+  .nest { background: #fce4ec; color: #880e4f; border: 2px solid #f48fb1; }
+  .typeorm { background: #e8f5e9; color: #1b5e20; border: 2px solid #a5d6a7; }
+  .postgres { background: #e8eaf6; color: #283593; border: 2px solid #9fa8da; }
+  .cloud { background: #e0f2f1; color: #004d40; border: 2px solid #80cbc4; min-width: 260px; }
+
+  .docker-wrapper { width: 100%; max-width: 960px; border: 2.5px dashed #1d63ed; border-radius: 16px; padding: 24px 20px 28px; background: rgba(29,99,237,0.03); position: relative; margin: 4px 0; }
+  .docker-label { position: absolute; top: -14px; left: 20px; background: #1d63ed; color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 1px; padding: 2px 14px; border-radius: 20px; display: flex; align-items: center; gap: 6px; }
+  .docker-inner { border: 1.5px dashed #1d63ed; border-radius: 10px; padding: 14px 14px 22px; background: rgba(29,99,237,0.04); position: relative; display: flex; flex-direction: column; align-items: center; }
+  .docker-inner-label { position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%); background: #1d63ed; color: #fff; font-size: 8px; font-weight: 700; padding: 1px 8px; border-radius: 20px; white-space: nowrap; letter-spacing: 0.4px; }
+  .inner-docker-row { display: flex; justify-content: center; gap: 16px; width: 100%; }
+
+  .arrow-down { display: flex; flex-direction: column; align-items: center; margin: 2px 0; }
+  .arrow-line { width: 2px; height: 20px; background: #a0aec0; }
+  .arrow-head { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #a0aec0; }
+  .sep { width: 100%; max-width: 960px; border: none; border-top: 1.5px dashed #cbd5e0; margin: 20px 0 16px; }
+  .icon { font-size: 22px; margin-bottom: 4px; }
+  .proto { font-size: 10px; font-weight: 600; background: #edf2f7; color: #4a5568; border-radius: 4px; padding: 1px 6px; margin: 0 4px; }
+
+  .legend { display: flex; gap: 24px; justify-content: center; margin-top: 28px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #4a5568; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .legend-dashed { width: 28px; height: 0; border-top: 2.5px dashed #1d63ed; }
+</style>
+</head>
+<body>
+
+<h1>System Architecture Diagram</h1>
+<p class="subtitle">Flutter · Next.js · NestJS · TypeORM · PostgreSQL · Docker</p>
+
+<div class="diagram">
+
+
+  <div class="layer">
+    <div class="layer-label">Client Layer</div>
+    <div class="row">
+      <div class="box flutter">
+        <div class="badge">MOBILE</div>
+        <div class="icon">📱</div>
+        <div class="tech">Flutter</div>
+        <div class="role">iOS &amp; Android App</div>
+      </div>
+      <div class="box nextjs">
+        <div class="badge">WEB</div>
+        <div class="icon">🌐</div>
+        <div class="tech">Next.js 14</div>
+        <div class="role">Web Application &amp; SSR</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow-down">
+    <div class="arrow-line"></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span class="proto">HTTPS</span>
+      <span class="proto">REST / GraphQL</span>
+    </div>
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+  </div>
+
+  <div class="docker-wrapper">
+    <div class="docker-label">🐳&nbsp; Docker Compose — Containerised Services</div>
+
+    <div class="layer" style="margin-bottom:0;">
+      <div class="layer-label" style="margin-top:6px;">API Gateway / Edge</div>
+      <div class="row">
+        <div class="docker-inner">
+          <div class="box gateway" style="box-shadow:none;">
+            <div class="icon">🔀</div>
+            <div class="tech">API Gateway + CDN</div>
+            <div class="role">Auth, Rate Limiting, SSL Termination, Routing</div>
+          </div>
+          <div class="docker-inner-label">container: gateway</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">
+      <div class="arrow-line"></div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <div class="layer" style="margin-bottom:0;">
+      <div class="layer-label">Backend Layer</div>
+      <div class="row">
+        <div class="docker-inner">
+          <div class="box nest" style="box-shadow:none;">
+            <div class="icon">🏗️</div>
+            <div class="tech">NestJS</div>
+            <div class="role">REST API / Business Logic<br>Guards · Pipes · Modules</div>
+          </div>
+          <div class="docker-inner-label">container: api</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">
+      <div class="arrow-line"></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="proto">TypeORM Queries</span>
+      </div>
+      <div class="arrow-line"></div>
+      <div class="arrow-head"></div>
+    </div>
+
+    <div class="layer" style="margin-bottom:0;">
+      <div class="layer-label">Data Layer</div>
+      <div class="inner-docker-row">
+        <div class="docker-inner">
+          <div class="box typeorm" style="box-shadow:none;">
+            <div class="icon">🔗</div>
+            <div class="tech">TypeORM</div>
+            <div class="role">ORM · Migrations<br>Entities &amp; Repositories</div>
+          </div>
+          <div class="docker-inner-label">bundled with: api</div>
+        </div>
+        <div class="docker-inner">
+          <div class="box postgres" style="box-shadow:none;">
+            <div class="icon">🐘</div>
+            <div class="tech">PostgreSQL</div>
+            <div class="role">Primary Database<br>ACID · Relations · JSON</div>
+          </div>
+          <div class="docker-inner-label">container: db</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr class="sep">
+
+  <div class="layer">
+    <div class="layer-label">Infrastructure (Cloud Host)</div>
+    <div class="row">
+      <div class="box cloud">
+        <div class="icon">☁️</div>
+        <div class="tech">Cloud Provider</div>
+        <div class="role">Container Orchestration · CI/CD · Managed DB · Object Storage</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#90caf9;"></div> Mobile Client</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ce93d8;"></div> Web Client</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffcc80;"></div> Gateway / Edge</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f48fb1;"></div> Backend Service</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#a5d6a7;"></div> ORM</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#9fa8da;"></div> Database</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#80cbc4;"></div> Cloud Infra</div>
+  <div class="legend-item"><div class="legend-dashed"></div> Docker Container</div>
+</div>
+
+</body>
+</html>
