@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tech Stack Benchmarks</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f4f8;
+    padding: 36px 24px;
+    color: #1a202c;
+  }
+  h1 {
+    text-align: center;
+    font-size: 21px;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 12px;
+    color: #718096;
+    margin-bottom: 28px;
+  }
+
+  /* Section headers */
+  .section-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #fff;
+    padding: 7px 14px;
+    border-radius: 6px 6px 0 0;
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-radius: 0 0 8px 8px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  th {
+    background: #f7fafc;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #4a5568;
+    padding: 8px 14px;
+    text-align: left;
+    border-bottom: 1.5px solid #e2e8f0;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid #edf2f7;
+    vertical-align: middle;
+    line-height: 1.45;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  tr:nth-child(odd) td { background: #ffffff; }
+
+  .metric { font-weight: 600; color: #2d3748; white-space: nowrap; }
+  .value  { font-weight: 700; }
+  .vs     { color: #718096; font-size: 12px; }
+  .note   { color: #718096; font-size: 11.5px; }
+
+  /* Pill badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .green  { background: #dcfce7; color: #166534; }
+  .blue   { background: #dbeafe; color: #1e40af; }
+  .yellow { background: #fef9c3; color: #854d0e; }
+  .red    { background: #fee2e2; color: #991b1b; }
+  .gray   { background: #f1f5f9; color: #475569; }
+
+  /* Section accent colors */
+  .flutter-hdr  { background: #1565c0; }
+  .nextjs-hdr   { background: #6a1b9a; }
+  .nest-hdr     { background: #880e4f; }
+  .typeorm-hdr  { background: #1b5e20; }
+  .pg-hdr       { background: #283593; }
+
+  /* source footnote */
+  .sources {
+    margin-top: 20px;
+    font-size: 11px;
+    color: #a0aec0;
+    line-height: 1.7;
+  }
+  .sources strong { color: #718096; }
+</style>
+</head>
+<body>
+
+<h1>Technology Stack — Performance Benchmarks</h1>
+<p class="subtitle">Measured against primary alternatives · Sources cited below</p>
+
+<!-- ─── FLUTTER ──────────────────────────────────────────────────── -->
+<div class="section-title flutter-hdr">📱 Flutter 3.x — vs React Native 0.76</div>
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Flutter</th>
+      <th>React Native</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="metric">App startup (first frame)</td>
+      <td class="value"><span class="badge green">~40 ms</span></td>
+      <td class="vs">~50 ms</td>
+      <td class="note">Flutter is quickest; AOT-compiled Dart, no JS bridge</td>
+    </tr>
+    <tr>
+      <td class="metric">UI frame rate (60 Hz stress)</td>
+      <td class="value"><span class="badge green">Stable 60 fps</span></td>
+      <td class="vs">Drops at restarts</td>
+      <td class="note">Flutter's Impeller engine renders directly; no bridge round-trips</td>
+    </tr>
+    <tr>
+      <td class="metric">Memory (1000-item list, Android)</td>
+      <td class="value"><span class="badge green">Lower &amp; stable</span></td>
+      <td class="vs">Spikes significantly</td>
+      <td class="note">RN showed major CPU &amp; memory spikes; Flutter scrolled smoothly</td>
+    </tr>
+    <tr>
+      <td class="metric">Android APK size</td>
+      <td class="value"><span class="badge blue">Smaller AAB/APK</span></td>
+      <td class="vs">Larger (Expo largest)</td>
+      <td class="note">Flutter needs no extra libs like Reanimated</td>
+    </tr>
+    <tr>
+      <td class="metric">Cross-platform market share (2024)</td>
+      <td class="value"><span class="badge green">46%</span></td>
+      <td class="vs">35%</td>
+      <td class="note">Stack Overflow Developer Survey 2024 / Statista</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ─── NEXT.JS ──────────────────────────────────────────────────── -->
+<div class="section-title nextjs-hdr">🌐 Next.js 14 — vs Vite SPA</div>
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Next.js (SSR/SSG)</th>
+      <th>Vite SPA</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="metric">Time to First Byte (TTFB)</td>
+      <td class="value"><span class="badge green">~30 ms</span></td>
+      <td class="vs">~50 ms</td>
+      <td class="note">Next.js serves pre-rendered HTML from server or edge</td>
+    </tr>
+    <tr>
+      <td class="metric">Time to Interactive (TTI)</td>
+      <td class="value"><span class="badge yellow">~2.1 s</span></td>
+      <td class="vs">~1.2 s (CSR)</td>
+      <td class="note">Vite wins on client interactivity; Next.js wins on FCP/LCP for SEO</td>
+    </tr>
+    <tr>
+      <td class="metric">Client JS bundle size</td>
+      <td class="value"><span class="badge yellow">~92 KB</span></td>
+      <td class="vs">~42 KB</td>
+      <td class="note">Next.js hydration adds overhead; Server Components reduce this</td>
+    </tr>
+    <tr>
+      <td class="metric">Lighthouse SEO score</td>
+      <td class="value"><span class="badge green">High (SSR/SSG)</span></td>
+      <td class="vs">Low (blank shell)</td>
+      <td class="note">Vite serves empty HTML until JS loads — crawlers see nothing</td>
+    </tr>
+    <tr>
+      <td class="metric">Image payload reduction (next/image)</td>
+      <td class="value"><span class="badge green">20–50% smaller</span></td>
+      <td class="vs">Manual</td>
+      <td class="note">Automatic resizing, AVIF/WebP, lazy loading built in</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ─── NESTJS ──────────────────────────────────────────────────── -->
+<div class="section-title nest-hdr">🏗️ NestJS 10 — vs Express.js</div>
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>NestJS (+ Express)</th>
+      <th>Raw Express</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="metric">Throughput (simple JSON, 1 core)</td>
+      <td class="value"><span class="badge blue">~15–18K req/s</span></td>
+      <td class="vs">~15–20K req/s</td>
+      <td class="note">NestJS adds ~10% overhead over Express — negligible in practice</td>
+    </tr>
+    <tr>
+      <td class="metric">Median response latency</td>
+      <td class="value"><span class="badge green">Equivalent</span></td>
+      <td class="vs">Equivalent</td>
+      <td class="note">At real-world load with DB queries, difference is immeasurable</td>
+    </tr>
+    <tr>
+      <td class="metric">Failure onset (concurrent users)</td>
+      <td class="value"><span class="badge yellow">~5–6 VUs</span></td>
+      <td class="vs">~5 VUs</td>
+      <td class="note">Both fail at similar concurrency; swap to Fastify adapter for +30% RPS</td>
+    </tr>
+    <tr>
+      <td class="metric">Bug reduction vs untyped Express</td>
+      <td class="value"><span class="badge green">~60% fewer</span></td>
+      <td class="vs">Baseline</td>
+      <td class="note">TypeScript + DI reduces production defects (DEV Community study)</td>
+    </tr>
+    <tr>
+      <td class="metric">Dev onboarding speed</td>
+      <td class="value"><span class="badge green">3× faster</span></td>
+      <td class="vs">Baseline</td>
+      <td class="note">Opinionated structure eliminates architecture decision fatigue</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ─── TYPEORM ──────────────────────────────────────────────────── -->
+<div class="section-title typeorm-hdr">🔗 TypeORM 0.3 — vs Prisma</div>
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>TypeORM</th>
+      <th>Prisma</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="metric">Read query latency (large dataset)</td>
+      <td class="value"><span class="badge green">Faster &gt;1,800 rows</span></td>
+      <td class="vs">Faster &lt;1,800 rows</td>
+      <td class="note">Prisma leads on small reads; TypeORM leads as data grows (benchmark by josethz00)</td>
+    </tr>
+    <tr>
+      <td class="metric">Simple findMany latency delta</td>
+      <td class="value"><span class="badge blue">Within a few ms</span></td>
+      <td class="vs">Within a few ms</td>
+      <td class="note">Prisma official benchmarks: difference too small to affect UX</td>
+    </tr>
+    <tr>
+      <td class="metric">NestJS decorator alignment</td>
+      <td class="value"><span class="badge green">Native (@Entity)</span></td>
+      <td class="vs">Schema file (PSL)</td>
+      <td class="note">TypeORM decorators match NestJS patterns — no context switching</td>
+    </tr>
+    <tr>
+      <td class="metric">Migration workflow</td>
+      <td class="value"><span class="badge green">CLI-driven, TS</span></td>
+      <td class="vs">CLI-driven, PSL</td>
+      <td class="note">TypeORM migrations are pure TypeScript; no separate schema language</td>
+    </tr>
+    <tr>
+      <td class="metric">npm weekly downloads (2025)</td>
+      <td class="value"><span class="badge yellow">~1.5M</span></td>
+      <td class="vs">~3M (Prisma)</td>
+      <td class="note">Prisma has grown to ~2× TypeORM downloads; both production-proven</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ─── POSTGRESQL ───────────────────────────────────────────────── -->
+<div class="section-title pg-hdr">🐘 PostgreSQL 16 — vs MySQL 8.0</div>
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>PostgreSQL 16</th>
+      <th>MySQL 8.0</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="metric">Simple OLTP throughput (SysBench)</td>
+      <td class="value"><span class="badge yellow">Slightly lower</span></td>
+      <td class="vs">Up to 21% higher peak TPS</td>
+      <td class="note">MySQL edges out on high-concurrency simple inserts (MDPI study, 2024)</td>
+    </tr>
+    <tr>
+      <td class="metric">Complex analytical queries (TPC-H)</td>
+      <td class="value"><span class="badge green">Significantly faster</span></td>
+      <td class="vs">Needs manual tuning</td>
+      <td class="note">PostgreSQL's query planner and parallel query far outperform MySQL on JOINs</td>
+    </tr>
+    <tr>
+      <td class="metric">Point-select throughput (pgbench)</td>
+      <td class="value"><span class="badge green">Up to 2M QPS</span></td>
+      <td class="vs">Comparable</td>
+      <td class="note">PostgreSQL record: 2M point-select QPS, 137K write TPS (Vonng/pgtpc)</td>
+    </tr>
+    <tr>
+      <td class="metric">JSONB query support</td>
+      <td class="value"><span class="badge green">Native + indexed</span></td>
+      <td class="vs">JSON (limited indexing)</td>
+      <td class="note">PostgreSQL JSONB allows GIN indexes; MySQL JSON cannot be indexed the same way</td>
+    </tr>
+    <tr>
+      <td class="metric">ACID &amp; MVCC concurrency</td>
+      <td class="value"><span class="badge green">Full MVCC</span></td>
+      <td class="vs">MVCC (InnoDB)</td>
+      <td class="note">Both ACID-compliant; PostgreSQL MVCC has no read-write lock contention</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="sources">
+  <strong>Sources:</strong>
+  Flutter vs RN — Natesh Bhat (Medium, Aug 2024); SynergyBoat benchmark (2025); Stack Overflow Developer Survey 2024; Statista cross-platform market share 2024. ·
+  Next.js vs Vite — DesignRevision comparison (2025); Strapi Vite vs Next.js guide (2025); QED42 Next.js performance tuning. ·
+  NestJS vs Express — scalablebackend.com load test (2024); DEV Community NestJS performance article; index.dev framework comparison (2026). ·
+  TypeORM vs Prisma — josethz00 DEV benchmark (2023); Prisma official ORM benchmarks; Medium comparison by duckdevv (Sep 2025). ·
+  PostgreSQL vs MySQL — MDPI academic benchmark, PostgreSQL 16 vs MySQL 8.0 (Oct 2024); Vonng/pgtpc TPC-H results; Klustron TPC-H comparison.
+</div>
+
+</body>
+</html>
