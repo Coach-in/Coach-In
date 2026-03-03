@@ -17,9 +17,9 @@ Why is this feature needed? Explain de problem it solves or the value it adds.
 Describe how you envision this feature working.
 
 **Acceptance Criteria**
-[] Criterion 1
-[] Criterion 2
-[] Criterion 3
+- [] Criterion 1
+- [] Criterion 2
+- [] Criterion 3
 
 **Additional Context**
 Add any mockuos, examples, or references that would help clarify the request.
