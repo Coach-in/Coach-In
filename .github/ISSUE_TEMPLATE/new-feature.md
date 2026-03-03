@@ -23,6 +23,3 @@ Describe how you envision this feature working.
 
 **Additional Context**
 Add any mockuos, examples, or references that would help clarify the request.
-
-**Additional context**
-Add any other context or screenshots about the feature request here.
