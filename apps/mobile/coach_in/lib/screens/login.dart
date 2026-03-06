@@ -120,18 +120,21 @@ class _LoginPageState extends State<LoginPage> {
       appBar: AppBar(
         title: Text(
           'Log in',
-          style: GoogleFonts.nunitoSans(
-              fontWeight: FontWeight.bold, color: Colors.white)),
-        backgroundColor: Colors.black,
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Color(0xffffd398)),
           onPressed: () {
             Navigator.push(
-                context, MaterialPageRoute(builder: (context) => StartPage()));
+              context,
+              MaterialPageRoute(builder: (context) => StartPage()),
+            );
           },
           tooltip: 'Back',
         ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
       ),
+      backgroundColor: Theme.of(context).colorScheme.primary,
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: ListView(
@@ -139,15 +142,15 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 10),
 
             // Email field
-            TextFormField(
+            TextField(
               controller: _emailController,
               decoration: InputDecoration(
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 labelText: 'Email',
-                labelStyle: GoogleFonts.nunitoSans(fontWeight: FontWeight.w600),
+                labelStyle: Theme.of(context).textTheme.labelSmall,
                 prefixIcon: const Icon(Icons.email),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
@@ -160,10 +163,10 @@ class _LoginPageState extends State<LoginPage> {
               decoration: InputDecoration(
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 labelText: 'Password',
-                labelStyle: GoogleFonts.nunitoSans(fontWeight: FontWeight.w600),
+                labelStyle: Theme.of(context).textTheme.labelSmall,
                 prefixIcon: const Icon(Icons.lock),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
             ),
@@ -176,8 +179,9 @@ class _LoginPageState extends State<LoginPage> {
                   onChanged: (val) {
                     setState(() => _rememberMe = val ?? false);
                   },
+                  activeColor: Color(0xffffd398),
                 ),
-                Text('Remember me', style: GoogleFonts.nunitoSans()),
+                Text('Remember me', style: GoogleFonts.montserrat(fontSize: 13, color: Color(0xffffd398))),
               ],
             ),
 
@@ -201,26 +205,30 @@ class _LoginPageState extends State<LoginPage> {
                 style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(45),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    backgroundColor: Colors.black),
+                    backgroundColor: Color(0xffffd398)),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text('Log in',
-                        style: GoogleFonts.nunitoSans(
-                            fontSize: 16,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold)),
+                        style: GoogleFonts.montserrat(
+                          fontSize: 16,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                    ),
               ),
             ),
             const SizedBox(height: 20),
 
             // Divider
-            Row(children: <Widget>[
-              const Expanded(child: Divider()),
-              Text(" or ", style: GoogleFonts.nunitoSans()),
-              const Expanded(child: Divider()),
-            ]),
+            Row(
+              children: <Widget>[
+                const Expanded(child: Divider(color: Color(0xffd1d5dc),)),
+                Text(" or ", style: GoogleFonts.montserrat(color: Color(0xffd1d5dc),)),
+                const Expanded(child: Divider(color: Color(0xffd1d5dc),)),
+              ],
+            ),
             const SizedBox(height: 20),
 
             // Google OAuth button
@@ -238,15 +246,15 @@ class _LoginPageState extends State<LoginPage> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(45),
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  backgroundColor: Colors.white,
+                  backgroundColor: Color(0xffffd398),
                   foregroundColor: Colors.black,
                   side: const BorderSide(color: Colors.grey),
                 ),
                 label: Text(
                   'Continue with Google',
-                  style: GoogleFonts.nunitoSans(fontSize: 16),
+                  style: GoogleFonts.montserrat(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
               ),
             ),
@@ -265,11 +273,7 @@ class _LoginPageState extends State<LoginPage> {
                 },
                 child: Text(
                   'New to AREA? Sign up here.',
-                  style: GoogleFonts.nunitoSans(
-                      fontSize: 16,
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline),
+                  style: Theme.of(context).textTheme.bodySmall
                 ),
               ),
             ),

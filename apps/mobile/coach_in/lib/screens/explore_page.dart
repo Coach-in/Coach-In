@@ -47,7 +47,7 @@ class _ExplorePageState extends State<ExplorePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).colorScheme.primary,
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -74,7 +74,7 @@ class _ExplorePageState extends State<ExplorePage> {
                   ],
                 ),
               ),
-              
+
             SizedBox(
               width: double.infinity,
               child: Semantics(
@@ -88,10 +88,10 @@ class _ExplorePageState extends State<ExplorePage> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(45),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    side: const BorderSide(width: 1.3, color: Colors.white),
-                    backgroundColor: Colors.white,
+                    side: const BorderSide(width: 1.3, color: Color(0xffffd398)),
+                    backgroundColor: const Color(0xffffd398),
                   ),
                   child: _isLoggingOut
                       ? const SizedBox(
@@ -104,10 +104,10 @@ class _ExplorePageState extends State<ExplorePage> {
                         )
                       : Text(
                           'Log out',
-                          style: GoogleFonts.nunitoSans(
+                          style: GoogleFonts.montserrat(
                             fontSize: 16,
                             color: Colors.black,
-                            fontWeight: FontWeight.w600,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                   ),

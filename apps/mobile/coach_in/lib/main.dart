@@ -24,10 +24,20 @@ class CoachIn extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: const Color(0xffffd398)
           ),
+          titleMedium: GoogleFonts.montserrat(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xffffd398)
+          ),
           bodySmall: GoogleFonts.montserrat(
             fontSize: 12,
             fontWeight: FontWeight.w300,
             color: const Color(0xffd1d5dc)
+          ),
+          labelSmall: GoogleFonts.montserrat(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xffffd398)
           ),
         ),
         colorScheme: ColorScheme.dark(

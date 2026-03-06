@@ -35,7 +35,7 @@ class StartPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const RegisterPage(),
+                        builder: (context) => const LoginPage(),
                       ),
                     );
                   },
@@ -49,10 +49,11 @@ class StartPage extends StatelessWidget {
                   ),
                   child: Text(
                     'Log in',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 14,
-                      color: Colors.black,
-                    ),
+                      style: GoogleFonts.montserrat(
+                        fontSize: 16,
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
                   ),
                 ),
               ),
@@ -70,7 +71,7 @@ class StartPage extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      MaterialPageRoute(builder: (context) => const RegisterPage()),
                     );
                   },
                   style: OutlinedButton.styleFrom(
@@ -83,8 +84,9 @@ class StartPage extends StatelessWidget {
                   child: Text(
                     'Register',
                     style: GoogleFonts.montserrat(
-                      fontSize: 14,
+                      fontSize: 16,
                       color: Color(0xffd1d5dc),
+                      fontWeight: FontWeight.bold
                     ),
                   ),
                 ),
