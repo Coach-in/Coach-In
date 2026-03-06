@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import './login.dart';
+import './register.dart';
+
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
 
@@ -27,14 +30,17 @@ class StartPage extends StatelessWidget {
               excludeSemantics: true,
               child: SizedBox(
                 width: double.infinity,
-                child: OutlinedButton(
+                child: ElevatedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterPage(),
+                      ),
                     );
                   },
-                  style: OutlinedButton.styleFrom(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(0xffefd6a2),
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -60,19 +66,17 @@ class StartPage extends StatelessWidget {
               excludeSemantics: true,
               child: SizedBox(
                 width: double.infinity,
-                child: ElevatedButton(
+                child: OutlinedButton(
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const RegisterPage(),
-                      ),
+                      MaterialPageRoute(builder: (context) => const LoginPage()),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
+                  style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(45),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     side: const BorderSide(width: 1.3, color: Color(0xffedf6a2)),
                   ),
@@ -92,6 +96,6 @@ class StartPage extends StatelessWidget {
           ],
         ),
       ),
-    )
+    );
   }
 }

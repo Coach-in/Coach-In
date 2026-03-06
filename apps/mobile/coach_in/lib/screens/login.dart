@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'register.dart';
 import 'start_page.dart';
+import './explore_page.dart';
 
 import '../services/api_service.dart';
 import '../services/oauth_service.dart';
