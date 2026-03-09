@@ -5,6 +5,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../config/api_config.dart';
 
+import 'dart:developer' as developer;
+
 class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
@@ -54,7 +56,7 @@ class ApiService {
       final refreshToken = await getRefreshToken();
       if (refreshToken == null) return false;
 
-      final baseUrl = await ApiConfig.getBaseUrl();
+      final baseUrl = ApiConfig.getBaseUrl();
       final response = await http.post(
         Uri.parse('$baseUrl/api/auth/refresh'),
         headers: ApiConfig.defaultHeaders,
@@ -113,7 +115,7 @@ class ApiService {
 
   Future<http.Response> post(String endpoint, Map<String, dynamic> body,
       {bool withAuth = false}) async {
-    final baseUrl = await ApiConfig.getBaseUrl();
+    final baseUrl = ApiConfig.getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
 
     return _sendRequest(
@@ -126,7 +128,7 @@ class ApiService {
 
   Future<http.Response> put(String endpoint, Map<String, dynamic> body,
       {bool withAuth = false}) async {
-    final baseUrl = await ApiConfig.getBaseUrl();
+    final baseUrl = ApiConfig.getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
 
     return _sendRequest(
@@ -138,7 +140,7 @@ class ApiService {
   }
 
   Future<http.Response> get(String endpoint, {bool withAuth = false}) async {
-    final baseUrl = await ApiConfig.getBaseUrl();
+    final baseUrl = ApiConfig.getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
 
     return _sendRequest(
@@ -154,13 +156,16 @@ class AuthService {
 
   Future<Map<String, dynamic>> register(String username, String email, String password) async {
     try {
-      final response = await _apiService.post('/api/auth/register', {
+      final response = await _apiService.post('/users/auth/signup', {
         'username': username,
         'email': email,
         'password': password,
       });
 
+      developer.log(response.statusCode.toString());
+
       if (response.statusCode == 200 || response.statusCode == 201) {
+        developer.log(response.body.toString());
         return {'success': true, 'data': jsonDecode(response.body)};
       } else {
         return {
@@ -176,7 +181,7 @@ class AuthService {
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      final response = await _apiService.post('/api/auth/login', {
+      final response = await _apiService.post('/users/auth/login', {
         'email': email,
         'password': password,
       });
@@ -192,9 +197,10 @@ class AuthService {
 
         return {'success': true, 'data': data};
       } else {
+        developer.log(response.body.toString());
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
+          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
           'details': response.body
         };
       }
@@ -206,7 +212,7 @@ class AuthService {
   Future<Map<String, dynamic>> logout() async {
     try {
       final response =
-          await _apiService.post('/api/auth/logout', {}, withAuth: true);
+          await _apiService.post('/users/auth/logout', {}, withAuth: true);
 
       if (response.statusCode == 200) {
         await _apiService.clearTokens();

@@ -67,8 +67,9 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success']) {
       final data = result['data'];
-      final accessToken = data['access_token'];
-      final refreshToken = data['refresh_token'];
+      final user = data['user'];
+      final accessToken = data['token'];
+      final refreshToken = user['refresh_token'];
 
       await _storage.write(key: 'accessToken', value: accessToken);
       await _storage.write(key: 'refreshToken', value: refreshToken);
