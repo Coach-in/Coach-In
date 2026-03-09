@@ -1,5 +1,9 @@
 export interface TokenContent {
-    userId: string;
-    email: string;
+  userId: string;
+  email: string;
 }
 
+export enum UserRole {
+  ATHLETE = 'athlete',
+  COACH = 'coach',
+}
