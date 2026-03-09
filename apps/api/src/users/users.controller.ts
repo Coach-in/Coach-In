@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Headers } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Headers,
+} from '@nestjs/common';
 import { UnauthorizedException } from '@nestjs/common/exceptions';
 import { ConfigService } from '@nestjs/config';
 import jwt from 'jsonwebtoken';
@@ -10,8 +19,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 @Controller('users')
 export class UsersController {
   constructor(
-      private readonly usersService: UsersService,
-      private readonly config: ConfigService,
+    private readonly usersService: UsersService,
+    private readonly config: ConfigService,
   ) {}
 
   @Post()
