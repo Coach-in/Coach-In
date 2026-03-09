@@ -10,7 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { CreateAthleteDto } from '../../athletes/dto/create-athlete.dto';
 import { CreateCoachDto } from '../../coachs/dto/create-coach.dto';
-import { UserRole} from "../../utils/types/jwt.types";
+import { UserRole } from '../../utils/types/jwt.types';
 
 export class CreateUserWithProfileDto {
   @IsEmail()
