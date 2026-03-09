@@ -1,5 +1,4 @@
 export interface TokenContent {
-    userId: string;
-    email: string;
+  userId: string;
+  email: string;
 }
-
