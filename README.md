@@ -127,17 +127,39 @@ Juste des professionnels sérieux, des sportifs motivés, et les outils pour les
 
 ## Lancer le projet
 
+### Avec Docker
+
 ```bash
 # Cloner le dépôt
 git clone https://github.com/votre-org/coachin.git
 cd coachin
 
-# Démarrer les services avec Docker
-docker compose up --build
+# Copier les variables d'environnement
+cp .env.example .env
+
+# Démarrer les services avec Docker Compose
+docker compose up
 
 # L'API sera disponible sur http://localhost:3000
 # Le frontend web sur http://localhost:3001
+# PostgreSQL sur localhost:5432
 ```
+
+### Développement local
+
+```bash
+# Backend API
+cd apps/api
+npm install
+npm run start:dev
+
+# Frontend Web (dans un autre terminal)
+cd apps/web
+npm install
+npm run dev
+```
+
+**Note :** Nécessite PostgreSQL installé localement et configuré selon `apps/api/.env`
 
 ---
 
