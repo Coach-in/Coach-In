@@ -14,8 +14,8 @@ export default function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="#how" className="text-[#8a96b0] hover:text-[#e8c97a] text-sm font-medium transition-colors">
-            Comment ça marche
+          <Link href="/catalog" className="text-[#8a96b0] hover:text-[#e8c97a] text-sm font-medium transition-colors">
+            Nos Coachs
           </Link>
           <Link href="#coaches" className="text-[#8a96b0] hover:text-[#e8c97a] text-sm font-medium transition-colors">
             Coachs

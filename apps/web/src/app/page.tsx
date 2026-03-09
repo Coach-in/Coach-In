@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const steps = [
   {
     num: "01", title: "Recherchez",
@@ -23,7 +25,7 @@ const pillars = [
 export default function Home() {
   return (
 <main className="bg-gradient-to-br from-[#1c232d] via-[#162644] to-[#0c336f] text-[#f0eee8] font-sans overflow-x-hidden">
-  <section className="relative min-h-screen flex items-center justify-center px-[5vw] py-20 overflow-hidden">
+  <section className="relative flex items-center justify-center px-[5vw] py-20 overflow-hidden">
         <div className="relative z-10 max-w-3xl text-center">
           <div className="inline-flex items-center gap-2 text-[#c9a84c] text-xs font-semibold tracking-[2.5px] uppercase border border-[rgba(201,168,76,0.18)] px-4 py-1.5 rounded-full bg-[rgba(201,168,76,0.05)] mb-7">
             <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] animate-pulse" />
@@ -43,9 +45,11 @@ export default function Home() {
           </p>
 
           <div className="flex gap-3 justify-center flex-wrap">
-            <button className="px-8 py-3.5 rounded-lg bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.22)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.32)] hover:-translate-y-0.5 transition-all">
+            <Link
+            className="px-8 py-3.5 rounded-lg bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.22)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.32)] hover:-translate-y-0.5 transition-all"
+            href="/catalog">
               Trouver un coach
-            </button>
+            </Link>
             <button className="px-8 py-3.5 rounded-lg border border-[rgba(201,168,76,0.18)] text-[#e8c97a] font-medium text-sm hover:bg-[rgba(201,168,76,0.07)] hover:border-[#c9a84c] transition-all">
               Je suis coach →
             </button>
