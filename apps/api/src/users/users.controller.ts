@@ -107,7 +107,7 @@ export class UsersController {
   }
 
   @Get('me')
-  @ApiBearerAuth()
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get the currently authenticated user' })
   @ApiResponse({
     status: 200,
@@ -202,7 +202,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiBearerAuth()
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Update a user by ID' })
   @ApiParam({
     name: 'id',
@@ -237,7 +237,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @ApiBearerAuth()
+  @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Delete a user by ID' })
   @ApiParam({
     name: 'id',
