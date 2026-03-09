@@ -5,6 +5,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
+import { CoachsModule } from './coachs/coachs.module';
+import { AthletesModule } from './athletes/athletes.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { User } from './users/entities/user.entity';
       }),
     }),
     UsersModule,
+    CoachsModule,
+    AthletesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
