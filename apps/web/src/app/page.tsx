@@ -37,10 +37,10 @@ export default function Home() {
             style={{ fontFamily: "'Montserrat', serif" }}
           >
             Le coaching en ligne,&nbsp;
-            <span className="text-[#e8c97a]">centré sur l&apos;humain.</span>
+            <span className="text-[#e8c97a]">centré sur l&apos;humain</span>
           </h1>
 
-          <p className="text-[#8a96b0] text-base font-light leading-relaxed max-w-lg mx-auto mb-10">
+          <p className="text-[#d1d5dc] text-base font-light leading-relaxed max-w-lg mx-auto mb-10">
             Connectez-vous avec des coachs diplômés et certifiés. Un accompagnement personnalisé pour atteindre vos objectifs sportifs.
           </p>
 

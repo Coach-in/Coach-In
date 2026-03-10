@@ -17,8 +17,8 @@ export default function Header() {
           <Link href="/catalog" className="text-[#8a96b0] hover:text-[#e8c97a] text-sm font-medium transition-colors">
             Nos Coachs
           </Link>
-          <Link href="#coaches" className="text-[#8a96b0] hover:text-[#e8c97a] text-sm font-medium transition-colors">
-            Coachs
+          <Link href="/login" className="text-black px-4 py-1.5 hover:text-[#1c232d] rounded-lg bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.22)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.32)] hover:-translate-y-0.5 transition-all">
+            Connexion
           </Link>
         </nav>
       </div>

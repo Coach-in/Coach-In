@@ -6,11 +6,10 @@ const COACHES = [
   {
     id: 1,
     name: "Sophie Martin",
-    specialty: "Yoga & Pilates",
+    specialty: "Remise en forme",
     desc: "Certifiée Yoga Alliance RYT 500, elle vous accompagne vers l'équilibre corps-esprit.",
     location: "Paris",
-    tags: ["Yoga", "Pilates", "Mobilité"],
-    experience: "8 ans",
+    tags: ["Musculation", "Perte de poids", "Mobilité"],
   },
   {
     id: 2,
@@ -19,7 +18,6 @@ const COACHES = [
     desc: "Coach diplômé d'état, spécialisé en renforcement musculaire et performance sportive.",
     location: "Lyon",
     tags: ["Musculation", "Performance", "Force"],
-    experience: "5 ans",
   },
   {
     id: 3,
@@ -28,7 +26,6 @@ const COACHES = [
     desc: "Athlète de haut niveau spécialisée trail et marathon, elle adapte chaque programme à votre niveau.",
     location: "Bordeaux",
     tags: ["Running", "Trail", "Marathon"],
-    experience: "10 ans",
   },
   {
     id: 4,
@@ -37,9 +34,7 @@ const COACHES = [
     desc: "Compétiteur et coach certifié, spécialiste de la force athlétique et de la programmation avancée.",
     badge: "DEJEPS Haltérophilie",
     location: "Toulouse",
-    available: true,
     tags: ["Powerlifting", "Force", "Compétition"],
-    experience: "6 ans",
   },
   {
     id: 5,
@@ -48,20 +43,16 @@ const COACHES = [
     desc: "Spécialisée en prévention des blessures et rééducation sportive, approche douce et progressive.",
     badge: "BPJEPS APT",
     location: "Nantes",
-    available: true,
     tags: ["Rééducation", "Prévention", "Mobilité"],
-    experience: "12 ans",
   },
   {
     id: 6,
     name: "Karim Benali",
-    specialty: "Boxe & Arts martiaux",
+    specialty: "Musculation",
     desc: "Champion régional de boxe, coach expérimenté pour la remise en forme et la compétition.",
     badge: "Diplôme Fédéral Boxe",
     location: "Marseille",
-    available: false,
     tags: ["Boxe", "MMA", "Cardio"],
-    experience: "9 ans",
   },
 ];
 
