@@ -9,12 +9,6 @@ export class Athlete {
   @Column()
   age: number;
 
-  @Column()
-  sport: string;
-
-  @Column({ nullable: true })
-  level?: string;
-
   @Column({ nullable: true })
   goals?: string;
 
