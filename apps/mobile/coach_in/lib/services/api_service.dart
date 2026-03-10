@@ -1,0 +1,236 @@
+import 'dart:convert';
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import '../config/api_config.dart';
+
+import 'dart:developer' as developer;
+
+class ApiService {
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+
+  Future<String?> getAccessToken() async => await _storage.read(key: 'accessToken');
+  Future<String?> getRefreshToken() async => await _storage.read(key: 'refreshToken');
+  Future<String?> getIpAddress() async => await _storage.read(key: 'ip_address');
+
+  Future<void> saveTokens(String access, String refresh) async {
+    await _storage.write(key: 'accessToken', value: access);
+    await _storage.write(key: 'refreshToken', value: refresh);
+  }
+
+  Future<void> clearTokens() async {
+    await _storage.delete(key: 'accessToken');
+    await _storage.delete(key: 'refreshToken');
+  }
+
+  Map<String, dynamic>? _decodeJwt(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      return jsonDecode(payload);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> _isAccessTokenExpired() async {
+    final token = await getAccessToken();
+    if (token == null) return true;
+
+    final decoded = _decodeJwt(token);
+    if (decoded == null || !decoded.containsKey('exp')) return true;
+
+    final exp = decoded['exp'] * 1000;
+    final expiryDate = DateTime.fromMillisecondsSinceEpoch(exp);
+    return DateTime.now().isAfter(expiryDate.subtract(const Duration(minutes: 1)));
+  }
+
+  Future<bool> _refreshToken() async {
+    try {
+      final refreshToken = await getRefreshToken();
+      if (refreshToken == null) return false;
+
+      final baseUrl = ApiConfig.getBaseUrl();
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/auth/refresh'),
+        headers: ApiConfig.defaultHeaders,
+        body: jsonEncode({'refresh_token': refreshToken}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final newAccess = data['access_token'] ?? data['accessToken'];
+        final newRefresh = data['refresh_token'] ?? data['refreshToken'];
+
+        if (newAccess != null && newRefresh != null) {
+          await saveTokens(newAccess, newRefresh);
+          return true;
+        }
+      }
+
+      await clearTokens();
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<http.Response> _sendRequest(
+    Future<http.Response> Function(Map<String, String>) requestFn, {
+    bool withAuth = false,
+  }) async {
+    Map<String, String> headers = Map.from(ApiConfig.defaultHeaders);
+
+    if (withAuth) {
+      if (await _isAccessTokenExpired()) {
+        final refreshed = await _refreshToken();
+        if (!refreshed) throw Exception('Session expired. Please log in again.');
+      }
+
+      final token = await getAccessToken();
+      if (token != null) headers['Authorization'] = 'Bearer $token';
+    }
+
+    http.Response response = await requestFn(headers);
+
+    if (withAuth && response.statusCode == 401) {
+      final refreshed = await _refreshToken();
+      if (refreshed) {
+        final newToken = await getAccessToken();
+        headers['Authorization'] = 'Bearer $newToken';
+        response = await requestFn(headers);
+      } else {
+        throw Exception('Session expired. Please log in again.');
+      }
+    }
+
+    return response;
+  }
+
+  Future<http.Response> post(String endpoint, Map<String, dynamic> body,
+      {bool withAuth = false}) async {
+    final baseUrl = ApiConfig.getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    return _sendRequest(
+      (headers) => http
+          .post(url, headers: headers, body: jsonEncode(body))
+          .timeout(ApiConfig.requestTimeout),
+      withAuth: withAuth,
+    );
+  }
+
+  Future<http.Response> put(String endpoint, Map<String, dynamic> body,
+      {bool withAuth = false}) async {
+    final baseUrl = ApiConfig.getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    return _sendRequest(
+      (headers) => http
+          .put(url, headers: headers, body: jsonEncode(body))
+          .timeout(ApiConfig.requestTimeout),
+      withAuth: withAuth,
+    );
+  }
+
+  Future<http.Response> get(String endpoint, {bool withAuth = false}) async {
+    final baseUrl = ApiConfig.getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    return _sendRequest(
+      (headers) => http.get(url, headers: headers).timeout(ApiConfig.requestTimeout),
+      withAuth: withAuth,
+    );
+  }
+
+}
+
+class AuthService {
+  final ApiService _apiService = ApiService();
+
+  Future<Map<String, dynamic>> register(String username, String email, String password) async {
+    try {
+      final response = await _apiService.post('/users/auth/signup', {
+        'username': username,
+        'email': email,
+        'password': password,
+      });
+
+      developer.log(response.statusCode.toString());
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        developer.log(response.body.toString());
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {
+          'success': false,
+          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
+          'details': response.body
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'An error occurred: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    try {
+      final response = await _apiService.post('/users/auth/login', {
+        'email': email,
+        'password': password,
+      });
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final access = data['access_token'];
+        final refresh = data['refresh_token'];
+
+        if (access != null && refresh != null) {
+          await _apiService.saveTokens(access, refresh);
+        }
+
+        return {'success': true, 'data': data};
+      } else {
+        developer.log(response.body.toString());
+        return {
+          'success': false,
+          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
+          'details': response.body
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'An error occurred: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> logout() async {
+    try {
+      final response =
+          await _apiService.post('/users/auth/logout', {}, withAuth: true);
+
+      if (response.statusCode == 200) {
+        await _apiService.clearTokens();
+        return {'success': true};
+      } else {
+        return {
+          'success': false,
+          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
+          'details': response.body
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'An error occurred: $e'};
+    }
+  }
+
+  Future<bool> isLoggedIn() async {
+    final token = await _apiService.getAccessToken();
+    return token != null && token.isNotEmpty && !(await _apiService._isAccessTokenExpired());
+  }
+}
