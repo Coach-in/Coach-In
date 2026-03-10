@@ -6,7 +6,12 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
 import { CoachsModule } from './coachs/coachs.module';
+import { Coach } from './coachs/entities/coach.entity';
 import { AthletesModule } from './athletes/athletes.module';
+import { Athlete } from './athletes/entities/athlete.entity';
+import { TagsModule } from './tags/tags.module';
+import { Tag } from './tags/entities/tag.entity';
+import { TagCategory } from './tags/entities/tag-category.entity';
 
 @Module({
   imports: [
@@ -20,13 +25,14 @@ import { AthletesModule } from './athletes/athletes.module';
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: [User],
+        entities: [User, Coach, Athlete, Tag, TagCategory],
         synchronize: true,
       }),
     }),
     UsersModule,
     CoachsModule,
     AthletesModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
