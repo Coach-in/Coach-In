@@ -12,4 +12,3 @@ export class TagCategory {
   @OneToMany(() => Tag, (tag) => tag.category)
   tags: Tag[];
 }
-

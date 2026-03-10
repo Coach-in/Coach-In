@@ -27,7 +27,8 @@ export class TagCategoriesService {
 
   async findByName(name: string): Promise<TagCategory> {
     const category = await this.tagCategoryRepository.findOneBy({ name });
-    if (!category) throw new NotFoundException(`TagCategory "${name}" not found`);
+    if (!category)
+      throw new NotFoundException(`TagCategory "${name}" not found`);
     return category;
   }
 
@@ -36,5 +37,3 @@ export class TagCategoriesService {
     await this.tagCategoryRepository.remove(category);
   }
 }
-
-
