@@ -5,6 +5,7 @@ import { CreateCoachDto } from './dto/create-coach.dto';
 import { UpdateCoachDto } from './dto/update-coach.dto';
 import { Coach } from './entities/coach.entity';
 import { TagsService } from '../tags/tags.service';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class CoachsService {
@@ -14,10 +15,14 @@ export class CoachsService {
     private readonly tagsService: TagsService,
   ) {}
 
-  async create(createCoachDto: CreateCoachDto): Promise<Coach> {
+  async create(createCoachDto: CreateCoachDto, user?: User): Promise<Coach> {
     const { tagNames, ...rest } = createCoachDto;
     const tags = tagNames ? await this.tagsService.findByNames(tagNames) : [];
-    const coach = this.coachRepository.create({ ...rest, tags });
+    const coach = this.coachRepository.create({
+      ...rest,
+      tags,
+      ...(user && { user }),
+    });
     return this.coachRepository.save(coach);
   }
 
@@ -26,8 +31,17 @@ export class CoachsService {
   }
 
   async findOne(id: string): Promise<Coach> {
-    const coach = await this.coachRepository.findOne({ where: { id },});
+    const coach = await this.coachRepository.findOne({ where: { id } });
     if (!coach) throw new NotFoundException(`Coach #${id} not found`);
+    return coach;
+  }
+
+  async findMe(userId: string): Promise<Coach> {
+    const coach = await this.coachRepository.findOne({
+      where: { user: { id: userId } },
+    });
+    if (!coach)
+      throw new NotFoundException(`Coach profile not found for user ${userId}`);
     return coach;
   }
 
@@ -36,7 +50,7 @@ export class CoachsService {
     const { tagNames, ...rest } = updateCoachDto;
     coach.tags = tagNames ? await this.tagsService.findByNames(tagNames) : [];
 
-    return this.coachRepository.save({...coach, ...rest});
+    return this.coachRepository.save({ ...coach, ...rest });
   }
 
   async remove(id: string): Promise<void> {
