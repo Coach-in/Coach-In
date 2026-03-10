@@ -29,6 +29,9 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto) {
+    if (await this.userRepository.findOneBy({ email: createUserDto.email })) {
+      throw new UnauthorizedException('Email already in use');
+    }
     const user = await this.userRepository.save({
       ...createUserDto,
       password: await bcrypt.hash(createUserDto.password, 10),
