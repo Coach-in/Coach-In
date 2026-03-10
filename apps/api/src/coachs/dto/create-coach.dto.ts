@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -11,15 +12,12 @@ export class CreateCoachDto {
   @IsNotEmpty()
   specialty: string;
 
-  @IsNumber()
-  @Min(0)
-  yearsOfExperience: number;
-
-  @IsString()
-  @IsOptional()
-  certifications?: string;
-
   @IsString()
   @IsOptional()
   bio?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tagNames?: string[];
 }
