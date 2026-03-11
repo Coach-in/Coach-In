@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -12,14 +13,11 @@ export class CreateAthleteDto {
   age: number;
 
   @IsString()
-  @IsNotEmpty()
-  sport: string;
-
-  @IsString()
-  @IsOptional()
-  level?: string;
-
-  @IsString()
   @IsOptional()
   goals?: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tagNames?: string[];
 }

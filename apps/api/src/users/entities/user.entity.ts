@@ -11,6 +11,9 @@ export class User {
   @Column()
   email: string;
 
+  @Column({ default: 'athlete' })
+  role: string;
+
   @Column({ nullable: true })
   password?: string;
 
