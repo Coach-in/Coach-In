@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserWithProfileDto } from './dto/create-user-with-profile.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -9,37 +9,65 @@ import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { TokenContent } from '../utils/types/jwt.types';
+import { TokenContent, UserRole } from '../utils/types/jwt.types';
+import { CoachsService } from '../coachs/coachs.service';
+import { AthletesService } from '../athletes/athletes.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly config: ConfigService,
+    private readonly coachsService: CoachsService,
+    private readonly athletesService: AthletesService,
   ) {}
 
   private async createAccessToken(user: User) {
     const tokenContent: TokenContent = { userId: user.id, email: user.email };
     const secret = this.config.get<string>('JWT_SECRET');
-
-    if (!secret) {
+    if (!secret)
       throw new Error('JWT_SECRET is not defined in environment variables');
-    }
     return jwt.sign(tokenContent, secret, { expiresIn: '10d' });
   }
 
-  async create(createUserDto: CreateUserDto) {
-    if (await this.userRepository.findOneBy({ email: createUserDto.email })) {
+  private async createCoachProfile(user: User, dto: CreateUserWithProfileDto) {
+    if (!dto.coachProfile)
+      throw new UnauthorizedException('Coach profile is required');
+    const coach = await this.coachsService.create(dto.coachProfile, user);
+    return { user, coach };
+  }
+
+  private async createAthleteProfile(
+    user: User,
+    dto: CreateUserWithProfileDto,
+  ) {
+    if (!dto.athleteProfile)
+      throw new UnauthorizedException('Athlete profile is required');
+    const athlete = await this.athletesService.create(dto.athleteProfile, user);
+    return { user, athlete };
+  }
+
+  async create(dto: CreateUserWithProfileDto) {
+    if (await this.userRepository.findOneBy({ email: dto.email })) {
       throw new UnauthorizedException('Email already in use');
     }
+
     const user = await this.userRepository.save({
-      ...createUserDto,
-      password: await bcrypt.hash(createUserDto.password, 10),
+      email: dto.email,
+      username: dto.username,
+      role: dto.role,
+      password: await bcrypt.hash(dto.password, 10),
     });
 
-    const token: string = await this.createAccessToken(user);
+    const token = await this.createAccessToken(user);
 
-    return { user, token };
+    if (dto.role === UserRole.COACH) {
+      const { coach } = await this.createCoachProfile(user, dto);
+      return { user, coach, token };
+    }
+
+    const { athlete } = await this.createAthleteProfile(user, dto);
+    return { user, athlete, token };
   }
 
   async findAll() {

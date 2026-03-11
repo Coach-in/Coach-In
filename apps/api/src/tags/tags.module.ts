@@ -6,12 +6,12 @@ import { TagsService } from './tags.service';
 import { TagsController } from './tags.controller';
 import { TagCategoriesService } from './tag-categories.service';
 import { TagCategoriesController } from './tag-categories.controller';
+import { TagsSeedService } from './tags-seed.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Tag, TagCategory])],
   controllers: [TagsController, TagCategoriesController],
-  providers: [TagsService, TagCategoriesService],
+  providers: [TagsService, TagCategoriesService, TagsSeedService],
   exports: [TagsService, TagCategoriesService],
 })
 export class TagsModule {}
-

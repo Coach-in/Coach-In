@@ -9,5 +9,6 @@ import { TagsModule } from '../tags/tags.module';
   imports: [TypeOrmModule.forFeature([Athlete]), TagsModule],
   controllers: [AthletesController],
   providers: [AthletesService],
+  exports: [AthletesService],
 })
 export class AthletesModule {}

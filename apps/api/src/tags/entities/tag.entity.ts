@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 
 @Entity()
 export class Tag {
@@ -8,7 +14,11 @@ export class Tag {
   @Column({ unique: true })
   name: string;
 
-  @ManyToOne('TagCategory', 'tags', { nullable: true, onDelete: 'SET NULL', eager: true })
+  @ManyToOne('TagCategory', 'tags', {
+    nullable: true,
+    onDelete: 'SET NULL',
+    eager: true,
+  })
   @JoinColumn({ name: 'category_id' })
   category?: any;
 }
