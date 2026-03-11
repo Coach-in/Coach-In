@@ -1,5 +1,5 @@
 class ApiConfig {
-  static const String _defaultIp = '172.20.10.2';
+  static const String _defaultIp = '10.68.247.145';
   static const int _port = 3000;
 
   static const Duration requestTimeout = Duration(seconds: 10);

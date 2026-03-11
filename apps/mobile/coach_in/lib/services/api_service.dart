@@ -149,17 +149,60 @@ class ApiService {
     );
   }
 
+  Future<List<dynamic>> fetchTags() async {
+    try {
+      final response = await get('/tags');
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch tags (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
 }
 
 class AuthService {
   final ApiService _apiService = ApiService();
 
-  Future<Map<String, dynamic>> register(String username, String email, String password) async {
+  Future<Map<String, dynamic>> registerCoach(String username, String email, String password, Map<String, dynamic> profile) async {
     try {
       final response = await _apiService.post('/users/auth/signup', {
         'username': username,
         'email': email,
         'password': password,
+        'role': "coach",
+        'coachProfile': profile
+      });
+
+      developer.log(response.statusCode.toString());
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        developer.log(response.body.toString());
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {
+          'success': false,
+          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
+          'details': response.body
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'An error occurred: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> registerAthlete(String username, String email, String password, Map<String, dynamic> profile) async {
+    try {
+      final response = await _apiService.post('/users/auth/signup', {
+        'username': username,
+        'email': email,
+        'password': password,
+        'role': "athlete",
+        'athleteProfile': profile
       });
 
       developer.log(response.statusCode.toString());
@@ -233,4 +276,5 @@ class AuthService {
     final token = await _apiService.getAccessToken();
     return token != null && token.isNotEmpty && !(await _apiService._isAccessTokenExpired());
   }
+
 }
