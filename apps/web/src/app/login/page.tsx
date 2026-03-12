@@ -2,44 +2,79 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type Role = "athlete" | "coach";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [role, setRole] = useState<Role>("athlete");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ role, email, password });
+    setError("");
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/auth/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Identifiants invalides.");
+        return;
+      }
+
+      await fetch("/api/auth/set-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: data.token }),
+      });
+      console.log("Token stocké en cookie", data.token);
+
+      router.push(role === "athlete" ? "/profilesportif" : "/profilecoach");
+
+    } catch {
+      setError("Impossible de contacter le serveur. Réessayez.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="bg-gradient-to-br from-[#1c232d] via-[#162644] to-[#0c336f] min-h-screen flex items-center justify-center">
       <div className="relative w-full max-w-md">
+
         <div className="text-center mb-8">
           <div className="gap-2.5 text-[#c9a84c] text-[0.8rem] font-semibold tracking-[3px] uppercase mb-3">
-                Connexion
+            Connexion
           </div>
           <Link href="/" className="inline-flex items-center gap-2.5 text-[#e8c97a] font-bold text-xl no-underline" style={{ fontFamily: "'Playfair Display', serif" }}>
-            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] flex items-center justify-center text-[#0a0f1e] font-black text-base">
-              Φ
-            </span>
+            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] flex items-center justify-center text-[#0a0f1e] font-black text-base">Φ</span>
             Coach&apos;In
           </Link>
           <p className="text-[#8a96b0] text-sm mt-3">Bon retour parmi nous.</p>
         </div>
+
         <div className="bg-[#0d1528] border border-[rgba(201,168,76,0.18)] rounded-2xl p-8">
+
+          {/* Toggle */}
           <div className="flex mb-8 border border-[rgba(201,168,76,0.18)] rounded-xl overflow-hidden">
             <button
-              onClick={() => setRole("athlete")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all ${
-                role === "athlete"
-                  ? "bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e]"
-                  : "text-[#8a96b0] hover:text-[#e8c97a] bg-transparent"
-              }`}
+              onClick={() => { setRole("athlete"); setError(""); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all ${role === "athlete" ? "bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e]" : "text-[#8a96b0] hover:text-[#e8c97a] bg-transparent"}`}
             >
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -47,12 +82,8 @@ export default function LoginPage() {
               Sportif
             </button>
             <button
-              onClick={() => setRole("coach")}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all border-l border-[rgba(201,168,76,0.18)] ${
-                role === "coach"
-                  ? "bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e]"
-                  : "text-[#8a96b0] hover:text-[#e8c97a] bg-transparent"
-              }`}
+              onClick={() => { setRole("coach"); setError(""); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all border-l border-[rgba(201,168,76,0.18)] ${role === "coach" ? "bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e]" : "text-[#8a96b0] hover:text-[#e8c97a] bg-transparent"}`}
             >
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
@@ -61,6 +92,7 @@ export default function LoginPage() {
             </button>
           </div>
 
+          {/* Hint */}
           <div className="flex items-center gap-2 text-[0.75rem] text-[#8a96b0] bg-[rgba(201,168,76,0.04)] border border-[rgba(201,168,76,0.1)] rounded-lg px-3 py-2 mb-6">
             <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] shrink-0" />
             {role === "athlete"
@@ -68,17 +100,23 @@ export default function LoginPage() {
               : "Connectez-vous pour gérer vos athlètes et vos programmations."}
           </div>
 
+          {/* Error */}
+          {error && (
+            <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5 mb-4">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">
-                Adresse e-mail
-              </label>
+              <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">Adresse e-mail</label>
               <input
-                type="email"
-                placeholder="vous@exemple.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="email" placeholder="vous@exemple.com"
+                value={email} onChange={(e) => setEmail(e.target.value)}
                 required
                 className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors"
               />
@@ -86,25 +124,20 @@ export default function LoginPage() {
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">
-                  Mot de passe
-                </label>
+                <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">Mot de passe</label>
                 <Link href="/forgot-password" className="text-xs text-[#c9a84c] hover:text-[#e8c97a] transition-colors">
                   Mot de passe oublié ?
                 </Link>
               </div>
               <div className="relative">
                 <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? "text" : "password"} placeholder="••••••••"
+                  value={password} onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full px-4 py-3 pr-11 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors"
                 />
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  type="button" onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-3 flex items-center text-[#8a96b0] hover:text-[#e8c97a] transition-colors"
                 >
                   {showPassword ? (
@@ -121,17 +154,23 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Submit */}
             <button
               type="submit"
-              className="mt-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.2)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.3)] hover:-translate-y-0.5 transition-all"
+              disabled={loading}
+              className="mt-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.2)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center justify-center gap-2"
             >
-              Connexion {role === "athlete" ? "sportif" : "coach"}
+              {loading && (
+                <svg className="animate-spin" width="15" height="15" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              )}
+              {loading ? "Connexion..." : `Connexion ${role === "athlete" ? "sportif" : "coach"}`}
             </button>
+
           </form>
         </div>
 
-        {/* Register link */}
         <p className="text-center text-[#8a96b0] text-sm mt-6">
           Pas encore de compte ?{" "}
           <Link href="/register" className="text-[#c9a84c] hover:text-[#e8c97a] font-semibold transition-colors">

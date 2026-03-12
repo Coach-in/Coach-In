@@ -2,21 +2,28 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { redirect } from 'next/navigation';
 
 type Role = "athlete" | "coach";
 type Step = 1 | 2 ;
 
 export default function RegisterPage() {
-  const [role, setRole] = useState<Role>("athlete");
-  const [step, setStep] = useState<Step>(1);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+    const [role, setRole] = useState<Role>("athlete");
+    const [step, setStep] = useState<Step>(1);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
+  
 
   const [form, setForm] = useState({
     username: "",
     email: "",
     password: "",
     confirm: "",
+    age: "",
+    goals: "",
+    tags: "",
     diploma: "",
     specialty: "",
     bio: "",
@@ -27,12 +34,69 @@ export default function RegisterPage() {
 
   const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
-    if (role === "coach") setStep(2);
-    else handleSubmit();
+    setError("");
+    setStep(2);
   };
 
-  const handleSubmit = () => {
-    console.log({ role, ...form });
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const body =
+        role === "athlete"
+          ? {
+              email: form.email,
+              username: form.username,
+              password: form.password,
+              role: "athlete",
+              athleteProfile: {
+                age: form.age ? parseInt(form.age) : undefined,
+                goals: form.goals || undefined,
+                tagNames: form.tags
+                  ? form.tags.split(",").map((t) => t.trim()).filter(Boolean)
+                  : [],
+              },
+            }
+          : {
+              email: form.email,
+              username: form.username,
+              password: form.password,
+              role: "coach",
+              coachProfile: {
+                diploma: form.diploma,
+                specialty: form.specialty,
+                bio: form.bio,
+              },
+            };
+
+      console.log("Submitting", body);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/users/auth/signup`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError("Une erreur est survenue.");
+        return;
+      }
+
+      await fetch("api/auth/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: data.token }),
+      });
+
+      redirect('/dashboard');
+    } catch {
+      setError("Impossible de contacter le serveur. Réessayez.");
+    }
   };
 
   return (
@@ -85,7 +149,6 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {role === "coach" && (
             <div className="flex items-center gap-2 mb-6">
               {[1, 2].map((s) => (
                 <div key={s} className="flex items-center gap-2 flex-1">
@@ -107,7 +170,6 @@ export default function RegisterPage() {
                 </div>
               ))}
             </div>
-          )}
 
           {step === 1 && (
             <form onSubmit={handleNext} className="flex flex-col gap-4">
@@ -204,85 +266,109 @@ export default function RegisterPage() {
                 disabled={form.confirm !== form.password && form.confirm !== ""}
                 className="mt-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.2)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
               >
-                {role === "coach" ? "Suivant →" : "Créer mon compte"}
+                Suivant →
               </button>
-
-              <div className="flex items-center gap-3 my-1">
-                <div className="flex-1 h-px bg-[rgba(201,168,76,0.12)]" />
-                <span className="text-[#8a96b0] text-xs">ou</span>
-                <div className="flex-1 h-px bg-[rgba(201,168,76,0.12)]" />
-              </div>
             </form>
           )}
 
-          {step === 2 && (
-            <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="flex flex-col gap-4">
-
-              <div className="flex items-center gap-2 text-[0.75rem] text-[#8a96b0] bg-[rgba(201,168,76,0.04)] border border-[rgba(201,168,76,0.1)] rounded-lg px-3 py-2 mb-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] shrink-0" />
-                Ces informations seront vérifiées avant validation de votre profil.
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">
-                  Diplôme principal
-                </label>
-                <input
-                  type="text"
-                  placeholder="ex : BPJEPS AF, DEJEPS, Master STAPS..."
-                  value={form.diploma}
-                  onChange={(e) => update("diploma", e.target.value)}
-                  required
-                  className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">
-                  Spécialité
-                </label>
-                <input
-                  type="text"
-                  placeholder="ex : Powerlifting, Yoga, Course à pied..."
-                  value={form.specialty}
-                  onChange={(e) => update("specialty", e.target.value)}
-                  required
-                  className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">
-                  Présentation
-                </label>
-                <textarea
-                  placeholder="Décrivez votre approche, votre expérience et vos valeurs en tant que coach..."
-                  value={form.bio}
-                  onChange={(e) => update("bio", e.target.value)}
-                  required
-                  rows={4}
-                  className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors resize-none"
-                />
-              </div>
-
-              <div className="flex gap-3 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="flex-1 py-3.5 rounded-xl border border-[rgba(201,168,76,0.18)] text-[#8a96b0] font-medium text-sm hover:text-[#e8c97a] hover:border-[#c9a84c] transition-all"
-                >
-                  ← Retour
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3.5 rounded-xl bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.2)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.3)] hover:-translate-y-0.5 transition-all"
-                >
-                  Créer mon compte
-                </button>
-              </div>
-            </form>
-          )}
-
+        {step === 2 && (
+          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="flex flex-col gap-4">
+        
+            <div className="flex items-center gap-2 text-[0.75rem] text-[#8a96b0] bg-[rgba(201,168,76,0.04)] border border-[rgba(201,168,76,0.1)] rounded-lg px-3 py-2 mb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] shrink-0" />
+              {role === "athlete"
+                ? "Ces informations aident le coach à mieux vous connaître. Tout est optionnel."
+                : "Ces informations seront vérifiées avant validation de votre profil."}
+            </div>
+            
+            {role === "athlete" && (
+              <>
+                <div className="flex gap-3">
+                  <div className="flex flex-col gap-1.5 w-24 shrink-0">
+                    <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">Âge</label>
+                    <input
+                      type="number" placeholder="25" min={10} max={99}
+                      value={form.age} onChange={(e) => update("age", e.target.value)}
+                      className="px-3 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors w-full"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">
+                      Tags <span className="normal-case font-normal">(séparés par des virgules)</span>
+                    </label>
+                    <input
+                      type="text" placeholder="Football, Running, Casual..."
+                      value={form.tags} onChange={(e) => update("tags", e.target.value)}
+                      className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors w-full"
+                    />
+                  </div>
+                </div>
+            
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">
+                    Objectifs <span className="normal-case font-normal">(optionnel)</span>
+                  </label>
+                  <textarea
+                    placeholder="ex : Améliorer mon endurance, perdre du poids, préparer une compétition..."
+                    value={form.goals} onChange={(e) => update("goals", e.target.value)}
+                    rows={4}
+                    className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors resize-none"
+                  />
+                </div>
+              </>
+            )}
+        
+            {role === "coach" && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">Diplôme principal</label>
+                  <input
+                    type="text" placeholder="ex : BPJEPS AF, DEJEPS, Master STAPS..."
+                    value={form.diploma} onChange={(e) => update("diploma", e.target.value)}
+                    required
+                    className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  />
+                </div>
+            
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">Spécialité</label>
+                  <input
+                    type="text" placeholder="ex : Powerlifting, Yoga, Course à pied..."
+                    value={form.specialty} onChange={(e) => update("specialty", e.target.value)}
+                    required
+                    className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  />
+                </div>
+            
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">Présentation</label>
+                  <textarea
+                    placeholder="Décrivez votre approche, votre expérience et vos valeurs en tant que coach..."
+                    value={form.bio} onChange={(e) => update("bio", e.target.value)}
+                    required rows={4}
+                    className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors resize-none"
+                  />
+                </div>
+              </>
+            )}
+        
+            <div className="flex gap-3 mt-2">
+              <button
+                type="button" onClick={() => setStep(1)}
+                className="flex-1 py-3.5 rounded-xl border border-[rgba(201,168,76,0.18)] text-[#8a96b0] font-medium text-sm hover:text-[#e8c97a] hover:border-[#c9a84c] transition-all"
+              >
+                ← Retour
+              </button>
+              <button
+                type="submit" disabled={loading}
+                className="flex-1 py-3.5 rounded-xl bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.2)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                Créer mon compte
+              </button>
+            </div>
+        
+          </form>
+        )}
         </div>
 
         <p className="text-center text-[#8a96b0] text-sm mt-6">
