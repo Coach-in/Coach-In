@@ -6,6 +6,7 @@ import {
   UploadedFile,
   UseInterceptors,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -33,6 +34,8 @@ const documentExample = {
 @ApiTags('Coach Documents')
 @Controller('coach-documents')
 export class CoachDocumentsController {
+  private readonly logger = new Logger(CoachDocumentsController.name);
+
   constructor(private readonly coachDocumentsService: CoachDocumentsService) {}
 
   @Post('upload/:coachId')
@@ -70,8 +73,15 @@ export class CoachDocumentsController {
     @Param('coachId') coachId: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    if (!file) throw new BadRequestException('File is required');
-    return this.coachDocumentsService.upload(file, coachId);
+    this.logger.debug(`[POST /upload/${coachId}] Received upload request`);
+    if (!file) {
+      this.logger.warn(`[POST /upload/${coachId}] No file provided`);
+      throw new BadRequestException('File is required');
+    }
+    this.logger.debug(`[POST /upload/${coachId}] File: "${file.originalname}", type=${file.mimetype}, size=${file.size}`);
+    const result = await this.coachDocumentsService.upload(file, coachId);
+    this.logger.log(`[POST /upload/${coachId}] Upload successful, documentId=${result.id}`);
+    return result;
   }
 
   @Get()
@@ -83,6 +93,7 @@ export class CoachDocumentsController {
     schema: { example: [documentExample] },
   })
   findAll() {
+    this.logger.debug(`[GET /coach-documents] Received request to list all documents`);
     return this.coachDocumentsService.findAll();
   }
 
@@ -97,6 +108,7 @@ export class CoachDocumentsController {
   })
   @ApiResponse({ status: 404, description: 'Document not found.' })
   accept(@Param('id') id: string) {
+    this.logger.debug(`[POST /${id}/accept] Received accept request`);
     return this.coachDocumentsService.accept(id);
   }
 
@@ -111,6 +123,7 @@ export class CoachDocumentsController {
   })
   @ApiResponse({ status: 404, description: 'Document not found.' })
   refuse(@Param('id') id: string) {
+    this.logger.debug(`[POST /${id}/refuse] Received refuse request`);
     return this.coachDocumentsService.refuse(id);
   }
 }
