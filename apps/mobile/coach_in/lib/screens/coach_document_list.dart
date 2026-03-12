@@ -206,7 +206,7 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
                         ElevatedButton(
                           onPressed: _fetchDocuments,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xffffd398),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
                           ),
                           child: Text(
                             'Retry',
@@ -231,10 +231,7 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
                           const SizedBox(height: 4),
                           Text(
                             '${_documents.length} document${_documents.length != 1 ? 's' : ''} pending review',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white54,
-                              fontSize: 13,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
                           ),
                           const SizedBox(height: 16),
                           ..._documents.map(_buildDocumentCard),
