@@ -98,9 +98,13 @@ export class CoachDocumentsController {
       this.logger.warn(`[POST /upload/${coachId}] No file provided`);
       throw new BadRequestException('File is required');
     }
-    this.logger.debug(`[POST /upload/${coachId}] File: "${file.originalname}", type=${file.mimetype}, size=${file.size}`);
+    this.logger.debug(
+      `[POST /upload/${coachId}] File: "${file.originalname}", type=${file.mimetype}, size=${file.size}`,
+    );
     const result = await this.coachDocumentsService.upload(file, coachId);
-    this.logger.log(`[POST /upload/${coachId}] Upload successful, documentId=${result.id}`);
+    this.logger.log(
+      `[POST /upload/${coachId}] Upload successful, documentId=${result.id}`,
+    );
     return result;
   }
 
@@ -116,7 +120,9 @@ export class CoachDocumentsController {
     schema: { example: [documentExample] },
   })
   findAll() {
-    this.logger.debug(`[GET /coach-documents] Received request to list all documents`);
+    this.logger.debug(
+      `[GET /coach-documents] Received request to list all documents`,
+    );
     return this.coachDocumentsService.findAll();
   }
 
