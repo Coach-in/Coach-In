@@ -19,6 +19,8 @@ class _ProfilePageState extends State<ProfilePage> {
   bool _isLoggingOut = false;
   String? _errorMessage;
 
+  List<Map<String, dynamic>> _notifications = [];
+
   Map<String, dynamic>? _profile;
   String? _role;
 
@@ -46,13 +48,16 @@ class _ProfilePageState extends State<ProfilePage> {
         profile = await _apiService.fetchAthleteInfo();
       }
 
+      final notifications = await _apiService.fetchNotifications();
+
       setState(() {
         _role = role;
         _profile = profile;
+        _notifications = List<Map<String, dynamic>>.from(notifications);
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Failed to load profile. Please try again.';
+        _errorMessage = 'Failed to load profile';
       });
     } finally {
       setState(() => _isLoading = false);
@@ -373,6 +378,95 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Widget _buildNotificationCard(Map<String, dynamic> notif) {
+    final isSeen = notif['status'] == 'seen';
+
+    return GestureDetector(
+      onTap: () async {
+        if (!isSeen) {
+          try {
+            await _apiService.markNotificationSeen(notif['id']);
+
+            setState(() {
+              notif['status'] = 'seen';
+            });
+          } catch (_) {}
+        }
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isSeen ? const Color(0xff1b2a41) : const Color(0xff263859),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSeen ? Colors.white12 : const Color(0xffffd398),
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.notifications,
+              color: isSeen ? Colors.white38 : const Color(0xffffd398),
+            ),
+
+            const SizedBox(width: 10),
+
+            Expanded(
+              child: Text(
+                notif['message'],
+                style: GoogleFonts.montserrat(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: isSeen ? FontWeight.w400 : FontWeight.w600,
+                ),
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationsCard() {
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xff1b2a41),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'NOTIFICATIONS',
+            style: GoogleFonts.montserrat(
+              color: const Color(0xffffd398),
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          if (_notifications.isEmpty)
+            Text(
+              'No notifications yet.',
+              style: GoogleFonts.montserrat(color: Colors.white54),
+            )
+          else
+            Column(
+              children: _notifications
+                  .map((n) => _buildNotificationCard(n))
+                  .toList(),
+            )
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -399,9 +493,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 ? Center(child: Text(_errorMessage!))
                 : _profile == null
                     ? const Center(child: Text('Profile unavailable'))
-                    : ListView(
+                    : RefreshIndicator(
+                        onRefresh: _fetchProfile,
+                        child: ListView(
                         children: [
                           _buildHeader(_profile!),
+                          _buildNotificationsCard(),
                           _buildGoalsOrBioCard(_profile!),
                           _buildSpecialtyCard(_profile!),
                           _buildTagsCard(_profile!['tags'] ?? []),
@@ -435,7 +532,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                             ),
-                        ],
+                          ],
+                        ),
                       ),
       ),
       bottomNavigationBar: _buildBottomNav('profile'),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'dart:developer' as developer;
+
 import '../services/api_service.dart';
 
 class CoachDetailPage extends StatefulWidget {
@@ -42,6 +44,47 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
       });
     } finally {
       setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _requestRelation() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+
+      developer.log("no");
+      final athlete = await _apiService.fetchAthleteInfo();
+      developer.log(athlete.toString());
+      final athleteId = athlete['id'];
+
+      developer.log("huhu");
+      await _apiService.requestRelationship(
+        athleteId,
+        widget.coachId,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Relationship request sent'),
+          backgroundColor: Color(0xffffd398),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to send request'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -130,6 +173,28 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
                                 ),
                               )
                             ],
+                          ),
+
+                          SizedBox(height: 15,),
+                          ElevatedButton(
+                            onPressed: _isLoading ? null : _requestRelation,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              backgroundColor: Color(0xffffd398),
+                            ),
+                            child: _isLoading
+                                ? const CircularProgressIndicator(color: Colors.black)
+                                : Text(
+                                    'Request contact',
+                                    style: GoogleFonts.montserrat(
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                           ),
 
                           _buildCard(
