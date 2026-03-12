@@ -10,7 +10,7 @@ import { TagCategoriesService } from './tag-categories.service';
 import { CreateTagCategoryDto } from './dto/create-tag-category.dto';
 
 @ApiTags('Tag Categories')
-@Controller('tags/categories')
+@Controller('tag-categories')
 export class TagCategoriesController {
   constructor(private readonly tagCategoriesService: TagCategoriesService) {}
 

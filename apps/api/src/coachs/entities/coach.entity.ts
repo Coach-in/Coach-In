@@ -25,6 +25,9 @@ export class Coach {
   @Column({ nullable: true })
   bio?: string;
 
+  @Column({ default: false })
+  isApproved: boolean;
+
   @ManyToMany(() => Tag, { eager: true })
   @JoinTable({ name: 'coach_tags' })
   tags: Tag[];

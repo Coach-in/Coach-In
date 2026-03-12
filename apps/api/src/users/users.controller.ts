@@ -83,6 +83,16 @@ export class UsersController {
           },
           required: ['email', 'username', 'password', 'role', 'coachProfile'],
         },
+          {
+          title: 'Admin signup',
+          properties: {
+            email: { type: 'string', format: 'email' },
+            username: { type: 'string' },
+            password: { type: 'string', minLength: 8 },
+            role: { type: 'string', enum: ['admin'] },
+          },
+          required: ['email', 'username', 'password', 'role'],
+        },
       ],
     },
     examples: {
@@ -112,6 +122,15 @@ export class UsersController {
             bio: '10 years of experience in professional sports',
             tagNames: ['Football', 'Advanced'],
           },
+        },
+      },
+      admin: {
+        summary: 'Admin signup',
+        value: {
+          email: 'admin@example.com',
+          username: 'admin_user',
+          password: 'password123',
+          role: 'admin',
         },
       },
     },
@@ -162,6 +181,22 @@ export class UsersController {
                   { id: 'tag-uuid-1', name: 'Football', category: { id: 'cat-uuid-1', name: 'Sport' } },
                   { id: 'tag-uuid-3', name: 'Advanced', category: { id: 'cat-uuid-2', name: 'Experience level' } },
                 ],
+              },
+              token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature',
+            },
+          },
+          admin: {
+            summary: 'Admin created',
+            value: {
+              user: {
+                id: 'a3f2c1d4-1234-5678-abcd-ef0123456789',
+                email: 'admin@example.com',
+                username: 'admin_user',
+                role: 'admin',
+                refresh_token: null,
+              },
+              admin: {
+                id: 'd1e2f3a4-1234-5678-abcd-ef0123456789',
               },
               token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature',
             },

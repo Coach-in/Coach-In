@@ -12,6 +12,10 @@ import { Athlete } from './athletes/entities/athlete.entity';
 import { TagsModule } from './tags/tags.module';
 import { Tag } from './tags/entities/tag.entity';
 import { TagCategory } from './tags/entities/tag-category.entity';
+import { AdminsModule } from './admins/admins.module';
+import { Admin } from './admins/entities/admin.entity';
+import { CoachDocumentsModule } from './coach-documents/coach-documents.module';
+import { CoachDocument } from './coach-documents/entities/coach-document.entity';
 
 @Module({
   imports: [
@@ -25,14 +29,20 @@ import { TagCategory } from './tags/entities/tag-category.entity';
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: [User, Coach, Athlete, Tag, TagCategory],
+        entities: [User, Coach, Athlete, Tag, TagCategory, Admin, CoachDocument],
         synchronize: true,
+        extra: {
+          max: 10,
+          idleTimeoutMillis: 30000,
+        },
       }),
     }),
     UsersModule,
     CoachsModule,
     AthletesModule,
     TagsModule,
+    AdminsModule,
+    CoachDocumentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
