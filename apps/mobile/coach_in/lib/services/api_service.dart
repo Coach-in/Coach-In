@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:io';
 
 import '../config/api_config.dart';
 
 import 'dart:developer' as developer;
+import 'package:pretty_json/pretty_json.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -126,6 +129,36 @@ class ApiService {
     );
   }
 
+  Future<http.Response> filePost(String endpoint, File file, String extension,
+    {bool withAuth = false}) async {
+    final baseUrl = ApiConfig.getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    final headers = <String, String>{};
+    if (withAuth) {
+      final token = await _storage.read(key: 'accessToken');
+      if (token != null) headers['Authorization'] = 'Bearer $token';
+    }
+
+    final contentType = switch (extension) {
+      'pdf'           => 'application/pdf',
+      'png'           => 'image/png',
+      'jpg' || 'jpeg' => 'image/jpeg',
+      _ => throw Exception('Unsupported file type: $extension. Must be PDF, PNG, or JPEG.'),
+    };
+
+    final request = http.MultipartRequest('POST', url)
+      ..headers.addAll(headers)
+      ..files.add(await http.MultipartFile.fromPath(
+        'file',
+        file.path,
+        contentType: MediaType.parse(contentType),
+      ));
+
+    final streamed = await request.send().timeout(ApiConfig.requestTimeout);
+    return http.Response.fromStream(streamed);
+  }
+
   Future<http.Response> put(String endpoint, Map<String, dynamic> body,
       {bool withAuth = false}) async {
     final baseUrl = ApiConfig.getBaseUrl();
@@ -149,17 +182,131 @@ class ApiService {
     );
   }
 
+  Future<List<dynamic>> fetchTags() async {
+    try {
+      final response = await get('/tags');
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch tags (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<List<dynamic>> fetchAdmins() async {
+    try {
+      final response = await get('/admins', withAuth: true);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch admins (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<List<dynamic>> fetchCoachDocuments() async {
+    try {
+      final response = await get('/coach-documents', withAuth: true);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch coach documents (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<void> reviewCoachDocument(String documentId, String action) async {
+    assert(action == 'accept' || action == 'refuse');
+    try {
+      final response = await post(
+        '/coach-documents/$documentId/$action',
+        {},
+        withAuth: true,
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to $action document (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<void> uploadCertification(String coachId, File file, String extension) async {
+    if (!['pdf', 'png', 'jpg', 'jpeg'].contains(extension)) {
+      throw Exception('Unsupported file type: $extension. Must be PDF, PNG, or JPEG.');
+    }
+
+    try {
+      final response = await filePost(
+        '/coach-documents/upload/$coachId',
+        file,
+        extension,
+        withAuth: true,
+      );
+
+      developer.log(response.statusCode.toString());
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return;
+      } else {
+        throw Exception('Failed to upload certification (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
 }
 
 class AuthService {
   final ApiService _apiService = ApiService();
 
-  Future<Map<String, dynamic>> register(String username, String email, String password) async {
+  Future<Map<String, dynamic>> registerCoach(String username, String email, String password, Map<String, dynamic> profile) async {
     try {
       final response = await _apiService.post('/users/auth/signup', {
         'username': username,
         'email': email,
         'password': password,
+        'role': "coach",
+        'coachProfile': profile
+      });
+      developer.log(profile.toString());
+      developer.log(response.body.toString());
+
+      developer.log(response.statusCode.toString());
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        developer.log(prettyJson(response.body));
+        printPrettyJson(response.body, indent: 2);
+        // developer.log(response.body.toString());
+        return {'success': true, 'data': jsonDecode(response.body)};
+      } else {
+        return {
+          'success': false,
+          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
+          'details': response.body
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'An error occurred: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> registerAthlete(String username, String email, String password, Map<String, dynamic> profile) async {
+    try {
+      final response = await _apiService.post('/users/auth/signup', {
+        'username': username,
+        'email': email,
+        'password': password,
+        'role': "athlete",
+        'athleteProfile': profile
       });
 
       developer.log(response.statusCode.toString());
@@ -209,28 +356,9 @@ class AuthService {
     }
   }
 
-  Future<Map<String, dynamic>> logout() async {
-    try {
-      final response =
-          await _apiService.post('/users/auth/logout', {}, withAuth: true);
-
-      if (response.statusCode == 200) {
-        await _apiService.clearTokens();
-        return {'success': true};
-      } else {
-        return {
-          'success': false,
-          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
-          'details': response.body
-        };
-      }
-    } catch (e) {
-      return {'success': false, 'message': 'An error occurred: $e'};
-    }
-  }
-
   Future<bool> isLoggedIn() async {
     final token = await _apiService.getAccessToken();
     return token != null && token.isNotEmpty && !(await _apiService._isAccessTokenExpired());
   }
+
 }
