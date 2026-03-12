@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'register.dart';
 import 'start_page.dart';
 import './explore_page.dart';
+import 'coach_document_list.dart';
 
 import '../services/api_service.dart';
 import '../services/oauth_service.dart';
@@ -50,6 +51,35 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _redirectBasedOnRole() async {
+    try {
+      final loggedEmail = _emailController.text.trim().isNotEmpty
+          ? _emailController.text.trim()
+          : await _storage.read(key: 'userEmail');
+
+      final admins = await _apiService.fetchAdmins();
+      final isAdmin = admins.any(
+        (a) => (a['user']?['email'] as String?)?.toLowerCase() ==
+            loggedEmail?.toLowerCase(),
+      );
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              isAdmin ? const CoachDocumentsPage() : const ExplorePage(),
+        ),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const ExplorePage()),
+      );
+    }
+  }
+
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
@@ -62,7 +92,6 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     if (!mounted) return;
-
     setState(() => _isLoading = false);
 
     if (result['success']) {
@@ -74,12 +103,10 @@ class _LoginPageState extends State<LoginPage> {
       await _storage.write(key: 'accessToken', value: accessToken);
       await _storage.write(key: 'refreshToken', value: refreshToken);
       await _storage.write(key: 'rememberMe', value: _rememberMe.toString());
+      await _storage.write(key: 'userEmail', value: _emailController.text.trim());
 
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ExplorePage()),
-      );
+      await _redirectBasedOnRole();
     } else {
       setState(() {
         _errorMessage =

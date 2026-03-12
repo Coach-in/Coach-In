@@ -196,6 +196,48 @@ class ApiService {
     }
   }
 
+  Future<List<dynamic>> fetchAdmins() async {
+    try {
+      final response = await get('/admins', withAuth: true);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch admins (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<List<dynamic>> fetchCoachDocuments() async {
+    try {
+      final response = await get('/coach-documents', withAuth: true);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch coach documents (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<void> reviewCoachDocument(String documentId, String action) async {
+    assert(action == 'accept' || action == 'refuse');
+    try {
+      final response = await post(
+        '/coach-documents/$documentId/$action',
+        {},
+        withAuth: true,
+      );
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Failed to $action document (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
   Future<void> uploadCertification(String coachId, File file, String extension) async {
     if (!['pdf', 'png', 'jpg', 'jpeg'].contains(extension)) {
       throw Exception('Unsupported file type: $extension. Must be PDF, PNG, or JPEG.');

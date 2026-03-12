@@ -4,7 +4,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
-import './start_page.dart';
 import './explore_page.dart';
 
 import '../services/api_service.dart';
