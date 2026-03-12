@@ -12,6 +12,7 @@ import jwt from 'jsonwebtoken';
 import { TokenContent, UserRole } from '../utils/types/jwt.types';
 import { CoachsService } from '../coachs/coachs.service';
 import { AthletesService } from '../athletes/athletes.service';
+import { AdminsService } from '../admins/admins.service';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,7 @@ export class UsersService {
     private readonly config: ConfigService,
     private readonly coachsService: CoachsService,
     private readonly athletesService: AthletesService,
+    private readonly adminsService: AdminsService,
   ) {}
 
   private async createAccessToken(user: User) {
@@ -47,6 +49,11 @@ export class UsersService {
     return { user, athlete };
   }
 
+  private async createAdminProfile(user: User, dto: CreateUserWithProfileDto) {
+    const admin = await this.adminsService.create(dto.adminProfile ?? {}, user);
+    return { user, admin };
+  }
+
   async create(dto: CreateUserWithProfileDto) {
     if (await this.userRepository.findOneBy({ email: dto.email })) {
       throw new UnauthorizedException('Email already in use');
@@ -64,6 +71,11 @@ export class UsersService {
     if (dto.role === UserRole.COACH) {
       const { coach } = await this.createCoachProfile(user, dto);
       return { user, coach, token };
+    }
+
+    if (dto.role === UserRole.ADMIN) {
+      const { admin } = await this.createAdminProfile(user, dto);
+      return { user, admin, token };
     }
 
     const { athlete } = await this.createAthleteProfile(user, dto);
