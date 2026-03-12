@@ -6,6 +6,7 @@ import 'register.dart';
 import 'start_page.dart';
 import './explore_page.dart';
 import 'coach_document_list.dart';
+import 'profile_page.dart';
 
 import '../services/api_service.dart';
 import '../services/oauth_service.dart';
@@ -300,7 +301,7 @@ class _LoginPageState extends State<LoginPage> {
                   );
                 },
                 child: Text(
-                  'New to AREA? Sign up here.',
+                  'New to Coach\'In? Sign up here.',
                   style: Theme.of(context).textTheme.bodySmall
                 ),
               ),

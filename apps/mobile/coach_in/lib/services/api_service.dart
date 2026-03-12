@@ -98,11 +98,14 @@ class ApiService {
 
       final token = await getAccessToken();
       if (token != null) headers['Authorization'] = 'Bearer $token';
+      developer.log("4");
     }
 
     http.Response response = await requestFn(headers);
 
     if (withAuth && response.statusCode == 401) {
+      developer.log("5");
+
       final refreshed = await _refreshToken();
       if (refreshed) {
         final newToken = await getAccessToken();
@@ -112,7 +115,7 @@ class ApiService {
         throw Exception('Session expired. Please log in again.');
       }
     }
-
+    developer.log("end of send request");
     return response;
   }
 
@@ -157,6 +160,18 @@ class ApiService {
 
     final streamed = await request.send().timeout(ApiConfig.requestTimeout);
     return http.Response.fromStream(streamed);
+  }
+
+  Future<http.Response> patch(String endpoint, {bool withAuth = false}) async {
+    final baseUrl = ApiConfig.getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    return _sendRequest(
+      (headers) => http
+          .patch(url, headers: headers)
+          .timeout(ApiConfig.requestTimeout),
+      withAuth: withAuth,
+    );
   }
 
   Future<http.Response> put(String endpoint, Map<String, dynamic> body,
@@ -260,6 +275,96 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<List<dynamic>> fetchCoaches() async {
+    try {
+      final response = await get('/coachs', withAuth: true);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch coachs (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchCurrentUser() async {
+    final response = await get('/users/me', withAuth: true);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch user');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchCoachInfo() async {
+    final response = await get('/coachs/me', withAuth: true);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch coach info');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchAthleteInfo() async {
+    try {
+      final response = await get('/athletes/me', withAuth: true);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch athlete info (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchCoachById(String id) async {
+    final response = await get('/coachs/$id', withAuth: true);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch coach');
+    }
+  }
+
+  Future<void> requestRelationship(String athleteId, String coachId) async {
+    developer.log("here");
+    final response = await post(
+      '/relationships',
+      {
+        'athleteId': athleteId,
+        'coachId': coachId,
+      },
+      withAuth: true,
+    );
+
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception('Failed to request relationship');
+    }
+  }
+
+  Future<List<dynamic>> fetchNotifications() async {
+    final response = await get('/notifications', withAuth: true);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch notifications');
+    }
+  }
+
+  Future<void> markNotificationSeen(String id) async {
+    final response = await patch('/notifications/$id/seen', withAuth: true);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to mark notification as seen');
     }
   }
 

@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import './screens/start_page.dart';
 import './screens/explore_page.dart';
+import './services/api_service.dart';
 
 void main() {
   runApp(const CoachIn());
@@ -62,10 +63,17 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
+  final ApiService _apiService = ApiService();
+
   @override
   void initState() {
     super.initState();
+    // _logout();
     _checkLoginStatus();
+  }
+
+  Future<void> _logout() async {
+    await _apiService.clearTokens();
   }
 
   Future<void> _checkLoginStatus() async {

@@ -1,9 +1,10 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import './start_page.dart';
 import '../services/api_service.dart';
+import './coach_detail_page.dart';
+import './start_page.dart';
+import './profile_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -13,15 +14,59 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
-  bool _isLoggingOut = false;
+  final ApiService _apiService = ApiService();
+
+  bool _isLoading = false;
   String? _errorMessage;
 
-  // final AuthService _authService = AuthService();
-  final ApiService _apiService = ApiService();
+  List<Map<String, dynamic>> _coaches = [];
+  String? _role;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExplore();
+  }
+
+  Future<void> _fetchExplore() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final user = await _apiService.fetchCurrentUser();
+      final role = user['role'];
+
+      if (role == 'coach') {
+        setState(() {
+          _role = role;
+        });
+        return;
+      }
+
+      final coaches = await _apiService.fetchCoaches();
+
+      final verified = List<Map<String, dynamic>>.from(coaches)
+          .where((c) => c['isApproved'] == true)
+          .toList();
+
+      setState(() {
+        _role = role;
+        _coaches = verified;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Failed to load coaches';
+      });
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _logout() async {
     setState(() {
-      _isLoggingOut = true;
+      // _isLoggingOut = true;
       _errorMessage = null;
     });
 
@@ -46,80 +91,240 @@ class _ExplorePageState extends State<ExplorePage> {
     // }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
+  Widget _buildCoachCard(Map<String, dynamic> coach) {
+    final user = coach['user'];
 
-            if (_errorMessage != null)
-              Container(
-                padding: const EdgeInsets.all(10),
-                margin: const EdgeInsets.only(bottom: 10),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => CoachDetailPage(coachId: coach['id']),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: Colors.white12),
+          color: const Color(0xff1b2a41),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: const Color(0xffffd398),
+                child: const Icon(Icons.person, color: Colors.black),
+              ),
+
+              const SizedBox(width: 14),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.error_outline, color: Colors.redAccent),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _errorMessage!,
-                        style: const TextStyle(color: Colors.white),
+                    Text(
+                      user['username'] ?? '',
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
                       ),
                     ),
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      coach['specialty'] ?? '',
+                      style: GoogleFonts.montserrat(
+                        color: Colors.white54,
+                        fontSize: 12,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Wrap(
+                      spacing: 6,
+                      children: (coach['tags'] as List)
+                          .map((t) => _buildTagChip(t['name']))
+                          .toList(),
+                    )
                   ],
                 ),
               ),
 
-            SizedBox(
-              width: double.infinity,
-              child: Semantics(
-                label: 'Log out',
-                button: true,
-                excludeSemantics: true,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                  onPressed: _isLoggingOut ? null : _logout,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    side: const BorderSide(width: 1.3, color: Color(0xffffd398)),
-                    backgroundColor: const Color(0xffffd398),
-                  ),
-                  child: _isLoggingOut
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.black,
-                            strokeWidth: 2.5,
-                          ),
-                        )
-                      : Text(
-                          'Log out',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 16,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const Icon(
+                Icons.chevron_right,
+                color: Color(0xffffd398),
+              )
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTagChip(String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xffffd398)),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.montserrat(
+          color: const Color(0xffffd398),
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNav(String currentPage) {
+    return Container(
+      height: 60,
+      decoration: const BoxDecoration(
+        color: Color(0xffffd398),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          GestureDetector(
+            onTap: () {
+              if (currentPage != 'explore') {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ExplorePage()),
+                );
+              }
+            },
+            child: Row(
+              children: [
+                Icon(
+                  Icons.explore,
+                  color: currentPage == 'explore'
+                      ? Colors.black
+                      : Colors.black54,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Explore',
+                  style: TextStyle(
+                    color: currentPage == 'explore'
+                        ? Colors.black
+                        : Colors.black54,
+                    fontWeight: FontWeight.w600,
+                  ),
+                )
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              if (currentPage != 'profile') {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                );
+              }
+            },
+            child: Row(
+              children: [
+                Icon(
+                  Icons.person,
+                  color: currentPage == 'profile'
+                      ? Colors.black
+                      : Colors.black54,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Profile',
+                  style: TextStyle(
+                    color: currentPage == 'profile'
+                        ? Colors.black
+                        : Colors.black54,
+                    fontWeight: FontWeight.w600,
+                  ),
+                )
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_role == 'coach') {
+      return Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        appBar: AppBar(
+          title: const Text('Explore'),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+        ),
+        body: Center(
+          child: Text(
+            'Explore will be available later.',
+            style: GoogleFonts.montserrat(color: Colors.white54),
+          ),
+        ),
+        bottomNavigationBar: _buildBottomNav('explore'),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      appBar: AppBar(
+        title: const Text('Explore Coaches'),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Color(0xffffd398)),
+            onPressed: _fetchExplore,
+          )
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xffffd398),
+                ),
+              )
+            : _errorMessage != null
+                ? Center(child: Text(_errorMessage!))
+                : _coaches.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No verified coaches yet.',
+                          style: GoogleFonts.montserrat(
+                            color: Colors.white54,
+                          ),
+                        ),
+                      )
+                    : ListView(
+                        children: [
+                          Text(
+                            '${_coaches.length} verified coaches',
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white54,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ..._coaches.map(_buildCoachCard),
+                        ],
+                      ),
+      ),
+      bottomNavigationBar: _buildBottomNav('explore'),
     );
   }
 }
