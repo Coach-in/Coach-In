@@ -27,7 +27,7 @@ export class CoachsService {
   }
 
   async findAll(): Promise<Coach[]> {
-    return this.coachRepository.find();
+    return this.coachRepository.find({ where: { isApproved: true } });
   }
 
   async findOne(id: string): Promise<Coach> {
