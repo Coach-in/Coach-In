@@ -95,10 +95,22 @@ export class RelationshipsService {
     return this.findOne(saved.id);
   }
 
-  async findAll(): Promise<Relationship[]> {
-    this.logger.debug(`[findAll] Fetching all relationships`);
-    const relationships = await this.relationshipRepository.find();
-    this.logger.debug(`[findAll] Found ${relationships.length} relationship(s)`);
+  async findAll(userId: string): Promise<Relationship[]> {
+    this.logger.debug(`[findAll] Fetching relationships for userId=${userId}`);
+    const relationships = await this.relationshipRepository
+      .createQueryBuilder('relationship')
+      .leftJoinAndSelect('relationship.athlete', 'athlete')
+      .leftJoinAndSelect('athlete.user', 'athleteUser')
+      .leftJoinAndSelect('athlete.tags', 'athleteTags')
+      .leftJoinAndSelect('athleteTags.category', 'athleteTagCategory')
+      .leftJoinAndSelect('relationship.coach', 'coach')
+      .leftJoinAndSelect('coach.user', 'coachUser')
+      .leftJoinAndSelect('coach.tags', 'coachTags')
+      .leftJoinAndSelect('coachTags.category', 'coachTagCategory')
+      .where('athleteUser.id = :userId', { userId })
+      .orWhere('coachUser.id = :userId', { userId })
+      .getMany();
+    this.logger.debug(`[findAll] Found ${relationships.length} relationship(s) for userId=${userId}`);
     return relationships;
   }
 

@@ -5,6 +5,8 @@ import {
   Param,
   Body,
   Logger,
+  Headers,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,6 +16,9 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import jwt from 'jsonwebtoken';
+import { TokenContent } from '../utils/types/jwt.types';
 import { RelationshipsService } from './relationships.service';
 import { CreateRelationshipDto } from './dto/create-relationship.dto';
 
@@ -44,7 +49,23 @@ const relationshipExample = {
 export class RelationshipsController {
   private readonly logger = new Logger(RelationshipsController.name);
 
-  constructor(private readonly relationshipsService: RelationshipsService) {}
+  constructor(
+    private readonly relationshipsService: RelationshipsService,
+    private readonly config: ConfigService,
+  ) {}
+
+  private extractUserId(authHeader: string): string {
+    const [name, token] = authHeader?.split(' ') ?? [];
+    if (name !== 'Bearer' || !token) throw new UnauthorizedException('Token is missing or invalid');
+    const secret = this.config.get<string>('JWT_SECRET');
+    if (!secret) throw new Error('JWT_SECRET is not defined in environment variables');
+    try {
+      const payload = jwt.verify(token, secret) as TokenContent;
+      return payload.userId;
+    } catch {
+      throw new UnauthorizedException('Token is missing or invalid');
+    }
+  }
 
   @Post()
   @ApiOperation({ summary: 'Athlete requests a coaching relationship with a coach' })
@@ -71,11 +92,13 @@ export class RelationshipsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all relationships' })
-  @ApiResponse({ status: 200, description: 'List of all relationships.', schema: { example: [relationshipExample] } })
-  async findAll() {
-    this.logger.debug(`[GET /relationships] Fetching all relationships`);
-    return this.relationshipsService.findAll();
+  @ApiOperation({ summary: 'Get your relationships (as athlete or coach, requires JWT)' })
+  @ApiResponse({ status: 200, description: 'List of relationships where you are the athlete or the coach.', schema: { example: [relationshipExample] } })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async findAll(@Headers('authorization') auth: string) {
+    this.logger.debug(`[GET /relationships] Received request`);
+    const userId = this.extractUserId(auth);
+    return this.relationshipsService.findAll(userId);
   }
 
   @Post(':id/accept')
