@@ -8,7 +8,12 @@ import { AthletesModule } from '../athletes/athletes.module';
 import { AdminsModule } from '../admins/admins.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), CoachsModule, AthletesModule, AdminsModule],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    CoachsModule,
+    AthletesModule,
+    AdminsModule,
+  ],
   controllers: [UsersController],
   providers: [UsersService],
 })

@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   S3Client,
@@ -33,7 +38,10 @@ export class CoachDocumentsService implements OnModuleInit {
 
     const credentials = {
       accessKeyId: this.config.get<string>('MINIO_ACCESS_KEY', 'minioadmin'),
-      secretAccessKey: this.config.get<string>('MINIO_SECRET_KEY', 'minioadmin'),
+      secretAccessKey: this.config.get<string>(
+        'MINIO_SECRET_KEY',
+        'minioadmin',
+      ),
     };
 
     this.s3 = new S3Client({
@@ -45,7 +53,10 @@ export class CoachDocumentsService implements OnModuleInit {
 
     this.s3Public = new S3Client({
       region: 'us-east-1',
-      endpoint: this.config.get<string>('MINIO_PUBLIC_ENDPOINT', 'http://localhost:9000'),
+      endpoint: this.config.get<string>(
+        'MINIO_PUBLIC_ENDPOINT',
+        'http://localhost:9000',
+      ),
       credentials,
       forcePathStyle: true,
     });
@@ -57,21 +68,33 @@ export class CoachDocumentsService implements OnModuleInit {
       await this.s3.send(new HeadBucketCommand({ Bucket: this.bucket }));
       this.logger.log(`Bucket "${this.bucket}" already exists.`);
     } catch (err) {
-      this.logger.warn(`Bucket "${this.bucket}" not found (${err?.message}), creating...`);
+      this.logger.warn(
+        `Bucket "${this.bucket}" not found (${err?.message}), creating...`,
+      );
       try {
         await this.s3.send(new CreateBucketCommand({ Bucket: this.bucket }));
         this.logger.log(`Bucket "${this.bucket}" created successfully.`);
       } catch (createErr) {
-        this.logger.error(`Failed to create bucket "${this.bucket}": ${createErr?.message}`, createErr?.stack);
+        this.logger.error(
+          `Failed to create bucket "${this.bucket}": ${createErr?.message}`,
+          createErr?.stack,
+        );
         throw createErr;
       }
     }
   }
 
-  async upload(file: Express.Multer.File, coachId: string): Promise<CoachDocument> {
-    this.logger.debug(`[upload] Request for coachId=${coachId}, file="${file.originalname}" (${file.mimetype}, ${file.size} bytes)`);
+  async upload(
+    file: Express.Multer.File,
+    coachId: string,
+  ): Promise<CoachDocument> {
+    this.logger.debug(
+      `[upload] Request for coachId=${coachId}, file="${file.originalname}" (${file.mimetype}, ${file.size} bytes)`,
+    );
 
-    const coach = await this.coachRepository.findOne({ where: { id: coachId } });
+    const coach = await this.coachRepository.findOne({
+      where: { id: coachId },
+    });
     if (!coach) {
       this.logger.warn(`[upload] Coach #${coachId} not found`);
       throw new NotFoundException(`Coach #${coachId} not found`);
@@ -93,7 +116,10 @@ export class CoachDocumentsService implements OnModuleInit {
       );
       this.logger.log(`[upload] File uploaded to S3 successfully: ${s3Key}`);
     } catch (err) {
-      this.logger.error(`[upload] S3 upload failed for key ${s3Key}: ${err?.message}`, err?.stack);
+      this.logger.error(
+        `[upload] S3 upload failed for key ${s3Key}: ${err?.message}`,
+        err?.stack,
+      );
       throw err;
     }
 
@@ -109,7 +135,10 @@ export class CoachDocumentsService implements OnModuleInit {
       this.logger.log(`[upload] Document saved to DB with id=${document.id}`);
       return document;
     } catch (err) {
-      this.logger.error(`[upload] Failed to save document to DB: ${err?.message}`, err?.stack);
+      this.logger.error(
+        `[upload] Failed to save document to DB: ${err?.message}`,
+        err?.stack,
+      );
       throw err;
     }
   }
@@ -121,44 +150,66 @@ export class CoachDocumentsService implements OnModuleInit {
 
     const result = await Promise.all(
       documents.map(async (doc) => {
-        this.logger.debug(`[findAll] Generating presigned URL for document id=${doc.id}, key=${doc.s3Key}`);
+        this.logger.debug(
+          `[findAll] Generating presigned URL for document id=${doc.id}, key=${doc.s3Key}`,
+        );
         try {
           const url = await this.buildPresignedUrl(doc.s3Key);
-          this.logger.debug(`[findAll] Presigned URL generated for id=${doc.id}`);
+          this.logger.debug(
+            `[findAll] Presigned URL generated for id=${doc.id}`,
+          );
           return { ...doc, url };
         } catch (err) {
-          this.logger.error(`[findAll] Failed to generate presigned URL for id=${doc.id}: ${err?.message}`, err?.stack);
+          this.logger.error(
+            `[findAll] Failed to generate presigned URL for id=${doc.id}: ${err?.message}`,
+            err?.stack,
+          );
           throw err;
         }
       }),
     );
 
-    this.logger.log(`[findAll] Returning ${result.length} document(s) with presigned URLs`);
+    this.logger.log(
+      `[findAll] Returning ${result.length} document(s) with presigned URLs`,
+    );
     return result;
   }
 
   async accept(id: string): Promise<{ message: string }> {
     this.logger.debug(`[accept] Request to accept document id=${id}`);
     const document = await this.findOne(id);
-    this.logger.debug(`[accept] Document found, linked to coachId=${document.coach.id}`);
+    this.logger.debug(
+      `[accept] Document found, linked to coachId=${document.coach.id}`,
+    );
 
     try {
-      await this.coachRepository.update(document.coach.id, { isApproved: true });
-      this.logger.log(`[accept] Coach #${document.coach.id} marked as approved`);
+      await this.coachRepository.update(document.coach.id, {
+        isApproved: true,
+      });
+      this.logger.log(
+        `[accept] Coach #${document.coach.id} marked as approved`,
+      );
     } catch (err) {
-      this.logger.error(`[accept] Failed to update coach approval status: ${err?.message}`, err?.stack);
+      this.logger.error(
+        `[accept] Failed to update coach approval status: ${err?.message}`,
+        err?.stack,
+      );
       throw err;
     }
 
     await this.deleteDocument(document);
     this.logger.log(`[accept] Document id=${id} deleted after approval`);
-    return { message: `Coach ${document.coach.id} approved and document deleted.` };
+    return {
+      message: `Coach ${document.coach.id} approved and document deleted.`,
+    };
   }
 
   async refuse(id: string): Promise<{ message: string }> {
     this.logger.debug(`[refuse] Request to refuse document id=${id}`);
     const document = await this.findOne(id);
-    this.logger.debug(`[refuse] Document found, linked to coachId=${document.coach.id}`);
+    this.logger.debug(
+      `[refuse] Document found, linked to coachId=${document.coach.id}`,
+    );
 
     await this.deleteDocument(document);
     this.logger.log(`[refuse] Document id=${id} refused and deleted`);
@@ -186,20 +237,32 @@ export class CoachDocumentsService implements OnModuleInit {
   }
 
   private async deleteDocument(document: CoachDocument): Promise<void> {
-    this.logger.debug(`[deleteDocument] Deleting from S3: key=${document.s3Key}`);
+    this.logger.debug(
+      `[deleteDocument] Deleting from S3: key=${document.s3Key}`,
+    );
     try {
-      await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: document.s3Key }));
+      await this.s3.send(
+        new DeleteObjectCommand({ Bucket: this.bucket, Key: document.s3Key }),
+      );
       this.logger.log(`[deleteDocument] S3 object deleted: ${document.s3Key}`);
     } catch (err) {
-      this.logger.error(`[deleteDocument] Failed to delete S3 object ${document.s3Key}: ${err?.message}`, err?.stack);
+      this.logger.error(
+        `[deleteDocument] Failed to delete S3 object ${document.s3Key}: ${err?.message}`,
+        err?.stack,
+      );
       throw err;
     }
 
     try {
       await this.documentRepository.remove(document);
-      this.logger.log(`[deleteDocument] Document id=${document.id} removed from DB`);
+      this.logger.log(
+        `[deleteDocument] Document id=${document.id} removed from DB`,
+      );
     } catch (err) {
-      this.logger.error(`[deleteDocument] Failed to remove document id=${document.id} from DB: ${err?.message}`, err?.stack);
+      this.logger.error(
+        `[deleteDocument] Failed to remove document id=${document.id} from DB: ${err?.message}`,
+        err?.stack,
+      );
       throw err;
     }
   }
