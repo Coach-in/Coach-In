@@ -83,7 +83,7 @@ export class UsersController {
           },
           required: ['email', 'username', 'password', 'role', 'coachProfile'],
         },
-          {
+        {
           title: 'Admin signup',
           properties: {
             email: { type: 'string', format: 'email' },
@@ -137,7 +137,8 @@ export class UsersController {
   })
   @ApiResponse({
     status: 201,
-    description: 'Returns the created user object, the role profile (athlete or coach) with their tags, and a JWT access token.',
+    description:
+      'Returns the created user object, the role profile (athlete or coach) with their tags, and a JWT access token.',
     content: {
       'application/json': {
         examples: {
@@ -156,8 +157,16 @@ export class UsersController {
                 age: 22,
                 goals: 'Improve endurance',
                 tags: [
-                  { id: 'tag-uuid-1', name: 'Football', category: { id: 'cat-uuid-1', name: 'Sport' } },
-                  { id: 'tag-uuid-2', name: 'Casual', category: { id: 'cat-uuid-2', name: 'Experience level' } },
+                  {
+                    id: 'tag-uuid-1',
+                    name: 'Football',
+                    category: { id: 'cat-uuid-1', name: 'Sport' },
+                  },
+                  {
+                    id: 'tag-uuid-2',
+                    name: 'Casual',
+                    category: { id: 'cat-uuid-2', name: 'Experience level' },
+                  },
                 ],
               },
               token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature',
@@ -178,8 +187,16 @@ export class UsersController {
                 specialty: 'Strength & Conditioning',
                 bio: '10 years of experience in professional sports',
                 tags: [
-                  { id: 'tag-uuid-1', name: 'Football', category: { id: 'cat-uuid-1', name: 'Sport' } },
-                  { id: 'tag-uuid-3', name: 'Advanced', category: { id: 'cat-uuid-2', name: 'Experience level' } },
+                  {
+                    id: 'tag-uuid-1',
+                    name: 'Football',
+                    category: { id: 'cat-uuid-1', name: 'Sport' },
+                  },
+                  {
+                    id: 'tag-uuid-3',
+                    name: 'Advanced',
+                    category: { id: 'cat-uuid-2', name: 'Experience level' },
+                  },
                 ],
               },
               token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature',
@@ -238,7 +255,8 @@ export class UsersController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Returns the authenticated user object and a JWT access token.',
+    description:
+      'Returns the authenticated user object and a JWT access token.',
     content: {
       'application/json': {
         example: {

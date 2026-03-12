@@ -11,4 +11,3 @@ import { Admin } from './entities/admin.entity';
   exports: [AdminsService],
 })
 export class AdminsModule {}
-

@@ -29,7 +29,15 @@ import { CoachDocument } from './coach-documents/entities/coach-document.entity'
         username: config.get<string>('DB_USER'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: [User, Coach, Athlete, Tag, TagCategory, Admin, CoachDocument],
+        entities: [
+          User,
+          Coach,
+          Athlete,
+          Tag,
+          TagCategory,
+          Admin,
+          CoachDocument,
+        ],
         synchronize: true,
         extra: {
           max: 10,

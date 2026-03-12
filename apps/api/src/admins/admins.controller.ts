@@ -43,7 +43,9 @@ export class AdminsController {
 
   @Get('me')
   @ApiBearerAuth('access-token')
-  @ApiOperation({ summary: 'Get the admin profile of the currently authenticated user' })
+  @ApiOperation({
+    summary: 'Get the admin profile of the currently authenticated user',
+  })
   @ApiResponse({
     status: 200,
     description: 'Returns the admin profile linked to the authenticated user.',
@@ -52,16 +54,29 @@ export class AdminsController {
   @ApiResponse({
     status: 401,
     description: 'Token missing or invalid',
-    schema: { example: { statusCode: 401, message: 'Token is missing or invalid', error: 'Unauthorized' } },
+    schema: {
+      example: {
+        statusCode: 401,
+        message: 'Token is missing or invalid',
+        error: 'Unauthorized',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Admin profile not found for this user',
-    schema: { example: { statusCode: 404, message: 'Admin profile not found for user <userId>', error: 'Not Found' } },
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Admin profile not found for user <userId>',
+        error: 'Not Found',
+      },
+    },
   })
   async findMe(@Headers('authorization') authHeader: string) {
     const [scheme, token] = authHeader?.split(' ') ?? [];
-    if (scheme !== 'Bearer' || !token) throw new UnauthorizedException('Token is missing or invalid');
+    if (scheme !== 'Bearer' || !token)
+      throw new UnauthorizedException('Token is missing or invalid');
     const secret = this.config.get<string>('JWT_SECRET');
     if (!secret) throw new Error('JWT_SECRET is not defined');
     const decoded = jwt.verify(token, secret) as TokenContent;
@@ -83,7 +98,11 @@ export class AdminsController {
   @Get(':id')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Get an admin by id' })
-  @ApiParam({ name: 'id', example: 'a1b2c3d4-1234-5678-abcd-ef0123456789', description: 'UUID of the admin' })
+  @ApiParam({
+    name: 'id',
+    example: 'a1b2c3d4-1234-5678-abcd-ef0123456789',
+    description: 'UUID of the admin',
+  })
   @ApiResponse({
     status: 200,
     description: 'Returns the admin profile.',
@@ -92,7 +111,13 @@ export class AdminsController {
   @ApiResponse({
     status: 404,
     description: 'Admin not found',
-    schema: { example: { statusCode: 404, message: 'Admin #<id> not found', error: 'Not Found' } },
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Admin #<id> not found',
+        error: 'Not Found',
+      },
+    },
   })
   findOne(@Param('id') id: string) {
     return this.adminsService.findOne(id);
@@ -101,7 +126,11 @@ export class AdminsController {
   @Patch(':id')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Update an admin by id' })
-  @ApiParam({ name: 'id', example: 'a1b2c3d4-1234-5678-abcd-ef0123456789', description: 'UUID of the admin' })
+  @ApiParam({
+    name: 'id',
+    example: 'a1b2c3d4-1234-5678-abcd-ef0123456789',
+    description: 'UUID of the admin',
+  })
   @ApiBody({ type: UpdateAdminDto })
   @ApiResponse({
     status: 200,
@@ -111,7 +140,13 @@ export class AdminsController {
   @ApiResponse({
     status: 404,
     description: 'Admin not found',
-    schema: { example: { statusCode: 404, message: 'Admin #<id> not found', error: 'Not Found' } },
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Admin #<id> not found',
+        error: 'Not Found',
+      },
+    },
   })
   update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
     return this.adminsService.update(id, updateAdminDto);
@@ -120,21 +155,33 @@ export class AdminsController {
   @Delete(':id')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Delete an admin by id' })
-  @ApiParam({ name: 'id', example: 'a1b2c3d4-1234-5678-abcd-ef0123456789', description: 'UUID of the admin' })
+  @ApiParam({
+    name: 'id',
+    example: 'a1b2c3d4-1234-5678-abcd-ef0123456789',
+    description: 'UUID of the admin',
+  })
   @ApiResponse({
     status: 200,
     description: 'Admin successfully deleted.',
-    schema: { example: { message: 'Admin a1b2c3d4-1234-5678-abcd-ef0123456789 deleted successfully' } },
+    schema: {
+      example: {
+        message:
+          'Admin a1b2c3d4-1234-5678-abcd-ef0123456789 deleted successfully',
+      },
+    },
   })
   @ApiResponse({
     status: 404,
     description: 'Admin not found',
-    schema: { example: { statusCode: 404, message: 'Admin #<id> not found', error: 'Not Found' } },
+    schema: {
+      example: {
+        statusCode: 404,
+        message: 'Admin #<id> not found',
+        error: 'Not Found',
+      },
+    },
   })
   remove(@Param('id') id: string) {
     return this.adminsService.remove(id);
   }
 }
-
-
-
