@@ -44,7 +44,7 @@ export default function LoginPage() {
       });
       console.log("Token stocké en cookie", data.token);
 
-      router.push(role === "athlete" ? "/profilesportif" : "/profilecoach");
+      router.push(role === "athlete" ? "/profilsportif" : "/profilecoach");
 
     } catch {
       setError("Impossible de contacter le serveur. Réessayez.");

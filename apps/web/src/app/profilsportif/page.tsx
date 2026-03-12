@@ -89,6 +89,14 @@ export default function AthleteProfile() {
   const handleSaveGoals = async () => {
     setEditGoals(false);
   };
+  
+  const handleDisconnection = () => {
+    fetch("/api/auth/set-token", {
+      method: "DELETE",
+    }).then(() => {
+      router.push("/login");
+    },);
+  };
 
   const unread = MOCK_MESSAGES.filter((m) => !m.read).length;
 
@@ -125,7 +133,7 @@ export default function AthleteProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1c232d] via-[#162644] to-[#0c336f] text-[#f0eee8] px-[5vw] py-25">
+    <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] via-[#162644] to-[#0c336f] text-[#f0eee8] px-[5vw] py-25">
       <div className="max-w-4xl mx-auto flex flex-col gap-6">
 
         <div className="relative rounded-2xl overflow-hidden border border-[rgba(201,168,76,0.8)] bg-[#0d1528]">
@@ -159,6 +167,10 @@ export default function AthleteProfile() {
                 </div>
               </div>
 
+              <button onClick={() => handleDisconnection()}
+              className="text-black px-4 py-1.5 hover:text-[#1c232d] rounded-lg bg-gradient-to-br from-red-300 to-red-500 font-bold hover:-translate-y-0.5 transition-all">
+                  Se déconnecter
+              </button>
               <div className="flex gap-0 border border-[rgba(201,168,76,0.18)] rounded-xl overflow-hidden">
                 {[
                   { n: MOCK_PROGRAMMES.length, l: "Programmes" },
