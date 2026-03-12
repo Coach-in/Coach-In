@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import './start_page.dart';
@@ -17,7 +16,8 @@ class _ExplorePageState extends State<ExplorePage> {
   bool _isLoggingOut = false;
   String? _errorMessage;
 
-  final AuthService _authService = AuthService();
+  // final AuthService _authService = AuthService();
+  final ApiService _apiService = ApiService();
 
   Future<void> _logout() async {
     setState(() {
@@ -25,23 +25,25 @@ class _ExplorePageState extends State<ExplorePage> {
       _errorMessage = null;
     });
 
-    final result = await _authService.logout();
+    await _apiService.clearTokens();
 
-    if (!mounted) return;
+    // final result = await _authService.logout();
 
-    setState(() => _isLoggingOut = false);
+    // if (!mounted) return;
 
-    if (result['success']) {
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const StartPage()),
-      );
-    } else {
-      setState(() {
-        _errorMessage = result['message'];
-      });
-    }
+    // setState(() => _isLoggingOut = false);
+
+    // if (result['success']) {
+    //   if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const StartPage()),
+    );
+    // } else {
+    //   setState(() {
+    //     _errorMessage = result['message'];
+    //   });
+    // }
   }
 
   @override

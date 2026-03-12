@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import './start_page.dart';
 import './explore_page.dart';
 import './login.dart';
+import 'register_info.dart';
 
 import '../services/api_service.dart';
 import '../services/oauth_service.dart';
@@ -24,48 +25,58 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool _isLoading = false;
   bool _isOAuthLoading = false;
+  bool _isCoach = false;
   String? _errorMessage;
 
-  final AuthService _authService = AuthService();
   final ApiService _apiService = ApiService();
 
-  Future<void> _register() async {
+  Future<void> _continue() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final result = await _authService.register(
-      _userController.text.trim(),
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => RegisterInfoPage(
+        email: _emailController.text.trim(),
+        user: _userController.text.trim(),
+        password: _passwordController.text.trim(),
+        isCoach: _isCoach
+      ))
     );
 
-    if (!mounted) return;
+    // final result = await _authService.register(
+    //   _userController.text.trim(),
+    //   _emailController.text.trim(),
+    //   _passwordController.text.trim(),
+    // );
 
-    setState(() => _isLoading = false);
+    // if (!mounted) return;
 
-    if (result['success']) {
-      final data = result['data'];
-      final user = data['user'];
-      final accessToken = data['token'];
-      final refreshToken = user['refresh_token'];
+    // setState(() => _isLoading = false);
 
-      await _storage.write(key: 'accessToken', value: accessToken);
-      await _storage.write(key: 'refreshToken', value: refreshToken);
-      await _storage.write(key: 'rememberMe', value: true.toString());
+    // if (result['success']) {
+    //   final data = result['data'];
+    //   final user = data['user'];
+    //   final accessToken = data['token'];
+    //   final refreshToken = user['refresh_token'];
 
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ExplorePage()),
-      );
-    } else {
-      setState(() {
-        _errorMessage =
-            result['message'] ?? 'Invalid credentials. Please try again.';
-      });
-    }
+    //   await _storage.write(key: 'accessToken', value: accessToken);
+    //   await _storage.write(key: 'refreshToken', value: refreshToken);
+    //   await _storage.write(key: 'rememberMe', value: true.toString());
+
+    //   if (!mounted) return;
+    //   Navigator.pushReplacement(
+    //     context,
+    //     MaterialPageRoute(builder: (context) => const ExplorePage()),
+    //   );
+    // } else {
+    //   setState(() {
+    //     _errorMessage =
+    //         result['message'] ?? 'Invalid credentials. Please try again.';
+    //   });
+    // }
   }
 
   Future<void> _registerWithGoogle() async {
@@ -166,9 +177,22 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
             ),
+
+            Row(
+              children: [
+                Checkbox(
+                  value: _isCoach,
+                  onChanged: (val) {
+                    setState(() => _isCoach = val ?? false);
+                  },
+                  activeColor: Color(0xffffd398),
+                ),
+                Text('I am a coach', style: GoogleFonts.montserrat(fontSize: 13, color: Color(0xffffd398))),
+              ],
+            ),
+
             const SizedBox(height: 20),
 
-            // Error message
             if (_errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -178,11 +202,10 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
 
-            // Email/Password Register button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isLoading || _isOAuthLoading ? null : _register,
+                onPressed: _isLoading || _isOAuthLoading ? null : _continue,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
@@ -193,7 +216,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Color(0xffd1d5dc))
                     : Text(
-                        'Register',
+                        'Continue',
                         style: GoogleFonts.montserrat(
                           fontSize: 16,
                           color: Colors.black,

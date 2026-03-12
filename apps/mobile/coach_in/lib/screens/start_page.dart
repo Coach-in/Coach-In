@@ -17,7 +17,7 @@ class StartPage extends StatelessWidget {
           children: [
             const Spacer(),
             Text(
-              "Coach\'In",
+              "Coach'In",
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleLarge,
             ),
