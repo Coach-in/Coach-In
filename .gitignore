@@ -1,0 +1,9 @@
+.env
+.env.local
+!.env.example
+
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+*.txt
