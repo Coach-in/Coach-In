@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:io';
 
 import '../config/api_config.dart';
 
 import 'dart:developer' as developer;
+import 'package:pretty_json/pretty_json.dart';
 
 class ApiService {
   static final ApiService _instance = ApiService._internal();
@@ -127,17 +129,34 @@ class ApiService {
     );
   }
 
-  Future<http.Response> filePost(String endpoint, File? body,
-      {bool withAuth = false}) async {
+  Future<http.Response> filePost(String endpoint, File file, String extension,
+    {bool withAuth = false}) async {
     final baseUrl = ApiConfig.getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
 
-    return _sendRequest(
-      (headers) => http
-          .post(url, headers: headers, body: jsonEncode(body))
-          .timeout(ApiConfig.requestTimeout),
-      withAuth: withAuth,
-    );
+    final headers = <String, String>{};
+    if (withAuth) {
+      final token = await _storage.read(key: 'accessToken');
+      if (token != null) headers['Authorization'] = 'Bearer $token';
+    }
+
+    final contentType = switch (extension) {
+      'pdf'           => 'application/pdf',
+      'png'           => 'image/png',
+      'jpg' || 'jpeg' => 'image/jpeg',
+      _ => throw Exception('Unsupported file type: $extension. Must be PDF, PNG, or JPEG.'),
+    };
+
+    final request = http.MultipartRequest('POST', url)
+      ..headers.addAll(headers)
+      ..files.add(await http.MultipartFile.fromPath(
+        'file',
+        file.path,
+        contentType: MediaType.parse(contentType),
+      ));
+
+    final streamed = await request.send().timeout(ApiConfig.requestTimeout);
+    return http.Response.fromStream(streamed);
   }
 
   Future<http.Response> put(String endpoint, Map<String, dynamic> body,
@@ -177,19 +196,28 @@ class ApiService {
     }
   }
 
-  Future<void> uploadCertification(String coachId, File? body) async {
-    try {
-      developer.log("I AM HERE YOOOOOHOOOOOOO");
-      final response = await filePost('/coach-documents/upload/$coachId', body);
-      developer.log(body.toString());
+  Future<void> uploadCertification(String coachId, File file, String extension) async {
+    if (!['pdf', 'png', 'jpg', 'jpeg'].contains(extension)) {
+      throw Exception('Unsupported file type: $extension. Must be PDF, PNG, or JPEG.');
+    }
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+    try {
+      final response = await filePost(
+        '/coach-documents/upload/$coachId',
+        file,
+        extension,
+        withAuth: true,
+      );
+
+      developer.log(response.statusCode.toString());
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return;
       } else {
         throw Exception('Failed to upload certification (${response.statusCode})');
       }
     } catch (e) {
-      throw Exception('An error occured: $e');
+      throw Exception('An error occurred: $e');
     }
   }
 
@@ -213,7 +241,9 @@ class AuthService {
       developer.log(response.statusCode.toString());
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        developer.log(response.body.toString());
+        developer.log(prettyJson(response.body));
+        printPrettyJson(response.body, indent: 2);
+        // developer.log(response.body.toString());
         return {'success': true, 'data': jsonDecode(response.body)};
       } else {
         return {
@@ -276,26 +306,6 @@ class AuthService {
         return {
           'success': false,
           'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
-          'details': response.body
-        };
-      }
-    } catch (e) {
-      return {'success': false, 'message': 'An error occurred: $e'};
-    }
-  }
-
-  Future<Map<String, dynamic>> logout() async {
-    try {
-      final response =
-          await _apiService.post('/users/auth/logout', {}, withAuth: true);
-
-      if (response.statusCode == 200) {
-        await _apiService.clearTokens();
-        return {'success': true};
-      } else {
-        return {
-          'success': false,
-          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
           'details': response.body
         };
       }

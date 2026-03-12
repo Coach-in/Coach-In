@@ -43,6 +43,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
 
   File? _certificationFile;
   String? _certificationFileName;
+  String? _certificationExtension;
 
   final AuthService _authService = AuthService();
   final ApiService _apiService = ApiService();
@@ -68,18 +69,19 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
   Future<void> _pickCertification() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'png', "jpeg"],
+      allowedExtensions: ['pdf', 'png', "jpg", "jpeg"],
     );
     if (result != null && result.files.single.path != null) {
       setState(() {
         _certificationFile = File(result.files.single.path!);
         _certificationFileName = result.files.single.name;
+        _certificationExtension = result.files.single.extension?.toLowerCase();
       });
     }
   }
 
   Future<void> _uploadCertification(String id) async {
-    _apiService.uploadCertification(id, _certificationFile!);
+    _apiService.uploadCertification(id, _certificationFile!, _certificationExtension!);
   }
 
   bool _validate() {
@@ -139,7 +141,8 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
     if (result['success'] == true) {
       final data = result['data'];
       final user = data['user'];
-      final id = user['id'];
+      final coach = data['coach'];
+      final id = coach['id'];
       final accessToken = data['token'] as String;
 
       await _storage.write(key: 'accessToken', value: accessToken);
