@@ -29,8 +29,11 @@ export class AdminsService {
   }
 
   async findMe(userId: string): Promise<Admin> {
-    const admin = await this.adminRepository.findOne({ where: { user: { id: userId } } });
-    if (!admin) throw new NotFoundException(`Admin profile not found for user ${userId}`);
+    const admin = await this.adminRepository.findOne({
+      where: { user: { id: userId } },
+    });
+    if (!admin)
+      throw new NotFoundException(`Admin profile not found for user ${userId}`);
     return admin;
   }
 

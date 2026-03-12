@@ -10,4 +10,3 @@ export class Admin {
   @JoinColumn({ name: 'user_id' })
   user: User;
 }
-

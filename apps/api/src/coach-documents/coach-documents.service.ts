@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   S3Client,
@@ -33,7 +38,10 @@ export class CoachDocumentsService implements OnModuleInit {
 
     const credentials = {
       accessKeyId: this.config.get<string>('MINIO_ACCESS_KEY', 'minioadmin'),
-      secretAccessKey: this.config.get<string>('MINIO_SECRET_KEY', 'minioadmin'),
+      secretAccessKey: this.config.get<string>(
+        'MINIO_SECRET_KEY',
+        'minioadmin',
+      ),
     };
 
     this.s3 = new S3Client({
@@ -45,7 +53,10 @@ export class CoachDocumentsService implements OnModuleInit {
 
     this.s3Public = new S3Client({
       region: 'us-east-1',
-      endpoint: this.config.get<string>('MINIO_PUBLIC_ENDPOINT', 'http://localhost:9000'),
+      endpoint: this.config.get<string>(
+        'MINIO_PUBLIC_ENDPOINT',
+        'http://localhost:9000',
+      ),
       credentials,
       forcePathStyle: true,
     });
@@ -62,8 +73,13 @@ export class CoachDocumentsService implements OnModuleInit {
     }
   }
 
-  async upload(file: Express.Multer.File, coachId: string): Promise<CoachDocument> {
-    const coach = await this.coachRepository.findOne({ where: { id: coachId } });
+  async upload(
+    file: Express.Multer.File,
+    coachId: string,
+  ): Promise<CoachDocument> {
+    const coach = await this.coachRepository.findOne({
+      where: { id: coachId },
+    });
     if (!coach) throw new NotFoundException(`Coach #${coachId} not found`);
 
     const ext = file.originalname.split('.').pop();
@@ -102,7 +118,9 @@ export class CoachDocumentsService implements OnModuleInit {
     const document = await this.findOne(id);
     await this.coachRepository.update(document.coach.id, { isApproved: true });
     await this.deleteDocument(document);
-    return { message: `Coach ${document.coach.id} approved and document deleted.` };
+    return {
+      message: `Coach ${document.coach.id} approved and document deleted.`,
+    };
   }
 
   async refuse(id: string): Promise<{ message: string }> {
@@ -126,7 +144,9 @@ export class CoachDocumentsService implements OnModuleInit {
   }
 
   private async deleteDocument(document: CoachDocument): Promise<void> {
-    await this.s3.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: document.s3Key }));
+    await this.s3.send(
+      new DeleteObjectCommand({ Bucket: this.bucket, Key: document.s3Key }),
+    );
     await this.documentRepository.remove(document);
   }
 }
