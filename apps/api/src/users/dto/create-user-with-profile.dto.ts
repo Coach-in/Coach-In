@@ -10,6 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { CreateAthleteDto } from '../../athletes/dto/create-athlete.dto';
 import { CreateCoachDto } from '../../coachs/dto/create-coach.dto';
+import { CreateAdminDto } from '../../admins/dto/create-admin.dto';
 import { UserRole } from '../../utils/types/jwt.types';
 
 export class CreateUserWithProfileDto {
@@ -34,4 +35,9 @@ export class CreateUserWithProfileDto {
   @ValidateNested()
   @Type(() => CreateCoachDto)
   coachProfile?: CreateCoachDto;
+
+  @ValidateIf((o) => o.role === UserRole.ADMIN)
+  @ValidateNested()
+  @Type(() => CreateAdminDto)
+  adminProfile?: CreateAdminDto;
 }
