@@ -102,7 +102,7 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
           backgroundColor: accept ? Colors.green : Colors.red,
         ),
       );
-      Navigator.pop(context); // Return to list
+      Navigator.pop(context);
     } catch (e) {
       setState(() => _errorMessage = 'Action failed. Please try again.');
     } finally {
@@ -160,7 +160,7 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
           decoration: BoxDecoration(
             border: Border.all(color: Colors.white12),
             borderRadius: BorderRadius.circular(10),
-            color: Colors.white.withOpacity(0.04),
+            color: Colors.white,
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
@@ -208,7 +208,7 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
             const SizedBox(height: 12),
             GestureDetector(
               onTap: () {
-                // url_launcher can be used here if added to pubspec
+                // open document
                 // launchUrl(Uri.parse(url));
               },
               child: Text(
@@ -254,11 +254,9 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
           children: [
             const SizedBox(height: 4),
 
-            // ── Document preview ──────────────────────────────────────────
             _buildDocumentPreview(),
             const SizedBox(height: 24),
 
-            // ── Document details ──────────────────────────────────────────
             Text(
               'Details',
               style: Theme.of(context).textTheme.labelSmall,
@@ -270,7 +268,7 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white12),
                 borderRadius: BorderRadius.circular(10),
-                color: Colors.white.withOpacity(0.04),
+                color: Colors.white,
               ),
               child: Column(
                 children: [
@@ -289,7 +287,6 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
             ),
             const SizedBox(height: 24),
 
-            // ── Error ─────────────────────────────────────────────────────
             if (_errorMessage != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
@@ -300,15 +297,14 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
                 ),
               ),
 
-            // ── Action buttons ────────────────────────────────────────────
             if (_isApproved)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withOpacity(0.4)),
+                  border: Border.all(color: Colors.green),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -329,7 +325,6 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
             else
               Row(
                 children: [
-                  // Refuse
                   Expanded(
                     child: SizedBox(
                       height: 50,
@@ -363,7 +358,6 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Accept
                   Expanded(
                     child: SizedBox(
                       height: 50,
