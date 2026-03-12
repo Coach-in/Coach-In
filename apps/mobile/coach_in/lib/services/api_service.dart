@@ -276,6 +276,49 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> fetchCurrentUser() async {
+    final response = await get('/users/me', withAuth: true);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch user');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchCoachInfo() async {
+    final response = await get('/coachs/me', withAuth: true);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch coach info');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchAthleteInfo() async {
+    try {
+      final response = await get('/athletes/me', withAuth: true);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch athlete info (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchCoachById(String id) async {
+    final response = await get('/coachs/$id', withAuth: true);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch coach');
+    }
+  }
+
 }
 
 class AuthService {
