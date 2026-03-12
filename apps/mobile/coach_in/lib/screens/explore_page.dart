@@ -15,9 +15,28 @@ class ExplorePage extends StatefulWidget {
 class _ExplorePageState extends State<ExplorePage> {
   bool _isLoggingOut = false;
   String? _errorMessage;
+  List<dynamic> _coaches = [];
 
-  // final AuthService _authService = AuthService();
   final ApiService _apiService = ApiService();
+
+  @override
+  void initState() {
+    super.initState();
+    _getCoaches();
+  }
+
+  Future<void> _getCoaches() async {
+    try {
+      final coaches = await _apiService.fetchCoaches();
+      setState(() {
+        _coaches = coaches;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    }
+  }
 
   Future<void> _logout() async {
     setState(() {
@@ -26,24 +45,10 @@ class _ExplorePageState extends State<ExplorePage> {
     });
 
     await _apiService.clearTokens();
-
-    // final result = await _authService.logout();
-
-    // if (!mounted) return;
-
-    // setState(() => _isLoggingOut = false);
-
-    // if (result['success']) {
-    //   if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const StartPage()),
     );
-    // } else {
-    //   setState(() {
-    //     _errorMessage = result['message'];
-    //   });
-    // }
   }
 
   @override

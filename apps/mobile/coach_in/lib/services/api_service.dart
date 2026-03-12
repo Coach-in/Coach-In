@@ -263,6 +263,19 @@ class ApiService {
     }
   }
 
+  Future<List<dynamic>> fetchCoaches() async {
+    try {
+      final response = await get('/coachs', withAuth: true);
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to fetch coachs (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occurred: $e');
+    }
+  }
+
 }
 
 class AuthService {
