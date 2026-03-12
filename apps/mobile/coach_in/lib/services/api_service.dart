@@ -162,14 +162,13 @@ class ApiService {
     return http.Response.fromStream(streamed);
   }
 
-  Future<http.Response> patch(String endpoint, Map<String, dynamic> body,
-      {bool withAuth = false}) async {
+  Future<http.Response> patch(String endpoint, {bool withAuth = false}) async {
     final baseUrl = ApiConfig.getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
 
     return _sendRequest(
       (headers) => http
-          .patch(url, headers: headers, body: jsonEncode(body))
+          .patch(url, headers: headers)
           .timeout(ApiConfig.requestTimeout),
       withAuth: withAuth,
     );
