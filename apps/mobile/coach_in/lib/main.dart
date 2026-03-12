@@ -63,7 +63,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  // final ApiService _apiService = ApiService();
+  final ApiService _apiService = ApiService();
 
   @override
   void initState() {
@@ -72,9 +72,9 @@ class _SplashScreenState extends State<SplashScreen> {
     _checkLoginStatus();
   }
 
-  // Future<void> _logout() async {
-  //   await _apiService.clearTokens();
-  // }
+  Future<void> _logout() async {
+    await _apiService.clearTokens();
+  }
 
   Future<void> _checkLoginStatus() async {
     await Future.delayed(const Duration(milliseconds: 800));
