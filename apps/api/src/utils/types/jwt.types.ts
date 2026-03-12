@@ -6,4 +6,5 @@ export interface TokenContent {
 export enum UserRole {
   ATHLETE = 'athlete',
   COACH = 'coach',
+  ADMIN = 'admin',
 }
