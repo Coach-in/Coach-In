@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:io';
 
 import '../config/api_config.dart';
 
@@ -126,6 +127,19 @@ class ApiService {
     );
   }
 
+  Future<http.Response> filePost(String endpoint, File? body,
+      {bool withAuth = false}) async {
+    final baseUrl = ApiConfig.getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    return _sendRequest(
+      (headers) => http
+          .post(url, headers: headers, body: jsonEncode(body))
+          .timeout(ApiConfig.requestTimeout),
+      withAuth: withAuth,
+    );
+  }
+
   Future<http.Response> put(String endpoint, Map<String, dynamic> body,
       {bool withAuth = false}) async {
     final baseUrl = ApiConfig.getBaseUrl();
@@ -163,6 +177,22 @@ class ApiService {
     }
   }
 
+  Future<void> uploadCertification(String coachId, File? body) async {
+    try {
+      developer.log("I AM HERE YOOOOOHOOOOOOO");
+      final response = await filePost('/coach-documents/upload/$coachId', body);
+      developer.log(body.toString());
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to upload certification (${response.statusCode})');
+      }
+    } catch (e) {
+      throw Exception('An error occured: $e');
+    }
+  }
+
 }
 
 class AuthService {
@@ -177,6 +207,8 @@ class AuthService {
         'role': "coach",
         'coachProfile': profile
       });
+      developer.log(profile.toString());
+      developer.log(response.body.toString());
 
       developer.log(response.statusCode.toString());
 

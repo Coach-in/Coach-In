@@ -8,7 +8,6 @@ import './start_page.dart';
 import './explore_page.dart';
 
 import '../services/api_service.dart';
-import '../services/oauth_service.dart';
 
 class RegisterInfoPage extends StatefulWidget {
   final String email;
@@ -69,7 +68,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
   Future<void> _pickCertification() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['pdf', 'png'],
+      allowedExtensions: ['pdf', 'png', "jpeg"],
     );
     if (result != null && result.files.single.path != null) {
       setState(() {
@@ -79,23 +78,8 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
     }
   }
 
-  Future<void> _uploadCertification(String accessToken) async {
-    // try {
-    //   await _apiService.uploadFile(
-    //     '/coach/certification',   // adjust to your actual endpoint
-    //     _certificationFile!,
-    //     accessToken: accessToken,
-    //   );
-    // } catch (e) {
-    //   if (mounted) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       const SnackBar(
-    //         content: Text('Account created, but certification upload failed. You can retry in your profile.'),
-    //         backgroundColor: Colors.orange,
-    //       ),
-    //     );
-    //   }
-    // }
+  Future<void> _uploadCertification(String id) async {
+    _apiService.uploadCertification(id, _certificationFile!);
   }
 
   bool _validate() {
@@ -143,7 +127,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       widget.email,
       widget.password,
       {
-        'speciality': _specialityController.text.trim(),
+        'specialty': _specialityController.text.trim(),
         'bio': _bioController.text.trim(),
         'tagNames': _selectedTags.map((t) => t['name']).toList(),
       },
@@ -155,13 +139,14 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
     if (result['success'] == true) {
       final data = result['data'];
       final user = data['user'];
+      final id = user['id'];
       final accessToken = data['token'] as String;
 
       await _storage.write(key: 'accessToken', value: accessToken);
-      await _storage.write(key: 'refreshToken', value: user['refresh_token'] as String);
+      await _storage.write(key: 'refreshToken', value: user['refresh_token']);
       await _storage.write(key: 'rememberMe', value: true.toString());
 
-      await _uploadCertification(accessToken);
+      await _uploadCertification(id);
 
       if (!mounted) return;
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ExplorePage()));
@@ -192,7 +177,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       final user = data['user'];
 
       await _storage.write(key: 'accessToken', value: data['token'] as String);
-      await _storage.write(key: 'refreshToken', value: user['refresh_token'] as String);
+      await _storage.write(key: 'refreshToken', value: user['refresh_token']);
       await _storage.write(key: 'rememberMe', value: true.toString());
 
       if (!mounted) return;
@@ -374,7 +359,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
         title: Text('Register', style: Theme.of(context).textTheme.titleMedium),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xffffd398)),
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StartPage())),
+          onPressed: () => Navigator.pop(context),
           tooltip: 'Back',
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -410,7 +395,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text('Certification (PDF or PNG) *', style: Theme.of(context).textTheme.labelSmall),
+              Text('Certification (PDF, PNG, JPEG) *', style: Theme.of(context).textTheme.labelSmall),
               const SizedBox(height: 8),
               GestureDetector(
                 onTap: _pickCertification,
