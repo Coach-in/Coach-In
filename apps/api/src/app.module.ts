@@ -16,6 +16,10 @@ import { AdminsModule } from './admins/admins.module';
 import { Admin } from './admins/entities/admin.entity';
 import { CoachDocumentsModule } from './coach-documents/coach-documents.module';
 import { CoachDocument } from './coach-documents/entities/coach-document.entity';
+import { RelationshipsModule } from './relationships/relationships.module';
+import { Relationship } from './relationships/entities/relationship.entity';
+import { NotificationsModule } from './notifications/notifications.module';
+import { Notification } from './notifications/entities/notification.entity';
 
 @Module({
   imports: [
@@ -37,6 +41,8 @@ import { CoachDocument } from './coach-documents/entities/coach-document.entity'
           TagCategory,
           Admin,
           CoachDocument,
+          Relationship,
+          Notification,
         ],
         synchronize: true,
         extra: {
@@ -51,6 +57,8 @@ import { CoachDocument } from './coach-documents/entities/coach-document.entity'
     TagsModule,
     AdminsModule,
     CoachDocumentsModule,
+    RelationshipsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

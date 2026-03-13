@@ -53,8 +53,8 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: isApproved
-            ? Colors.green.withOpacity(0.15)
-            : Colors.orange.withOpacity(0.15),
+            ? Colors.green
+            : Colors.orange,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isApproved ? Colors.green : Colors.orange,
@@ -94,7 +94,7 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
         decoration: BoxDecoration(
           border: Border.all(color: Colors.white12),
           borderRadius: BorderRadius.circular(10),
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white,
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -105,7 +105,7 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xffffd398).withOpacity(0.15),
+                  color: const Color(0xffffd398),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -206,7 +206,7 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
                         ElevatedButton(
                           onPressed: _fetchDocuments,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xffffd398),
+                            backgroundColor: Theme.of(context).colorScheme.primary,
                           ),
                           child: Text(
                             'Retry',
@@ -231,10 +231,7 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
                           const SizedBox(height: 4),
                           Text(
                             '${_documents.length} document${_documents.length != 1 ? 's' : ''} pending review',
-                            style: GoogleFonts.montserrat(
-                              color: Colors.white54,
-                              fontSize: 13,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
                           ),
                           const SizedBox(height: 16),
                           ..._documents.map(_buildDocumentCard),
