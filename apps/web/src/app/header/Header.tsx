@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import NotificationsModal from "@/app/components/NotificationsModal";
 
 type AuthState = {
   authenticated: boolean;
@@ -15,6 +16,8 @@ export default function Header() {
     role: null,
     username: null,
   });
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -26,7 +29,7 @@ export default function Header() {
 
         const meRes = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/users/me`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         if (!meRes.ok) return;
@@ -38,8 +41,20 @@ export default function Header() {
           role: me.role,
           username: me.username,
         });
-      } catch {
-      }
+
+        const notifRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/notifications`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+
+        if (notifRes.ok) {
+          const notifications = await notifRes.json();
+          const unseenCount = notifications.filter(
+            (n: { status: string }) => n.status === "unseen",
+          ).length;
+          setUnreadCount(unseenCount);
+        }
+      } catch {}
     };
 
     checkAuth();
@@ -48,13 +63,21 @@ export default function Header() {
   const profileHref = auth.role === "coach" ? "/profilcoach" : "/profilsportif";
 
   const initials = auth.username
-    ? auth.username.split("_").map((p: string) => p[0].toUpperCase()).join("").slice(0, 2)
+    ? auth.username
+        .split("_")
+        .map((p: string) => p[0].toUpperCase())
+        .join("")
+        .slice(0, 2)
     : null;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 border-b border-[#ffd398] bg-[rgba(10,15,30)]">
       <div className="max-w-5xl mx-auto px-6 h-18 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5 text-[#e8c97a] font-bold text-lg no-underline" style={{ fontFamily: "'Playfair Display', serif" }}>
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 text-[#e8c97a] font-bold text-lg no-underline"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
           <span className="w-8 h-8 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] flex items-center justify-center text-[#0a0f1e] font-black text-base">
             Φ
           </span>
@@ -62,9 +85,39 @@ export default function Header() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="/catalog" className="text-[#8a96b0] hover:text-[#e8c97a] text-sm font-medium transition-colors">
+          <Link
+            href="/catalog"
+            className="text-[#8a96b0] hover:text-[#e8c97a] text-sm font-medium transition-colors"
+          >
             Nos Coachs
           </Link>
+
+          {auth.authenticated && (
+            <button
+              onClick={() => setIsNotificationsOpen(true)}
+              className="relative text-[#8a96b0] hover:text-[#ffd398] transition-colors"
+            >
+              <svg
+                width="22"
+                height="22"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0"
+                />
+              </svg>
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#ffd398] text-[#1c232d] text-[0.6rem] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              )}
+            </button>
+          )}
 
           {auth.authenticated ? (
             <Link
@@ -86,6 +139,30 @@ export default function Header() {
           )}
         </nav>
 
+        <NotificationsModal
+          isOpen={isNotificationsOpen}
+          onClose={() => {
+            setIsNotificationsOpen(false);
+            if (auth.authenticated) {
+              fetch("/api/auth/set-token")
+                .then((res) => res.json())
+                .then(({ token }) => {
+                  if (token) {
+                    fetch(`${process.env.NEXT_PUBLIC_API_URL}/notifications`, {
+                      headers: { Authorization: `Bearer ${token}` },
+                    })
+                      .then((res) => res.json())
+                      .then((notifications) => {
+                        const unseenCount = notifications.filter(
+                          (n: { status: string }) => n.status === "unseen",
+                        ).length;
+                        setUnreadCount(unseenCount);
+                      });
+                  }
+                });
+            }
+          }}
+        />
       </div>
     </header>
   );
