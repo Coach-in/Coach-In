@@ -177,7 +177,7 @@ export default function CoachesCatalog() {
             {filtered.map((coach) => (
               <Link
                 key={coach.id}
-                href={`/coachInfo/${coach.id}`}
+                href={`/coachinfo/${coach.id}`}
                 className="group border border-[rgba(201,168,76,0.18)] rounded-2xl overflow-hidden bg-[#0d1528] hover:bg-[#111d36] hover:border-[rgba(201,168,76,0.4)] hover:-translate-y-1 transition-all duration-200 cursor-pointer block"
               >
                 <div className="relative h-28 bg-gradient-to-br from-[#111d36] to-[#0d1528] flex items-end px-5 pb-0">

@@ -22,7 +22,8 @@ interface Coach {
 type ConnectionStatus = "idle" | "loading" | "sent" | "error";
 
 export default function CoachDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const id = params["coach.id"] as string;
   const router = useRouter();
 
   const [coach, setCoach] = useState<Coach | null>(null);
@@ -31,30 +32,34 @@ export default function CoachDetailPage() {
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("idle");
   const [connectionError, setConnectionError] = useState("");
 
-  // You'll want to pull the current athlete's ID from your auth context/cookie
-  // For now we read it from a cookie or localStorage – adapt to your auth setup
   const [athleteId, setAthleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Fetch current user info — adapt to however you expose the JWT payload
     const fetchMe = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setAthleteId(data.athleteProfile?.id ?? null);
-        }
+        const tokenRes = await fetch("/api/auth/set-token");
+        const { authenticated, token } = await tokenRes.json();
+  
+        if (!authenticated || !token) return;
+  
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/athletes/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
       } catch {
-        // not logged in or not an athlete, athleteId stays null
       }
     };
     fetchMe();
   }, []);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+        console.log("No coach ID provided in URL : ", id);
+        return;}
     const fetchCoach = async () => {
       try {
         setLoading(true);
