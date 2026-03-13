@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 interface Tag {
   id: string;
@@ -174,9 +175,10 @@ export default function CoachesCatalog() {
         {filtered.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((coach) => (
-              <div
+              <Link
                 key={coach.id}
-                className="group border border-[rgba(201,168,76,0.18)] rounded-2xl overflow-hidden bg-[#0d1528] hover:bg-[#111d36] hover:border-[rgba(201,168,76,0.4)] hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+                href={`/coachInfo/${coach.id}`}
+                className="group border border-[rgba(201,168,76,0.18)] rounded-2xl overflow-hidden bg-[#0d1528] hover:bg-[#111d36] hover:border-[rgba(201,168,76,0.4)] hover:-translate-y-1 transition-all duration-200 cursor-pointer block"
               >
                 <div className="relative h-28 bg-gradient-to-br from-[#111d36] to-[#0d1528] flex items-end px-5 pb-0">
                   <div
@@ -215,11 +217,11 @@ export default function CoachesCatalog() {
                     ))}
                   </div>
 
-                  <button className="text-[0.75rem] font-semibold text-[#c9a84c] hover:text-[#e8c97a] transition-colors">
+                  <span className="text-[0.75rem] font-semibold text-[#c9a84c] group-hover:text-[#e8c97a] transition-colors">
                     Voir le profil →
-                  </button>
+                  </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
