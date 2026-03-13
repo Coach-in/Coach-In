@@ -45,38 +45,6 @@ class _RegisterPageState extends State<RegisterPage> {
         isCoach: _isCoach
       ))
     );
-
-    // final result = await _authService.register(
-    //   _userController.text.trim(),
-    //   _emailController.text.trim(),
-    //   _passwordController.text.trim(),
-    // );
-
-    // if (!mounted) return;
-
-    // setState(() => _isLoading = false);
-
-    // if (result['success']) {
-    //   final data = result['data'];
-    //   final user = data['user'];
-    //   final accessToken = data['token'];
-    //   final refreshToken = user['refresh_token'];
-
-    //   await _storage.write(key: 'accessToken', value: accessToken);
-    //   await _storage.write(key: 'refreshToken', value: refreshToken);
-    //   await _storage.write(key: 'rememberMe', value: true.toString());
-
-    //   if (!mounted) return;
-    //   Navigator.pushReplacement(
-    //     context,
-    //     MaterialPageRoute(builder: (context) => const ExplorePage()),
-    //   );
-    // } else {
-    //   setState(() {
-    //     _errorMessage =
-    //         result['message'] ?? 'Invalid credentials. Please try again.';
-    //   });
-    // }
   }
 
   Future<void> _registerWithGoogle() async {
