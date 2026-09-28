@@ -147,19 +147,38 @@ docker compose up
 
 ### Développement local
 
-```bash
-# Backend API
-cd apps/api
-npm install
-npm run start:dev
+Tout (PostgreSQL, MinIO, API, web) se lance avec Docker :
 
-# Frontend Web (dans un autre terminal)
-cd apps/web
-npm install
-npm run dev
+```bash
+# à faire une fois
+cp apps/api/.env.example apps/api/.env   # puis remplacer JWT_SECRET
+
+# Postgres + MinIO + API + web
+docker compose up -d
+
+# dépendances de l'API (si vous lancez l'API hors Docker)
+cd apps/api && npm ci
 ```
 
-**Note :** Nécessite PostgreSQL installé localement et configuré selon `apps/api/.env`
+| Service | URL |
+|---|---|
+| Front web | http://localhost:3001 |
+| API | http://localhost:3000 |
+| Swagger | http://localhost:3000/api/docs |
+
+Détails : [`apps/api/README.md`](apps/api/README.md)
+
+---
+
+## Documentation technique
+
+| Document | Contenu |
+|---|---|
+| [`apps/api/README.md`](apps/api/README.md) | setup, commandes, variables d'env |
+| [`apps/api/ARCHITECTURE.md`](apps/api/ARCHITECTURE.md) | modules, modèle de données, auth, décisions et leurs coûts |
+| [`apps/doc/conventions.md`](apps/doc/conventions.md) | comment écrire du code ici, tests, avant la PR |
+| [`apps/doc/VerificationsCoach.md`](apps/doc/VerificationsCoach.md) | spécification du parcours de vérification coach |
+| [`Idealisation/`](Idealisation/) | documents de conception (schéma d'API, audits, ADR) |
 
 ---
 
