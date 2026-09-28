@@ -1,26 +1,70 @@
 @import "tailwindcss";
+@import "./tokens.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@layer base {
+  html {
+    color-scheme: dark;
+  }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-navy-950);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+ * Print — turns the app into a clean workout sheet.
+ * The app is dark-only, so every surface has to be forced light here,
+ * otherwise the browser prints a black rectangle.
+ */
+@page {
+  margin: 16mm 14mm;
+}
+
+@media print {
+  /* Drop the app chrome: site header and the layout's scroll offset. */
+  header {
+    display: none !important;
+  }
+
+  main {
+    padding-top: 0 !important;
+  }
+
+  /* Light sheet */
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  /* Never split a row or a card across pages. */
+  .print-keep {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Inputs are used as inline editors on screen; on paper they should
+     read as plain text, not as form fields. */
+  input,
+  textarea,
+  select {
+    border: 0 !important;
+    background: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* A link's destination is useless on paper unless it is spelled out. */
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    word-break: break-all;
+  }
 }

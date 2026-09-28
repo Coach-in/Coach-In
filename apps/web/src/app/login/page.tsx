@@ -54,27 +54,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-gradient-to-br from-[#1c232d] via-[#162644] to-[#0c336f] min-h-screen flex items-center justify-center">
+    <div className="bg-gradient-to-br from-graphite-800 via-navy-600 to-navy-500 min-h-screen flex items-center justify-center">
       <div className="relative w-full max-w-md">
 
         <div className="text-center mb-8">
-          <div className="gap-2.5 text-[#c9a84c] text-[0.8rem] font-semibold tracking-[3px] uppercase mb-3">
+          <div className="gap-2.5 text-gold text-[0.8rem] font-semibold tracking-[3px] uppercase mb-3">
             Connexion
           </div>
-          <Link href="/" className="inline-flex items-center gap-2.5 text-[#e8c97a] font-bold text-xl no-underline" style={{ fontFamily: "'Playfair Display', serif" }}>
-            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] flex items-center justify-center text-[#0a0f1e] font-black text-base">Φ</span>
+          <Link href="/" className="font-display inline-flex items-center gap-2.5 text-gold-light font-bold text-xl no-underline">
+            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-gold to-gold-light flex items-center justify-center text-navy-950 font-black text-base">Φ</span>
             Coach&apos;In
           </Link>
-          <p className="text-[#8a96b0] text-sm mt-3">Bon retour parmi nous.</p>
+          <p className="text-ink-muted text-sm mt-3">Bon retour parmi nous.</p>
         </div>
 
-        <div className="bg-[#0d1528] border border-[rgba(201,168,76,0.18)] rounded-2xl p-8">
+        <div className="bg-navy-900 border border-gold-border rounded-2xl p-8">
 
           {/* Toggle */}
-          <div className="flex mb-8 border border-[rgba(201,168,76,0.18)] rounded-xl overflow-hidden">
+          <div className="flex mb-8 border border-gold-border rounded-xl overflow-hidden">
             <button
               onClick={() => { setRole("athlete"); setError(""); }}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all ${role === "athlete" ? "bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e]" : "text-[#8a96b0] hover:text-[#e8c97a] bg-transparent"}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all ${role === "athlete" ? "bg-gradient-to-br from-gold to-gold-light text-navy-950" : "text-ink-muted hover:text-gold-light bg-transparent"}`}
             >
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -83,7 +83,7 @@ export default function LoginPage() {
             </button>
             <button
               onClick={() => { setRole("coach"); setError(""); }}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all border-l border-[rgba(201,168,76,0.18)] ${role === "coach" ? "bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e]" : "text-[#8a96b0] hover:text-[#e8c97a] bg-transparent"}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all border-l border-gold-border ${role === "coach" ? "bg-gradient-to-br from-gold to-gold-light text-navy-950" : "text-ink-muted hover:text-gold-light bg-transparent"}`}
             >
               <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.562.562 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
@@ -93,8 +93,8 @@ export default function LoginPage() {
           </div>
 
           {/* Hint */}
-          <div className="flex items-center gap-2 text-[0.75rem] text-[#8a96b0] bg-[rgba(201,168,76,0.04)] border border-[rgba(201,168,76,0.1)] rounded-lg px-3 py-2 mb-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] shrink-0" />
+          <div className="flex items-center gap-2 text-[0.75rem] text-ink-muted bg-gold-faint border border-gold-soft rounded-lg px-3 py-2 mb-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
             {role === "athlete"
               ? "Connectez-vous pour accéder à vos programmes, suivre vos progrès avec un coach qualifié."
               : "Connectez-vous pour gérer vos athlètes et vos programmations."}
@@ -102,7 +102,7 @@ export default function LoginPage() {
 
           {/* Error */}
           {error && (
-            <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5 mb-4">
+            <div className="flex items-center gap-2 text-danger-ink text-xs bg-danger-surface border border-danger-line rounded-lg px-3 py-2.5 mb-4">
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
               </svg>
@@ -113,19 +113,19 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">Adresse e-mail</label>
+              <label className="text-xs font-semibold text-ink-muted tracking-wide uppercase">Adresse e-mail</label>
               <input
                 type="email" placeholder="vous@exemple.com"
                 value={email} onChange={(e) => setEmail(e.target.value)}
                 required
-                className="px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors"
+                className="px-4 py-3 rounded-xl bg-navy-950 border border-gold-border text-ink text-sm placeholder-ink-muted focus:outline-none focus:border-gold transition-colors"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-semibold text-[#8a96b0] tracking-wide uppercase">Mot de passe</label>
-                <Link href="/forgot-password" className="text-xs text-[#c9a84c] hover:text-[#e8c97a] transition-colors">
+                <label className="text-xs font-semibold text-ink-muted tracking-wide uppercase">Mot de passe</label>
+                <Link href="/forgot-password" className="text-xs text-gold hover:text-gold-light transition-colors">
                   Mot de passe oublié ?
                 </Link>
               </div>
@@ -134,11 +134,11 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"} placeholder="••••••••"
                   value={password} onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 pr-11 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors"
+                  className="w-full px-4 py-3 pr-11 rounded-xl bg-navy-950 border border-gold-border text-ink text-sm placeholder-ink-muted focus:outline-none focus:border-gold transition-colors"
                 />
                 <button
                   type="button" onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-[#8a96b0] hover:text-[#e8c97a] transition-colors"
+                  className="absolute inset-y-0 right-3 flex items-center text-ink-muted hover:text-gold-light transition-colors"
                 >
                   {showPassword ? (
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -157,7 +157,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.2)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center justify-center gap-2"
+              className="mt-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-gold to-gold-light text-navy-950 font-bold text-sm shadow-glow hover:shadow-glow-lg hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center justify-center gap-2"
             >
               {loading && (
                 <svg className="animate-spin" width="15" height="15" fill="none" viewBox="0 0 24 24">
@@ -171,9 +171,9 @@ export default function LoginPage() {
           </form>
         </div>
 
-        <p className="text-center text-[#8a96b0] text-sm mt-6">
+        <p className="text-center text-ink-muted text-sm mt-6">
           Pas encore de compte ?{" "}
-          <Link href="/register" className="text-[#c9a84c] hover:text-[#e8c97a] font-semibold transition-colors">
+          <Link href="/register" className="text-gold hover:text-gold-light font-semibold transition-colors">
             S&apos;inscrire
           </Link>
         </p>

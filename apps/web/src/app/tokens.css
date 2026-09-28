@@ -1,0 +1,151 @@
+/*
+ * Coach'In design tokens
+ * ----------------------
+ * Single source of truth for colour, type and elevation.
+ * Consumed by Tailwind v4: every `--color-*` below becomes a utility
+ * (e.g. `--color-gold` -> `text-gold`, `--color-gold-border` -> `border-gold-border`).
+ *
+ * Rule of thumb for this codebase: never write a raw hex or rgba in a .tsx.
+ * If you need a new shade, add a token here first.
+ */
+
+@theme {
+  /* ---------------------------------------------------------------------
+   * Brand — gold
+   * The signature colour: CTAs, active states, rules and accents.
+   * ------------------------------------------------------------------ */
+  --color-gold: #c9a84c; /* 500 — primary brand gold */
+  --color-gold-light: #e8c97a; /* 400 — gradient end, emphasis on dark */
+  --color-gold-cream: #efd6a2; /* 300 — softest gold, hover text */
+  --color-gold-warm: #ffd398; /* 200 — warm cream, unread markers */
+
+  /* ---------------------------------------------------------------------
+   * Brand — navy / azure surfaces
+   * The app is dark-only. These carry every background and gradient.
+   * ------------------------------------------------------------------ */
+  --color-navy-950: #0a0f1e; /* deepest — inputs, ink on gold, page base */
+  --color-navy-900: #0d1528; /* raised — cards, panels, modals */
+  --color-navy-800: #111d36; /* raised hover — cards, rows */
+  --color-navy-700: #162040; /* cover gradient mid */
+  --color-navy-600: #162644; /* page gradient mid */
+  --color-navy-500: #0c336f; /* page gradient end, modal header wash */
+  --color-navy-400: #0d1a3a; /* cover gradient start */
+  --color-azure-600: #1d3a6e; /* avatar gradient start */
+  --color-azure-500: #2a5298; /* avatar gradient end */
+  --color-graphite-800: #1c232d; /* neutral dark — page gradient start */
+
+  /* ---------------------------------------------------------------------
+   * Ink — text on dark surfaces
+   * ------------------------------------------------------------------ */
+  --color-ink: #f0eee8; /* headings and primary text */
+  --color-ink-body: #d1d5dc; /* long-form body copy */
+  --color-ink-muted: #8a96b0; /* secondary text, labels, placeholders */
+  --color-ink-subtle: #979fae; /* lowest-emphasis text, timestamps */
+  --color-on-accent: #0a0f1e; /* text/icon placed on a gold surface */
+
+  /* ---------------------------------------------------------------------
+   * Gold tints — the brand gold at low alpha
+   * Replaces 19 hand-written `rgba(201,168,76,·)` values. Derived from
+   * `--color-gold`, so re-theming the brand updates all of them at once.
+   * Each maps to a *use*, not to a number, so pick by intent.
+   * ------------------------------------------------------------------ */
+  --color-gold-hairline: color-mix(in srgb, var(--color-gold) 3%, transparent); /* 1px texture stripes */
+  --color-gold-faint: color-mix(in srgb, var(--color-gold) 5%, transparent); /* empty states, soft panels */
+  --color-gold-muted: color-mix(in srgb, var(--color-gold) 8%, transparent); /* icon chips, tags, hover fills */
+  --color-gold-soft: color-mix(in srgb, var(--color-gold) 15%, transparent); /* tag borders, soft badges */
+  --color-gold-border: color-mix(in srgb, var(--color-gold) 18%, transparent); /* DEFAULT hairline border */
+  --color-gold-strong: color-mix(in srgb, var(--color-gold) 25%, transparent); /* input + dashed borders */
+  --color-gold-active: color-mix(in srgb, var(--color-gold) 40%, transparent); /* hover / selected border */
+  --color-gold-heavy: color-mix(in srgb, var(--color-gold) 80%, transparent); /* hero card border */
+  --color-gold-glow: color-mix(in srgb, var(--color-gold) 22%, transparent); /* resting elevation glow */
+  --color-gold-glow-strong: color-mix(in srgb, var(--color-gold) 32%, transparent); /* hover elevation glow */
+
+  /* Warm-cream tints. Same ramp, for the softer "unread"/notification accents. */
+  --color-gold-warm-faint: color-mix(in srgb, var(--color-gold-warm) 5%, transparent);
+  --color-gold-warm-soft: color-mix(in srgb, var(--color-gold-warm) 10%, transparent);
+  --color-gold-warm-border: color-mix(in srgb, var(--color-gold-warm) 20%, transparent);
+
+  /* Overlays */
+  --color-navy-wash: color-mix(in srgb, var(--color-navy-500) 25%, transparent); /* modal header / row tint */
+  --color-on-accent-soft: color-mix(in srgb, var(--color-on-accent) 25%, transparent); /* chips on a gold surface */
+  --color-scrim: #00000080; /* modal backdrop */
+
+  /* ---------------------------------------------------------------------
+   * Status — success
+   * ------------------------------------------------------------------ */
+  --color-success: #22c55e;
+  --color-success-ink: #4ade80; /* readable on dark */
+  --color-success-surface: color-mix(in srgb, var(--color-success) 10%, transparent);
+  --color-success-surface-hover: color-mix(in srgb, var(--color-success) 15%, transparent);
+  --color-success-line: color-mix(in srgb, var(--color-success) 25%, transparent);
+  --color-success-line-strong: color-mix(in srgb, var(--color-success) 40%, transparent);
+
+  /* ---------------------------------------------------------------------
+   * Status — danger
+   * ------------------------------------------------------------------ */
+  --color-danger: #ef4444;
+  --color-danger-ink-soft: #fca5a5; /* gradient highlight */
+  --color-danger-ink: #f87171; /* readable on dark */
+  --color-danger-surface: color-mix(in srgb, var(--color-danger) 10%, transparent);
+  --color-danger-surface-hover: color-mix(in srgb, var(--color-danger) 15%, transparent);
+  --color-danger-line: color-mix(in srgb, var(--color-danger) 25%, transparent);
+  --color-danger-line-strong: color-mix(in srgb, var(--color-danger) 50%, transparent);
+
+  /* ---------------------------------------------------------------------
+   * Status — warning (pending / awaiting review)
+   * ------------------------------------------------------------------ */
+  --color-warning: #f59e0b;
+  --color-warning-ink: #fbbf24; /* readable on dark */
+  --color-warning-surface: color-mix(in srgb, var(--color-warning) 10%, transparent);
+  --color-warning-surface-hover: color-mix(in srgb, var(--color-warning) 15%, transparent);
+  --color-warning-line: color-mix(in srgb, var(--color-warning) 25%, transparent);
+  --color-warning-line-strong: color-mix(in srgb, var(--color-warning) 40%, transparent);
+
+  /* ---------------------------------------------------------------------
+   * Elevation — gold glow
+   * Replaces `shadow-[0_4px_24px_rgba(201,168,76,0.22)]` and friends.
+   * The colours are referenced from the palette above rather than inlined:
+   * Tailwind can then identify the shadow colour and keep `hover:shadow-*`
+   * composable with the other shadow layers.
+   * ------------------------------------------------------------------ */
+  --shadow-glow: 0 4px 24px var(--color-gold-glow);
+  --shadow-glow-lg: 0 8px 32px var(--color-gold-glow-strong);
+}
+
+@theme inline {
+  /* ---------------------------------------------------------------------
+   * Typography
+   * Backed by next/font (see layout.tsx), which self-hosts the font files
+   * at build time — no <link>, no layout shift, no third-party request.
+   *   font-sans     -> Montserrat   (UI, body copy)
+   *   font-display  -> Playfair Display (headings, wordmark, numerals)
+   * ------------------------------------------------------------------ */
+  --font-sans: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/*
+ * Composite backgrounds that are too specific for a utility chain.
+ * @utility (Tailwind v4) keeps these on-demand and tree-shakeable.
+ */
+
+/* Profile cover: navy gradient + faint gold pinstripe texture. */
+@utility cover-gradient {
+  background-image:
+    linear-gradient(135deg, var(--color-navy-400), var(--color-navy-700)),
+    repeating-linear-gradient(
+      45deg,
+      var(--color-gold-hairline) 0 1px,
+      transparent 1px 12px
+    );
+}
+
+/* Soft brand glow at the top of full-bleed auth screens. */
+@utility glow-top {
+  background-image: radial-gradient(
+    ellipse 70% 50% at 50% 0%,
+    color-mix(in srgb, var(--color-gold) 6%, transparent) 0%,
+    transparent 60%
+  );
+}

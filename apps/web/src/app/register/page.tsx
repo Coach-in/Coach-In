@@ -149,32 +149,32 @@ export default function RegisterPage() {
     </svg>
   );
 
-  const inputClass = "px-4 py-3 rounded-xl bg-[#0a0f1e] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors w-full";
-  const labelClass = "text-xs font-semibold text-[#8a96b0] tracking-wide uppercase";
+  const inputClass = "px-4 py-3 rounded-xl bg-navy-950 border border-gold-border text-ink text-sm placeholder-ink-muted focus:outline-none focus:border-gold transition-colors w-full";
+  const labelClass = "text-xs font-semibold text-ink-muted tracking-wide uppercase";
 
   const coachSteps = ["Compte", "Profil", "Diplôme"];
   const athleteSteps = ["Compte", "Profil"];
   const steps = role === "coach" ? coachSteps : athleteSteps;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] via-[#162644] to-[#0c336f] flex items-center justify-center px-4 py-16">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_50%_0%,rgba(201,168,76,0.06)_0%,transparent_60%)] pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-600 to-navy-500 flex items-center justify-center px-4 py-16">
+      <div className="glow-top absolute inset-0 pointer-events-none" />
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-2.5 text-[#e8c97a] font-bold text-xl no-underline" style={{ fontFamily: "'Playfair Display', serif" }}>
-            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] flex items-center justify-center text-[#0a0f1e] font-black text-base">Φ</span>
+          <Link href="/" className="font-display inline-flex items-center gap-2.5 text-gold-light font-bold text-xl no-underline">
+            <span className="w-9 h-9 rounded-full bg-gradient-to-br from-gold to-gold-light flex items-center justify-center text-navy-950 font-black text-base">Φ</span>
             Coach&apos;In
           </Link>
-          <p className="text-[#8a96b0] text-sm mt-3">Créez votre compte gratuitement.</p>
+          <p className="text-ink-muted text-sm mt-3">Créez votre compte gratuitement.</p>
         </div>
 
-        <div className="bg-[#0d1528] border border-[rgba(201,168,76,0.18)] rounded-2xl p-8">
+        <div className="bg-navy-900 border border-gold-border rounded-2xl p-8">
           {step === 1 && (
-            <div className="flex mb-6 border border-[rgba(201,168,76,0.18)] rounded-xl overflow-hidden">
+            <div className="flex mb-6 border border-gold-border rounded-xl overflow-hidden">
               {(["athlete", "coach"] as Role[]).map((r, i) => (
                 <button key={r} type="button"
                   onClick={() => { setRole(r); setError(""); }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all ${i > 0 ? "border-l border-[rgba(201,168,76,0.18)]" : ""} ${role === r ? "bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e]" : "text-[#8a96b0] hover:text-[#e8c97a]"}`}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-semibold transition-all ${i > 0 ? "border-l border-gold-border" : ""} ${role === r ? "bg-gradient-to-br from-gold to-gold-light text-navy-950" : "text-ink-muted hover:text-gold-light"}`}
                 >
                   {r === "athlete" ? "Sportif" : "Coach"}
                 </button>
@@ -191,19 +191,19 @@ export default function RegisterPage() {
               return (
                 <div key={s} className="flex items-center flex-1">
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${active ? "bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e]" : "border border-[rgba(201,168,76,0.25)] text-[#8a96b0]"}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${active ? "bg-gradient-to-br from-gold to-gold-light text-navy-950" : "border border-gold-strong text-ink-muted"}`}>
                       {done ? "✓" : s}
                     </div>
-                    <span className={`text-xs font-medium whitespace-nowrap ${active ? "text-[#e8c97a]" : "text-[#8a96b0]"}`}>{label}</span>
+                    <span className={`text-xs font-medium whitespace-nowrap ${active ? "text-gold-light" : "text-ink-muted"}`}>{label}</span>
                   </div>
-                  {!isLast && <div className={`flex-1 h-px mx-2 ${done ? "bg-[#c9a84c]" : "bg-[rgba(201,168,76,0.18)]"}`} />}
+                  {!isLast && <div className={`flex-1 h-px mx-2 ${done ? "bg-gold" : "bg-gold-border"}`} />}
                 </div>
               );
             })}
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5 mb-4">
+            <div className="flex items-center gap-2 text-danger-ink text-xs bg-danger-surface border border-danger-line rounded-lg px-3 py-2.5 mb-4">
               <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
               </svg>
@@ -213,8 +213,8 @@ export default function RegisterPage() {
 
           {step === 1 && (
             <form onSubmit={handleNext} className="flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-[0.75rem] text-[#8a96b0] bg-[rgba(201,168,76,0.04)] border border-[rgba(201,168,76,0.1)] rounded-lg px-3 py-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] shrink-0" />
+              <div className="flex items-center gap-2 text-[0.75rem] text-ink-muted bg-gold-faint border border-gold-soft rounded-lg px-3 py-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
                 {role === "athlete" ? "Créez votre profil pour accéder aux coachs certifiés." : "Vos diplômes seront vérifiés avant activation du profil."}
               </div>
 
@@ -230,7 +230,7 @@ export default function RegisterPage() {
                 <label className={labelClass}>Mot de passe</label>
                 <div className="relative">
                   <input type={showPassword ? "text" : "password"} placeholder="8 caractères minimum" value={form.password} onChange={(e) => update("password", e.target.value)} required minLength={8} className={inputClass + " pr-11"} />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-3 flex items-center text-[#8a96b0] hover:text-[#e8c97a] transition-colors">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-3 flex items-center text-ink-muted hover:text-gold-light transition-colors">
                     {showPassword ? <EyeOff /> : <EyeOpen />}
                   </button>
                 </div>
@@ -238,16 +238,16 @@ export default function RegisterPage() {
               <div className="flex flex-col gap-1.5">
                 <label className={labelClass}>Confirmer le mot de passe</label>
                 <div className="relative">
-                  <input type={showConfirm ? "text" : "password"} placeholder="••••••••" value={form.confirm} onChange={(e) => update("confirm", e.target.value)} required className={`${inputClass} pr-11 ${passwordMismatch ? "border-red-500/50" : ""}`} />
-                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute inset-y-0 right-3 flex items-center text-[#8a96b0] hover:text-[#e8c97a] transition-colors">
+                  <input type={showConfirm ? "text" : "password"} placeholder="••••••••" value={form.confirm} onChange={(e) => update("confirm", e.target.value)} required className={`${inputClass} pr-11 ${passwordMismatch ? "border-danger-line-strong" : ""}`} />
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute inset-y-0 right-3 flex items-center text-ink-muted hover:text-gold-light transition-colors">
                     {showConfirm ? <EyeOff /> : <EyeOpen />}
                   </button>
                 </div>
-                {passwordMismatch && <p className="text-red-400 text-xs">Les mots de passe ne correspondent pas.</p>}
+                {passwordMismatch && <p className="text-danger-ink text-xs">Les mots de passe ne correspondent pas.</p>}
               </div>
 
               <button type="submit" disabled={passwordMismatch || loading}
-                className="mt-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm shadow-[0_4px_24px_rgba(201,168,76,0.2)] hover:shadow-[0_8px_32px_rgba(201,168,76,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                className="mt-2 w-full py-3.5 rounded-xl bg-gradient-to-br from-gold to-gold-light text-navy-950 font-bold text-sm shadow-glow hover:shadow-glow-lg hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                 {loading && <Spinner />}
                 Suivant →
               </button>
@@ -256,8 +256,8 @@ export default function RegisterPage() {
 
           {step === 2 && (
             <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-[0.75rem] text-[#8a96b0] bg-[rgba(201,168,76,0.04)] border border-[rgba(201,168,76,0.1)] rounded-lg px-3 py-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] shrink-0" />
+              <div className="flex items-center gap-2 text-[0.75rem] text-ink-muted bg-gold-faint border border-gold-soft rounded-lg px-3 py-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
                 {role === "athlete" ? "Ces informations aident le coach à mieux vous connaître." : "Ces informations seront vérifiées avant validation de votre profil."}
               </div>
 
@@ -298,10 +298,10 @@ export default function RegisterPage() {
               )}
 
               <div className="flex gap-3 mt-2">
-                <button type="button" onClick={() => setStep(1)} className="flex-1 py-3.5 rounded-xl border border-[rgba(201,168,76,0.18)] text-[#8a96b0] font-medium text-sm hover:text-[#e8c97a] hover:border-[#c9a84c] transition-all">
+                <button type="button" onClick={() => setStep(1)} className="flex-1 py-3.5 rounded-xl border border-gold-border text-ink-muted font-medium text-sm hover:text-gold-light hover:border-gold transition-all">
                   ← Retour
                 </button>
-                <button type="submit" disabled={loading} className="flex-1 py-3.5 rounded-xl bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm hover:shadow-[0_8px_32px_rgba(201,168,76,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <button type="submit" disabled={loading} className="flex-1 py-3.5 rounded-xl bg-gradient-to-br from-gold to-gold-light text-navy-950 font-bold text-sm hover:shadow-glow-lg hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                   {loading && <Spinner />}
                   {loading ? "Création..." : role === "coach" ? "Suivant →" : "Créer mon compte"}
                 </button>
@@ -314,21 +314,21 @@ export default function RegisterPage() {
 
               {uploadDone ? (
                 <div className="flex flex-col items-center gap-4 py-6 text-center">
-                  <div className="w-14 h-14 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center text-green-400">
+                  <div className="w-14 h-14 rounded-full bg-success-surface-hover border border-success-line flex items-center justify-center text-success-ink">
                     <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
                   </div>
                   <div>
-                    <p className="font-bold text-[#f0eee8] text-base" style={{ fontFamily: "'Playfair Display', serif" }}>Document envoyé !</p>
-                    <p className="text-[#8a96b0] text-sm mt-1">Votre profil sera activé après vérification par notre équipe.</p>
+                    <p className="font-display font-bold text-ink text-base">Document envoyé !</p>
+                    <p className="text-warning-ink text-sm mt-1">Votre profil sera activé après vérification par notre équipe.</p>
                   </div>
-                  <p className="text-[#c9a84c] text-xs animate-pulse">Redirection en cours...</p>
+                  <p className="text-gold text-xs animate-pulse">Redirection en cours...</p>
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-2 text-[0.75rem] text-[#8a96b0] bg-[rgba(201,168,76,0.04)] border border-[rgba(201,168,76,0.1)] rounded-lg px-3 py-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#c9a84c] shrink-0" />
+                  <div className="flex items-center gap-2 text-[0.75rem] text-ink-muted bg-gold-faint border border-gold-soft rounded-lg px-3 py-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gold shrink-0" />
                     Votre compte est créé. Uploadez maintenant votre justificatif de diplôme.
                   </div>
                   <div
@@ -338,10 +338,10 @@ export default function RegisterPage() {
                     onDrop={handleDrop}
                     className={`relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-10 cursor-pointer transition-all ${
                       dragOver
-                        ? "border-[#c9a84c] bg-[rgba(201,168,76,0.08)]"
+                        ? "border-gold bg-gold-muted"
                         : file
-                        ? "border-green-500/40 bg-green-500/5"
-                        : "border-[rgba(201,168,76,0.25)] bg-[rgba(201,168,76,0.02)] hover:border-[#c9a84c] hover:bg-[rgba(201,168,76,0.05)]"
+                        ? "border-success-line-strong bg-success-surface"
+                        : "border-gold-strong bg-gold-faint hover:border-gold hover:bg-gold-faint"
                     }`}
                   >
                     <input
@@ -354,26 +354,26 @@ export default function RegisterPage() {
 
                     {file ? (
                       <>
-                        <div className="w-12 h-12 rounded-xl bg-green-500/15 border border-green-500/30 flex items-center justify-center text-green-400">
+                        <div className="w-12 h-12 rounded-xl bg-success-surface-hover border border-success-line flex items-center justify-center text-success-ink">
                           <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                           </svg>
                         </div>
                         <div className="text-center">
-                          <p className="text-[#f0eee8] text-sm font-semibold">{file.name}</p>
-                          <p className="text-[#8a96b0] text-xs mt-0.5">{(file.size / 1024).toFixed(0)} Ko · Cliquer pour changer</p>
+                          <p className="text-ink text-sm font-semibold">{file.name}</p>
+                          <p className="text-ink-muted text-xs mt-0.5">{(file.size / 1024).toFixed(0)} Ko · Cliquer pour changer</p>
                         </div>
                       </>
                     ) : (
                       <>
-                        <div className="w-12 h-12 rounded-xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.18)] flex items-center justify-center text-[#c9a84c]">
+                        <div className="w-12 h-12 rounded-xl bg-gold-muted border border-gold-border flex items-center justify-center text-gold">
                           <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                           </svg>
                         </div>
                         <div className="text-center">
-                          <p className="text-[#f0eee8] text-sm font-medium">Glissez votre fichier ici</p>
-                          <p className="text-[#8a96b0] text-xs mt-1">PNG, JPG ou PDF · max 10 Mo</p>
+                          <p className="text-ink text-sm font-medium">Glissez votre fichier ici</p>
+                          <p className="text-ink-muted text-xs mt-1">PNG, JPG ou PDF · max 10 Mo</p>
                         </div>
                       </>
                     )}
@@ -383,7 +383,7 @@ export default function RegisterPage() {
                     <button
                       type="button"
                       onClick={() => router.push("/profilcoach")}
-                      className="flex-1 py-3.5 rounded-xl border border-[rgba(201,168,76,0.18)] text-[#8a96b0] font-medium text-sm hover:text-[#e8c97a] hover:border-[#c9a84c] transition-all"
+                      className="flex-1 py-3.5 rounded-xl border border-gold-border text-ink-muted font-medium text-sm hover:text-gold-light hover:border-gold transition-all"
                     >
                       Passer pour l&apos;instant
                     </button>
@@ -391,7 +391,7 @@ export default function RegisterPage() {
                       type="button"
                       onClick={handleUpload}
                       disabled={!file || loading}
-                      className="flex-1 py-3.5 rounded-xl bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] text-[#0a0f1e] font-bold text-sm hover:shadow-[0_8px_32px_rgba(201,168,76,0.3)] hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="flex-1 py-3.5 rounded-xl bg-gradient-to-br from-gold to-gold-light text-navy-950 font-bold text-sm hover:shadow-glow-lg hover:-translate-y-0.5 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                       {loading && <Spinner />}
                       {loading ? "Envoi..." : "Envoyer le document"}
@@ -404,9 +404,9 @@ export default function RegisterPage() {
 
         </div>
 
-        <p className="text-center text-[#8a96b0] text-sm mt-6">
+        <p className="text-center text-ink-muted text-sm mt-6">
           Déjà un compte ?{" "}
-          <Link href="/login" className="text-[#c9a84c] hover:text-[#e8c97a] font-semibold transition-colors">
+          <Link href="/login" className="text-gold hover:text-gold-light font-semibold transition-colors">
             Se connecter
           </Link>
         </p>

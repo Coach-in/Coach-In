@@ -63,10 +63,10 @@ export default function CoachesCatalog() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] via-[#162644] to-[#0c336f] text-[#f0eee8] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-navy-950 via-navy-600 to-navy-500 text-ink flex items-center justify-center">
         <div className="text-center">
           <svg
-            className="animate-spin h-10 w-10 text-[#c9a84c] mx-auto mb-4"
+            className="animate-spin h-10 w-10 text-gold mx-auto mb-4"
             fill="none"
             viewBox="0 0 24 24"
           >
@@ -84,40 +84,36 @@ export default function CoachesCatalog() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             ></path>
           </svg>
-          <p className="text-[#8a96b0]">Chargement des coachs...</p>
+          <p className="text-ink-muted">Chargement des coachs...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0f1e] via-[#162644] to-[#0c336f] text-[#f0eee8] px-[5vw] py-16">
+    <div className="min-h-screen bg-navy-800 text-ink px-[5vw] py-16">
       <div className="max-w-5xl mx-auto">
         <div className="mb-12">
-          <div className="flex items-center gap-2.5 text-[#c9a84c] text-[0.7rem] font-semibold tracking-[3px] uppercase mb-3">
-            <span className="w-6 h-px bg-[#c9a84c]" />
+          <div className="flex items-center gap-2.5 text-gold text-[0.7rem] font-semibold tracking-[3px] uppercase mb-3">
+            <span className="w-6 h-px bg-gold" />
             Professionnels certifiés
-          </div>
-          <h1
-            className="text-4xl md:text-5xl font-black text-[#f0eee8] mb-3"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
+          </div><h1 className="font-display text-4xl md:text-5xl font-black text-ink mb-3">
             Nos coachs
           </h1>
-          <p className="text-[#8a96b0] text-sm leading-relaxed max-w-md">
+          <p className="text-ink-muted text-sm leading-relaxed max-w-md">
             Tous nos coachs sont diplômés et vérifiés. Trouvez le professionnel
             qui correspond à vos objectifs.
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400">
+          <div className="mb-6 p-4 rounded-xl bg-danger-surface border border-danger-line text-danger-ink">
             {error}
           </div>
         )}
 
         <div className="relative mb-10 max-w-md">
-          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-[#8a96b0]">
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-ink-muted">
             <svg
               width="16"
               height="16"
@@ -138,12 +134,12 @@ export default function CoachesCatalog() {
             placeholder="Rechercher un coach par nom..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 rounded-xl bg-[#0d1528] border border-[rgba(201,168,76,0.18)] text-[#f0eee8] text-sm placeholder-[#8a96b0] focus:outline-none focus:border-[#c9a84c] transition-colors"
+            className="w-full pl-10 pr-4 py-3 rounded-xl bg-navy-900 border border-gold-border text-ink text-sm placeholder-ink-muted focus:outline-none focus:border-gold transition-colors"
           />
           {search && (
             <button
               onClick={() => setSearch("")}
-              className="absolute inset-y-0 right-3 flex items-center text-[#8a96b0] hover:text-[#e8c97a] transition-colors"
+              className="absolute inset-y-0 right-3 flex items-center text-ink-muted hover:text-gold-light transition-colors"
             >
               <svg
                 width="14"
@@ -163,11 +159,11 @@ export default function CoachesCatalog() {
           )}
         </div>
 
-        <p className="text-[#8a96b0] text-xs mb-6 tracking-wide">
+        <p className="text-ink-muted text-xs mb-6 tracking-wide">
           {filtered.length} coach{filtered.length > 1 ? "s" : ""} trouvé
           {filtered.length > 1 ? "s" : ""}
           {search && (
-            <span className="text-[#c9a84c]"> pour &quot;{search}&quot;</span>
+            <span className="text-gold"> pour &quot;{search}&quot;</span>
           )}
         </p>
 
@@ -176,13 +172,9 @@ export default function CoachesCatalog() {
             {filtered.map((coach) => (
               <div
                 key={coach.id}
-                className="group border border-[rgba(201,168,76,0.18)] rounded-2xl overflow-hidden bg-[#0d1528] hover:bg-[#111d36] hover:border-[rgba(201,168,76,0.4)] hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+                className="group border border-gold-border rounded-2xl overflow-hidden bg-navy-900 hover:bg-navy-800 hover:border-gold-active hover:-translate-y-1 transition-all duration-200 cursor-pointer"
               >
-                <div className="relative h-28 bg-gradient-to-br from-[#111d36] to-[#0d1528] flex items-end px-5 pb-0">
-                  <div
-                    className="w-14 h-14 rounded-full bg-gradient-to-br from-[#c9a84c] to-[#e8c97a] flex items-center justify-center text-[#0a0f1e] font-black text-lg translate-y-7 border-4 border-[#0d1528]"
-                    style={{ fontFamily: "'Playfair Display', serif" }}
-                  >
+                <div className="relative h-28 bg-gradient-to-br from-navy-800 to-navy-900 flex items-end px-5 pb-0"><div className="font-display w-14 h-14 rounded-full bg-gradient-to-br from-gold to-gold-light flex items-center justify-center text-navy-950 font-black text-lg translate-y-7 border-4 border-navy-900">
                     {coach.user?.username
                       ?.split(" ")
                       .map((n) => n[0]?.toUpperCase())
@@ -190,17 +182,13 @@ export default function CoachesCatalog() {
                   </div>
                 </div>
 
-                <div className="pt-9 px-5 pb-5">
-                  <div
-                    className="font-bold text-[#f0eee8] text-base mb-0.5"
-                    style={{ fontFamily: "'Playfair Display', serif" }}
-                  >
+                <div className="pt-9 px-5 pb-5"><div className="font-display font-bold text-ink text-base mb-0.5">
                     {coach.user?.username || "Coach"}
                   </div>
-                  <div className="text-[#c9a84c] text-xs font-medium mb-3">
+                  <div className="text-gold text-xs font-medium mb-3">
                     {coach.specialty}
                   </div>
-                  <p className="text-[#8a96b0] text-[0.82rem] leading-relaxed mb-4">
+                  <p className="text-ink-muted text-[0.82rem] leading-relaxed mb-4">
                     {coach.bio || "Aucune biographie disponible."}
                   </p>
 
@@ -208,14 +196,14 @@ export default function CoachesCatalog() {
                     {coach.tags.map((tag) => (
                       <span
                         key={tag.id}
-                        className="text-[0.68rem] font-medium px-2 py-0.5 rounded-md bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.15)] text-[#c9a84c]"
+                        className="text-[0.68rem] font-medium px-2 py-0.5 rounded-md bg-gold-muted border border-gold-soft text-gold"
                       >
                         {tag.name}
                       </span>
                     ))}
                   </div>
 
-                  <button className="text-[0.75rem] font-semibold text-[#c9a84c] hover:text-[#e8c97a] transition-colors">
+                  <button className="text-[0.75rem] font-semibold text-gold hover:text-gold-light transition-colors">
                     Voir le profil →
                   </button>
                 </div>
@@ -223,8 +211,8 @@ export default function CoachesCatalog() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 border border-dashed border-[rgba(201,168,76,0.18)] rounded-2xl bg-[rgba(201,168,76,0.02)]">
-            <div className="w-12 h-12 rounded-full border border-[rgba(201,168,76,0.18)] bg-[rgba(201,168,76,0.08)] flex items-center justify-center mx-auto mb-4 text-[#e8c97a]">
+          <div className="text-center py-20 border border-dashed border-gold-border rounded-2xl bg-gold-faint">
+            <div className="w-12 h-12 rounded-full border border-gold-border bg-gold-muted flex items-center justify-center mx-auto mb-4 text-gold-light">
               <svg
                 width="22"
                 height="22"
@@ -240,12 +228,12 @@ export default function CoachesCatalog() {
                 />
               </svg>
             </div>
-            <p className="text-[#8a96b0] text-sm">
+            <p className="text-ink-muted text-sm">
               Aucun coach trouvé pour &quot;{search}&quot;
             </p>
             <button
               onClick={() => setSearch("")}
-              className="mt-3 text-[#c9a84c] text-xs hover:text-[#e8c97a] transition-colors"
+              className="mt-3 text-gold text-xs hover:text-gold-light transition-colors"
             >
               Réinitialiser la recherche
             </button>

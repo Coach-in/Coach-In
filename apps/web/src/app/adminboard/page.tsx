@@ -81,10 +81,10 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1e] flex items-center justify-center">
+      <div className="min-h-screen bg-navy-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <svg
-            className="animate-spin text-[#c9a84c]"
+            className="animate-spin text-gold"
             width="28"
             height="28"
             fill="none"
@@ -104,36 +104,41 @@ export default function AdminPage() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
             />
           </svg>
-          <p className="text-[#8a96b0] text-sm">Chargement des documents...</p>
+          <p className="text-ink-muted text-sm">Chargement des documents...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0c336f]  text-[#f0eee8] px-[5vw] py-10">
+    <div className="min-h-screen bg-navy-500 text-ink px-[5vw] py-10">
       <div className="max-w-5xl mx-auto flex flex-col gap-8">
         <div>
-          <div className="flex items-center gap-2.5 text-[#c9a84c] text-[0.7rem] font-semibold tracking-[3px] uppercase mb-3">
-            <span className="w-6 h-px bg-[#c9a84c]" />
+          <div className="flex items-center gap-2.5 text-gold text-[0.7rem] font-semibold tracking-[3px] uppercase mb-3">
+            <span className="w-6 h-px bg-gold" />
             Administration
           </div>
           <div className="flex items-end justify-between flex-wrap gap-4">
             <div>
-              <h1
-                className="text-3xl md:text-4xl font-black text-[#f0eee8]"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
+              <h1 className="font-display text-3xl md:text-4xl font-black text-ink">
                 Validation des coachs
               </h1>
-              <p className="text-[#8a96b0] text-sm mt-1">
-                {pending.length} document{pending.length > 1 ? "s" : ""} en
-                attente de vérification
+              <p className="mt-1 flex items-center gap-1.5 text-sm">
+                {pending.length > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-md border border-warning-line bg-warning-surface px-2 py-0.5 text-xs font-semibold text-warning-ink">
+                    {pending.length} document{pending.length > 1 ? "s" : ""} en
+                    attente de vérification
+                  </span>
+                ) : (
+                  <span className="text-ink-muted text-sm">
+                    Aucun document en attente
+                  </span>
+                )}
               </p>
             </div>
             <button
               onClick={fetchDocuments}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgba(201,168,76,0.18)] text-[#8a96b0] text-xs font-semibold hover:text-[#e8c97a] hover:border-[#c9a84c] transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gold-border text-ink-muted text-xs font-semibold hover:text-gold-light hover:border-gold transition-all"
             >
               <svg
                 width="13"
@@ -155,7 +160,7 @@ export default function AdminPage() {
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-danger-ink text-sm bg-danger-surface border border-danger-line rounded-xl px-4 py-3">
             <svg
               width="16"
               height="16"
@@ -175,8 +180,8 @@ export default function AdminPage() {
         )}
 
         {pending.length === 0 && !error && (
-          <div className="text-center py-20 border border-dashed border-[rgba(201,168,76,0.8)] rounded-2xl bg-[rgba(201,168,76,0.02)]">
-            <div className="w-12 h-12 rounded-full border border-[rgba(201,168,76,0.8)] bg-[rgba(201,168,76,0.08)] flex items-center justify-center mx-auto mb-4 text-[#e8c97a]">
+          <div className="text-center py-20 border border-dashed border-gold-heavy rounded-2xl bg-gold-faint">
+            <div className="w-12 h-12 rounded-full border border-gold-heavy bg-gold-muted flex items-center justify-center mx-auto mb-4 text-gold-light">
               <svg
                 width="22"
                 height="22"
@@ -192,7 +197,7 @@ export default function AdminPage() {
                 />
               </svg>
             </div>
-            <p className="text-white text-bold">
+            <p className="text-ink font-semibold">
               Aucun document en attente. Tout est à jour.
             </p>
           </div>
@@ -214,16 +219,16 @@ export default function AdminPage() {
                     className={`rounded-2xl border p-5 transition-all cursor-pointer ${
                       isDone
                         ? fb?.type === "accept"
-                          ? "border-green-500/30 bg-green-500/5 opacity-60"
-                          : "border-red-500/30 bg-red-500/5 opacity-60"
+                          ? "border-success-line bg-success-surface opacity-60"
+                          : "border-danger-line bg-danger-surface opacity-60"
                         : isSelected
-                          ? "border-[rgba(201,168,76,0.5)] bg-[#111d36]"
-                          : "border-[rgba(201,168,76,0.18)] bg-[#0d1528] hover:bg-[#111d36] hover:border-[rgba(201,168,76,0.35)]"
+                          ? "border-gold-active bg-navy-800"
+                          : "border-gold-border bg-navy-900 hover:bg-navy-800 hover:border-gold-active"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-start gap-3 min-w-0">
-                        <div className="w-10 h-10 rounded-xl bg-[rgba(201,168,76,0.08)] border border-[rgba(201,168,76,0.18)] flex items-center justify-center text-[#c9a84c] shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-gold-muted border border-gold-border flex items-center justify-center text-gold shrink-0">
                           <svg
                             width="18"
                             height="18"
@@ -241,13 +246,13 @@ export default function AdminPage() {
                         </div>
 
                         <div className="min-w-0">
-                          <p className="font-semibold text-[#f0eee8] text-sm truncate">
+                          <p className="font-semibold text-ink text-sm truncate">
                             {doc.originalName}
                           </p>
-                          <p className="text-[#c9a84c] text-xs mt-0.5">
+                          <p className="text-gold text-xs mt-0.5">
                             {doc.coach.specialty}
                           </p>
-                          <p className="text-[#8a96b0] text-[0.7rem] mt-1">
+                          <p className="text-ink-muted text-[0.7rem] mt-1">
                             Soumis le{" "}
                             {new Date(doc.uploadedAt).toLocaleDateString(
                               "fr-FR",
@@ -258,7 +263,7 @@ export default function AdminPage() {
                               },
                             )}
                           </p>
-                          <p className="text-[#8a96b0] text-[0.68rem] font-mono mt-0.5 truncate">
+                          <p className="text-ink-muted text-[0.68rem] font-mono mt-0.5 truncate">
                             Coach ID : {doc.coach.id.slice(0, 8)}...
                           </p>
                         </div>
@@ -270,7 +275,7 @@ export default function AdminPage() {
                       >
                         {isDone ? (
                           <span
-                            className={`text-xs font-semibold px-3 py-1.5 rounded-lg ${fb?.type === "accept" ? "bg-green-500/15 text-green-400" : "bg-red-500/15 text-red-400"}`}
+                            className={`text-xs font-semibold px-3 py-1.5 rounded-lg ${fb?.type === "accept" ? "bg-success-surface-hover text-success-ink" : "bg-danger-surface-hover text-danger-ink"}`}
                           >
                             {fb?.type === "accept" ? "✓ Approuvé" : "✗ Refusé"}
                           </span>
@@ -279,7 +284,7 @@ export default function AdminPage() {
                             <button
                               disabled={isLoading}
                               onClick={() => handleAction(doc, "accept")}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/15 border border-green-500/25 text-green-400 text-xs font-semibold hover:bg-green-500/25 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success-surface-hover border border-success-line text-success-ink text-xs font-semibold hover:bg-success-surface-hover transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               {isLoading ? (
                                 <svg
@@ -324,7 +329,7 @@ export default function AdminPage() {
                             <button
                               disabled={isLoading}
                               onClick={() => handleAction(doc, "refuse")}
-                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold hover:bg-red-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-danger-surface border border-danger-line text-danger-ink text-xs font-semibold hover:bg-danger-surface-hover transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                             >
                               <svg
                                 width="12"
@@ -352,14 +357,14 @@ export default function AdminPage() {
             </div>
 
             {preview && (
-              <div className="w-80 shrink-0 sticky top-24 border border-[rgba(201,168,76,0.25)] rounded-2xl bg-[#0d1528] overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[rgba(201,168,76,0.15)]">
-                  <span className="text-xs font-semibold text-[#c9a84c] tracking-wide uppercase">
+              <div className="w-80 shrink-0 sticky top-24 border border-gold-strong rounded-2xl bg-navy-900 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gold-soft">
+                  <span className="text-xs font-semibold text-gold tracking-wide uppercase">
                     Aperçu
                   </span>
                   <button
                     onClick={() => setPreview(null)}
-                    className="text-[#8a96b0] hover:text-[#e8c97a] transition-colors"
+                    className="text-ink-muted hover:text-gold-light transition-colors"
                   >
                     <svg
                       width="14"
@@ -382,14 +387,14 @@ export default function AdminPage() {
                   {preview.mimeType === "application/pdf" ? (
                     <iframe
                       src={preview.url}
-                      className="w-full h-72 rounded-xl border border-[rgba(201,168,76,0.15)] bg-[#0a0f1e]"
+                      className="w-full h-72 rounded-xl border border-gold-soft bg-navy-950"
                       title={preview.originalName}
                     />
                   ) : (
                     <img
                       src={preview.url}
                       alt={preview.originalName}
-                      className="w-full rounded-xl border border-[rgba(201,168,76,0.15)] object-contain max-h-72"
+                      className="w-full rounded-xl border border-gold-soft object-contain max-h-72"
                     />
                   )}
                 </div>
@@ -413,8 +418,8 @@ export default function AdminPage() {
                       key={row.label}
                       className="flex items-center justify-between text-xs"
                     >
-                      <span className="text-[#8a96b0]">{row.label}</span>
-                      <span className="text-[#f0eee8] font-medium text-right max-w-[140px] truncate">
+                      <span className="text-ink-muted">{row.label}</span>
+                      <span className="text-ink font-medium text-right max-w-[140px] truncate">
                         {row.value}
                       </span>
                     </div>
@@ -424,7 +429,7 @@ export default function AdminPage() {
                     href={preview.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 w-full py-2 rounded-lg border border-[rgba(201,168,76,0.18)] text-[#c9a84c] text-xs font-semibold text-center hover:bg-[rgba(201,168,76,0.07)] hover:border-[#c9a84c] transition-all"
+                    className="mt-2 w-full py-2 rounded-lg border border-gold-border text-gold text-xs font-semibold text-center hover:bg-gold-muted hover:border-gold transition-all"
                   >
                     Ouvrir dans un nouvel onglet ↗
                   </a>
