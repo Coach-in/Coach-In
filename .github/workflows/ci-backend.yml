@@ -2,7 +2,7 @@ name: CI Backend
 
 on:
   push:
-    branches: ['dev', 'main']
+    branches: ['dev', 'main', 'ci-create']
   pull_request:
     branches: ['dev', 'main']
 
@@ -14,7 +14,6 @@ env:
   NODE_VERSION: '24'
 
 jobs:
-  # Fastest signal: if the TypeScript does not compile, nothing else matters.
   compile:
     name: Compile (tsc --noEmit)
     runs-on: ubuntu-latest
@@ -38,9 +37,8 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
-  # Reports only for now: the pre-existing formatting/type-safety debt in
-  # apps/api is being fixed separately, so this must not block merges yet.
-  # Promote to a blocking step by removing `continue-on-error` below.
+  # Pour l'instant ne cause pas de problèmes en cas de  fail, mais a changer après
+  # s'être concerté sur le linter.
   lint:
     name: Lint (eslint)
     runs-on: ubuntu-latest
@@ -88,8 +86,6 @@ jobs:
       - name: Run unit tests
         run: npx jest --ci
 
-  # Catches compose-level mistakes (missing env_file, bad service references)
-  # in under a second. Does not start any container.
   docker-compose:
     name: Docker Compose config
     runs-on: ubuntu-latest
