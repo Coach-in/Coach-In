@@ -22,6 +22,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { Notification } from './notifications/entities/notification.entity';
 import { ExercisesModule } from './exercises/exercises.module';
 import { Exercise } from './exercises/entities/exercise.entity';
+import { ProgrammesModule } from './programmes/programmes.module';
 import { Programme } from './programmes/entities/programme.entity';
 import { ProgrammeDay } from './programmes/entities/programme-day.entity';
 import { ProgrammeExercise } from './programmes/entities/programme-exercise.entity';
@@ -69,6 +70,7 @@ import { ProgrammeExercise } from './programmes/entities/programme-exercise.enti
     RelationshipsModule,
     NotificationsModule,
     ExercisesModule,
+    ProgrammesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
