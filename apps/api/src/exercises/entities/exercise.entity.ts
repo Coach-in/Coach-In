@@ -5,6 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  RelationId,
 } from 'typeorm';
 import { Coach } from '../../coachs/entities/coach.entity';
 
@@ -26,6 +27,10 @@ export class Exercise {
   @ManyToOne(() => Coach, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'created_by' })
   createdBy?: Coach | null;
+
+  // Exposes the creator without loading the coach (and its user) relation
+  @RelationId((exercise: Exercise) => exercise.createdBy)
+  createdById?: string | null;
 
   @CreateDateColumn()
   createdAt: Date;
