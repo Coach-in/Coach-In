@@ -20,6 +20,10 @@ import { RelationshipsModule } from './relationships/relationships.module';
 import { Relationship } from './relationships/entities/relationship.entity';
 import { NotificationsModule } from './notifications/notifications.module';
 import { Notification } from './notifications/entities/notification.entity';
+import { Exercise } from './exercises/entities/exercise.entity';
+import { Programme } from './programmes/entities/programme.entity';
+import { ProgrammeDay } from './programmes/entities/programme-day.entity';
+import { ProgrammeExercise } from './programmes/entities/programme-exercise.entity';
 
 @Module({
   imports: [
@@ -43,6 +47,10 @@ import { Notification } from './notifications/entities/notification.entity';
           CoachDocument,
           Relationship,
           Notification,
+          Exercise,
+          Programme,
+          ProgrammeDay,
+          ProgrammeExercise,
         ],
         synchronize: true,
         extra: {
