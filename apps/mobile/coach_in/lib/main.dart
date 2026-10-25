@@ -72,6 +72,8 @@ class _SplashScreenState extends State<SplashScreen> {
     _checkLoginStatus();
   }
 
+  // Dev helper: uncomment the call in initState to force a logout.
+  // ignore: unused_element
   Future<void> _logout() async {
     await _apiService.clearTokens();
   }
