@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import '../widgets/app_bottom_nav.dart';
 import './coach_detail_page.dart';
 import './start_page.dart';
-import './profile_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -186,80 +186,6 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  Widget _buildBottomNav(String currentPage) {
-    return Container(
-      height: 60,
-      decoration: const BoxDecoration(
-        color: Color(0xffffd398),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          GestureDetector(
-            onTap: () {
-              if (currentPage != 'explore') {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ExplorePage()),
-                );
-              }
-            },
-            child: Row(
-              children: [
-                Icon(
-                  Icons.explore,
-                  color: currentPage == 'explore'
-                      ? Colors.black
-                      : Colors.black54,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Explore',
-                  style: TextStyle(
-                    color: currentPage == 'explore'
-                        ? Colors.black
-                        : Colors.black54,
-                    fontWeight: FontWeight.w600,
-                  ),
-                )
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              if (currentPage != 'profile') {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfilePage()),
-                );
-              }
-            },
-            child: Row(
-              children: [
-                Icon(
-                  Icons.person,
-                  color: currentPage == 'profile'
-                      ? Colors.black
-                      : Colors.black54,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Profile',
-                  style: TextStyle(
-                    color: currentPage == 'profile'
-                        ? Colors.black
-                        : Colors.black54,
-                    fontWeight: FontWeight.w600,
-                  ),
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_role == 'coach') {
@@ -275,7 +201,7 @@ class _ExplorePageState extends State<ExplorePage> {
             style: GoogleFonts.montserrat(color: Colors.white54),
           ),
         ),
-        bottomNavigationBar: _buildBottomNav('explore'),
+        bottomNavigationBar: const AppBottomNav(currentPage: 'explore'),
       );
     }
 
@@ -324,7 +250,7 @@ class _ExplorePageState extends State<ExplorePage> {
                         ],
                       ),
       ),
-      bottomNavigationBar: _buildBottomNav('explore'),
+      bottomNavigationBar: const AppBottomNav(currentPage: 'explore'),
     );
   }
 }

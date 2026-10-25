@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
-import './explore_page.dart';
+import '../widgets/app_bottom_nav.dart';
 import './start_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -304,80 +304,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildBottomNav(String currentPage) {
-    return Container(
-      height: 60,
-      decoration: const BoxDecoration(
-        color: Color(0xffffd398),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          GestureDetector(
-            onTap: () {
-              if (currentPage != 'explore') {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ExplorePage()),
-                );
-              }
-            },
-            child: Row(
-              children: [
-                Icon(
-                  Icons.explore,
-                  color: currentPage == 'explore'
-                      ? Colors.black
-                      : Colors.black54,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Explore',
-                  style: TextStyle(
-                    color: currentPage == 'explore'
-                        ? Colors.black
-                        : Colors.black54,
-                    fontWeight: FontWeight.w600,
-                  ),
-                )
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              if (currentPage != 'profile') {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProfilePage()),
-                );
-              }
-            },
-            child: Row(
-              children: [
-                Icon(
-                  Icons.person,
-                  color: currentPage == 'profile'
-                      ? Colors.black
-                      : Colors.black54,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'Profile',
-                  style: TextStyle(
-                    color: currentPage == 'profile'
-                        ? Colors.black
-                        : Colors.black54,
-                    fontWeight: FontWeight.w600,
-                  ),
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildNotificationCard(Map<String, dynamic> notif) {
     final isSeen = notif['status'] == 'seen';
 
@@ -536,7 +462,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
       ),
-      bottomNavigationBar: _buildBottomNav('profile'),
+      bottomNavigationBar: const AppBottomNav(currentPage: 'profile'),
     );
   }
 }
