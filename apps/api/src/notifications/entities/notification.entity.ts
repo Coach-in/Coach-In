@@ -21,7 +21,11 @@ export class Notification {
   @Column()
   message: string;
 
-  @Column({ type: 'enum', enum: NotificationStatus, default: NotificationStatus.UNSEEN })
+  @Column({
+    type: 'enum',
+    enum: NotificationStatus,
+    default: NotificationStatus.UNSEEN,
+  })
   status: NotificationStatus;
 
   @CreateDateColumn()

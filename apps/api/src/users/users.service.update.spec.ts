@@ -2,6 +2,12 @@ import bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UserRole } from '../utils/types/jwt.types';
+import { Repository } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import { CoachsService } from '../coachs/coachs.service';
+import { AthletesService } from '../athletes/athletes.service';
+import { AdminsService } from '../admins/admins.service';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 describe('UsersService (security)', () => {
   let service: UsersService;
@@ -22,11 +28,11 @@ describe('UsersService (security)', () => {
     };
     athletesService = { create: jest.fn().mockResolvedValue({ id: 'ath-1' }) };
     service = new UsersService(
-      userRepository as any,
-      { get: () => 'test-secret' } as any,
-      {} as any,
-      athletesService as any,
-      {} as any,
+      userRepository as unknown as Repository<User>,
+      { get: () => 'test-secret' } as unknown as ConfigService,
+      {} as unknown as CoachsService,
+      athletesService as unknown as AthletesService,
+      {} as unknown as AdminsService,
     );
   });
 
@@ -36,7 +42,7 @@ describe('UsersService (security)', () => {
         username: 'new_name',
         role: 'admin',
         refresh_token: 'x',
-      } as any);
+      } as UpdateUserDto);
 
       expect(userRepository.update).toHaveBeenCalledWith('user-1', {
         username: 'new_name',

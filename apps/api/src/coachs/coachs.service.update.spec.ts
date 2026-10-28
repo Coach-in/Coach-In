@@ -1,5 +1,8 @@
 import { CoachsService } from './coachs.service';
 import { Coach } from './entities/coach.entity';
+import { Repository } from 'typeorm';
+import { TagsService } from '../tags/tags.service';
+import { UpdateCoachDto } from './dto/update-coach.dto';
 
 describe('CoachsService.update (security)', () => {
   it('never lets the caller set isApproved', async () => {
@@ -16,15 +19,15 @@ describe('CoachsService.update (security)', () => {
     };
     const tagsService = { findByNames: jest.fn().mockResolvedValue([]) };
     const service = new CoachsService(
-      coachRepository as any,
-      tagsService as any,
+      coachRepository as unknown as Repository<Coach>,
+      tagsService as unknown as TagsService,
     );
 
     const result = await service.update('coach-1', {
       bio: 'New bio',
       tagNames: [],
       isApproved: true,
-    } as any);
+    } as UpdateCoachDto);
 
     expect(result.isApproved).toBe(false);
     expect(result.bio).toBe('New bio');

@@ -27,19 +27,19 @@ export class CreateUserWithProfileDto {
   @IsEnum(UserRole)
   role: UserRole;
 
-  @ValidateIf((o) => o.role === UserRole.ATHLETE)
+  @ValidateIf((o: CreateUserWithProfileDto) => o.role === UserRole.ATHLETE)
   @IsDefined()
   @ValidateNested()
   @Type(() => CreateAthleteDto)
   athleteProfile?: CreateAthleteDto;
 
-  @ValidateIf((o) => o.role === UserRole.COACH)
+  @ValidateIf((o: CreateUserWithProfileDto) => o.role === UserRole.COACH)
   @IsDefined()
   @ValidateNested()
   @Type(() => CreateCoachDto)
   coachProfile?: CreateCoachDto;
 
-  @ValidateIf((o) => o.role === UserRole.ADMIN)
+  @ValidateIf((o: CreateUserWithProfileDto) => o.role === UserRole.ADMIN)
   @ValidateNested()
   @Type(() => CreateAdminDto)
   adminProfile?: CreateAdminDto;

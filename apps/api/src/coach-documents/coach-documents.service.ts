@@ -19,6 +19,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CoachDocument } from './entities/coach-document.entity';
 import { Coach } from '../coachs/entities/coach.entity';
+import { errorMessage, errorStack } from '../utils/error';
 
 @Injectable()
 export class CoachDocumentsService implements OnModuleInit {
@@ -69,15 +70,15 @@ export class CoachDocumentsService implements OnModuleInit {
       this.logger.log(`Bucket "${this.bucket}" already exists.`);
     } catch (err) {
       this.logger.warn(
-        `Bucket "${this.bucket}" not found (${err?.message}), creating...`,
+        `Bucket "${this.bucket}" not found (${errorMessage(err)}), creating...`,
       );
       try {
         await this.s3.send(new CreateBucketCommand({ Bucket: this.bucket }));
         this.logger.log(`Bucket "${this.bucket}" created successfully.`);
       } catch (createErr) {
         this.logger.error(
-          `Failed to create bucket "${this.bucket}": ${createErr?.message}`,
-          createErr?.stack,
+          `Failed to create bucket "${this.bucket}": ${errorMessage(createErr)}`,
+          errorStack(createErr),
         );
         throw createErr;
       }
@@ -117,8 +118,8 @@ export class CoachDocumentsService implements OnModuleInit {
       this.logger.log(`[upload] File uploaded to S3 successfully: ${s3Key}`);
     } catch (err) {
       this.logger.error(
-        `[upload] S3 upload failed for key ${s3Key}: ${err?.message}`,
-        err?.stack,
+        `[upload] S3 upload failed for key ${s3Key}: ${errorMessage(err)}`,
+        errorStack(err),
       );
       throw err;
     }
@@ -136,8 +137,8 @@ export class CoachDocumentsService implements OnModuleInit {
       return document;
     } catch (err) {
       this.logger.error(
-        `[upload] Failed to save document to DB: ${err?.message}`,
-        err?.stack,
+        `[upload] Failed to save document to DB: ${errorMessage(err)}`,
+        errorStack(err),
       );
       throw err;
     }
@@ -161,8 +162,8 @@ export class CoachDocumentsService implements OnModuleInit {
           return { ...doc, url };
         } catch (err) {
           this.logger.error(
-            `[findAll] Failed to generate presigned URL for id=${doc.id}: ${err?.message}`,
-            err?.stack,
+            `[findAll] Failed to generate presigned URL for id=${doc.id}: ${errorMessage(err)}`,
+            errorStack(err),
           );
           throw err;
         }
@@ -191,8 +192,8 @@ export class CoachDocumentsService implements OnModuleInit {
       );
     } catch (err) {
       this.logger.error(
-        `[accept] Failed to update coach approval status: ${err?.message}`,
-        err?.stack,
+        `[accept] Failed to update coach approval status: ${errorMessage(err)}`,
+        errorStack(err),
       );
       throw err;
     }
@@ -247,8 +248,8 @@ export class CoachDocumentsService implements OnModuleInit {
       this.logger.log(`[deleteDocument] S3 object deleted: ${document.s3Key}`);
     } catch (err) {
       this.logger.error(
-        `[deleteDocument] Failed to delete S3 object ${document.s3Key}: ${err?.message}`,
-        err?.stack,
+        `[deleteDocument] Failed to delete S3 object ${document.s3Key}: ${errorMessage(err)}`,
+        errorStack(err),
       );
       throw err;
     }
@@ -260,8 +261,8 @@ export class CoachDocumentsService implements OnModuleInit {
       );
     } catch (err) {
       this.logger.error(
-        `[deleteDocument] Failed to remove document id=${document.id} from DB: ${err?.message}`,
-        err?.stack,
+        `[deleteDocument] Failed to remove document id=${document.id} from DB: ${errorMessage(err)}`,
+        errorStack(err),
       );
       throw err;
     }

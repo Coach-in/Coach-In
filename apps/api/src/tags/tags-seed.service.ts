@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { TagCategoriesService } from './tag-categories.service';
+import { TagCategory } from './entities/tag-category.entity';
 import { TagsService } from './tags.service';
 import { TAG_SEED } from '../config/tags.config';
 
@@ -29,7 +30,7 @@ export class TagsSeedService implements OnApplicationBootstrap {
         .findAll()
         .then((cats) => cats.find((c) => c.name === entry.category));
 
-      let category;
+      let category: TagCategory;
       if (existingCategory) {
         this.logger.log(
           `[Category] "${entry.category}" already exists, skipping.`,

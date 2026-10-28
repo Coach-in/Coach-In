@@ -24,7 +24,7 @@ export class UsersService {
     private readonly adminsService: AdminsService,
   ) {}
 
-  private async createAccessToken(user: User) {
+  private createAccessToken(user: User) {
     const tokenContent: TokenContent = { userId: user.id, email: user.email };
     const secret = this.config.get<string>('JWT_SECRET');
     if (!secret)
@@ -68,7 +68,7 @@ export class UsersService {
       }),
     );
 
-    const token = await this.createAccessToken(user);
+    const token = this.createAccessToken(user);
 
     if (dto.role === UserRole.COACH) {
       const { coach } = await this.createCoachProfile(user, dto);
@@ -103,7 +103,7 @@ export class UsersService {
       throw new UnauthorizedException('Invalid password');
     }
 
-    const token: string = await this.createAccessToken(user);
+    const token: string = this.createAccessToken(user);
 
     return { user, token };
   }

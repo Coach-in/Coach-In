@@ -28,10 +28,13 @@ export class Relationship {
   @JoinColumn({ name: 'coach_id' })
   coach: Coach;
 
-  @Column({ type: 'enum', enum: RelationshipStatus, default: RelationshipStatus.PENDING })
+  @Column({
+    type: 'enum',
+    enum: RelationshipStatus,
+    default: RelationshipStatus.PENDING,
+  })
   status: RelationshipStatus;
 
   @CreateDateColumn()
   createdAt: Date;
 }
-
