@@ -110,6 +110,30 @@
    * ------------------------------------------------------------------ */
   --shadow-glow: 0 4px 24px var(--color-gold-glow);
   --shadow-glow-lg: 0 8px 32px var(--color-gold-glow-strong);
+
+  /* ---------------------------------------------------------------------
+   * Motion — list items entering and leaving (e.g. the program builder)
+   *   animate-item-in   -> fade + rise + slight scale-up
+   *   animate-item-out  -> reverse, played before the item is removed
+   * ------------------------------------------------------------------ */
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* No fill on item-in: a held animation would override later transform transitions */
+  --animate-item-in: item-in 280ms var(--ease-out-soft);
+  --animate-item-out: item-out 180ms ease-in forwards;
+
+  @keyframes item-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.97);
+    }
+  }
+
+  @keyframes item-out {
+    to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
 }
 
 @theme inline {
