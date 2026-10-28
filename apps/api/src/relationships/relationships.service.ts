@@ -12,7 +12,8 @@ import {
   Relationship,
   RelationshipStatus,
 } from './entities/relationship.entity';
-import { Notification } from '../notifications/entities/notification.entity';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { Athlete } from '../athletes/entities/athlete.entity';
 import { Coach } from '../coachs/entities/coach.entity';
 import { CreateRelationshipDto } from './dto/create-relationship.dto';
@@ -29,6 +30,7 @@ export class RelationshipsService {
     private readonly athleteRepository: Repository<Athlete>,
     @InjectRepository(Coach)
     private readonly coachRepository: Repository<Coach>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(
@@ -76,8 +78,8 @@ export class RelationshipsService {
       );
     }
 
-    const saved = await this.relationshipRepository.manager.transaction(
-      async (manager) => {
+    const { saved, notification } =
+      await this.relationshipRepository.manager.transaction(async (manager) => {
         const relationship = await manager.getRepository(Relationship).save(
           manager.getRepository(Relationship).create({
             athlete,
@@ -85,16 +87,24 @@ export class RelationshipsService {
             status: RelationshipStatus.PENDING,
           }),
         );
-        await manager.getRepository(Notification).save(
-          manager.getRepository(Notification).create({
+        const created = await this.notificationsService.create(
+          {
+            type: NotificationType.RELATIONSHIP_REQUESTED,
             message: `${athlete.user.username} souhaite être coaché par vous.`,
             sender: athlete.user,
             receiver: coach.user,
-          }),
+            data: {
+              relationshipId: relationship.id,
+              athleteId: athlete.id,
+              athleteName: athlete.user.username,
+            },
+            link: `/relationships/${relationship.id}`,
+          },
+          manager,
         );
-        return relationship;
-      },
-    );
+        return { saved: relationship, notification: created };
+      });
+    this.notificationsService.publish(notification);
     this.logger.log(`[create] Relationship created with id=${saved.id}`);
 
     return this.findOne(saved.id);
@@ -120,6 +130,7 @@ export class RelationshipsService {
       id,
       requester,
       RelationshipStatus.ACCEPTED,
+      NotificationType.RELATIONSHIP_ACCEPTED,
       'a accepté votre demande de coaching.',
     );
   }
@@ -130,6 +141,7 @@ export class RelationshipsService {
       id,
       requester,
       RelationshipStatus.REFUSED,
+      NotificationType.RELATIONSHIP_REFUSED,
       'a refusé votre demande de coaching.',
     );
   }
@@ -138,6 +150,7 @@ export class RelationshipsService {
     id: string,
     requester: AuthUser,
     status: RelationshipStatus,
+    notificationType: NotificationType,
     messageSuffix: string,
   ): Promise<Relationship> {
     const relationship = await this.findOne(id);
@@ -152,17 +165,33 @@ export class RelationshipsService {
       );
     }
 
-    await this.relationshipRepository.manager.transaction(async (manager) => {
-      relationship.status = status;
-      await manager.getRepository(Relationship).save(relationship);
-      await manager.getRepository(Notification).save(
-        manager.getRepository(Notification).create({
-          message: `${relationship.coach.user.username} ${messageSuffix}`,
-          sender: relationship.coach.user,
-          receiver: relationship.athlete.user,
-        }),
-      );
-    });
+    const notification = await this.relationshipRepository.manager.transaction(
+      async (manager) => {
+        relationship.status = status;
+        await manager.getRepository(Relationship).save(relationship);
+        await this.notificationsService.markRelationshipRequestSeen(
+          relationship.id,
+          relationship.coach.user.id,
+          manager,
+        );
+        return this.notificationsService.create(
+          {
+            type: notificationType,
+            message: `${relationship.coach.user.username} ${messageSuffix}`,
+            sender: relationship.coach.user,
+            receiver: relationship.athlete.user,
+            data: {
+              relationshipId: relationship.id,
+              coachId: relationship.coach.id,
+              coachName: relationship.coach.user.username,
+            },
+            link: `/relationships/${relationship.id}`,
+          },
+          manager,
+        );
+      },
+    );
+    this.notificationsService.publish(notification);
     this.logger.log(`[answer] Relationship id=${id} is now ${status}`);
 
     return this.findOne(id);

@@ -88,6 +88,24 @@ describe('AllExceptionsFilter', () => {
     expect(errorLog).toHaveBeenCalled();
   });
 
+  it('never logs the query string of a failing request', () => {
+    const hostWithQuery = {
+      switchToHttp: () => ({
+        getRequest: () => ({
+          method: 'GET',
+          url: '/notifications/stream?ticket=secret-ticket',
+        }),
+        getResponse: () => ({ status }),
+      }),
+    } as unknown as ArgumentsHost;
+
+    filter.catch(new Error('boom'), hostWithQuery);
+
+    const [message] = errorLog.mock.calls[0] as [string];
+    expect(message).toContain('/notifications/stream');
+    expect(message).not.toContain('secret-ticket');
+  });
+
   it('hides unknown database errors behind a generic 500', () => {
     filter.catch(databaseError('99999'), host);
 
