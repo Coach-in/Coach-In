@@ -183,6 +183,18 @@ class ApiService {
     );
   }
 
+  Future<http.Response> delete(String endpoint, {bool withAuth = false}) async {
+    final baseUrl = ApiConfig.getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    return _sendRequest(
+      (headers) => http
+          .delete(url, headers: headers)
+          .timeout(ApiConfig.requestTimeout),
+      withAuth: withAuth,
+    );
+  }
+
   Future<http.Response> get(String endpoint, {bool withAuth = false}) async {
     final baseUrl = ApiConfig.getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
@@ -352,6 +364,14 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to fetch notifications');
+    }
+  }
+
+  Future<void> deleteNotification(String id) async {
+    final response = await delete('/notifications/$id', withAuth: true);
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete notification');
     }
   }
 
