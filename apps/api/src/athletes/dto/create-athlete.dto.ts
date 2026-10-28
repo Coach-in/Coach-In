@@ -13,6 +13,7 @@ export class CreateAthleteDto {
   age: number;
 
   @IsString()
+  @IsString()
   @IsOptional()
   goals?: string;
 

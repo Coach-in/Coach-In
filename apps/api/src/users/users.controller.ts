@@ -150,7 +150,6 @@ export class UsersController {
                 email: 'athlete@example.com',
                 username: 'john_athlete',
                 role: 'athlete',
-                refresh_token: null,
               },
               athlete: {
                 id: 'b1c2d3e4-1234-5678-abcd-ef0123456789',
@@ -180,7 +179,6 @@ export class UsersController {
                 email: 'coach@example.com',
                 username: 'jane_coach',
                 role: 'coach',
-                refresh_token: null,
               },
               coach: {
                 id: 'c1d2e3f4-1234-5678-abcd-ef0123456789',
@@ -210,7 +208,6 @@ export class UsersController {
                 email: 'admin@example.com',
                 username: 'admin_user',
                 role: 'admin',
-                refresh_token: null,
               },
               admin: {
                 id: 'd1e2f3a4-1234-5678-abcd-ef0123456789',
@@ -265,7 +262,6 @@ export class UsersController {
             email: 'athlete@example.com',
             username: 'john_athlete',
             role: 'athlete',
-            refresh_token: null,
           },
           token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature',
         },
@@ -310,7 +306,6 @@ export class UsersController {
         email: 'athlete@example.com',
         username: 'john_athlete',
         role: 'athlete',
-        refresh_token: null,
       },
     },
   })

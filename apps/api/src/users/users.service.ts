@@ -59,12 +59,14 @@ export class UsersService {
       throw new UnauthorizedException('Email already in use');
     }
 
-    const user = await this.userRepository.save({
-      email: dto.email,
-      username: dto.username,
-      role: dto.role,
-      password: await bcrypt.hash(dto.password, 10),
-    });
+    const user = await this.userRepository.save(
+      Object.assign(new User(), {
+        email: dto.email,
+        username: dto.username,
+        role: dto.role,
+        password: await bcrypt.hash(dto.password, 10),
+      }),
+    );
 
     const token = await this.createAccessToken(user);
 
@@ -107,7 +109,16 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    await this.userRepository.update(id, updateUserDto);
+    const { email, username, password } = updateUserDto;
+    const changes: Partial<User> = {};
+    if (email !== undefined) changes.email = email;
+    if (username !== undefined) changes.username = username;
+    if (password !== undefined)
+      changes.password = await bcrypt.hash(password, 10);
+
+    if (Object.keys(changes).length > 0) {
+      await this.userRepository.update(id, changes);
+    }
 
     return { message: `User ${id} updated successfully` };
   }

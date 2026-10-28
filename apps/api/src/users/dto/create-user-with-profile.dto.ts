@@ -2,6 +2,7 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsDefined,
   MinLength,
   ValidateIf,
   ValidateNested,
@@ -27,11 +28,13 @@ export class CreateUserWithProfileDto {
   role: UserRole;
 
   @ValidateIf((o) => o.role === UserRole.ATHLETE)
+  @IsDefined()
   @ValidateNested()
   @Type(() => CreateAthleteDto)
   athleteProfile?: CreateAthleteDto;
 
   @ValidateIf((o) => o.role === UserRole.COACH)
+  @IsDefined()
   @ValidateNested()
   @Type(() => CreateCoachDto)
   coachProfile?: CreateCoachDto;

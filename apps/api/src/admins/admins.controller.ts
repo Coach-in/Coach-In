@@ -29,7 +29,6 @@ const adminExample = {
     username: 'admin_user',
     email: 'admin@example.com',
     role: 'admin',
-    refresh_token: null,
   },
 };
 

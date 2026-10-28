@@ -1,15 +1,21 @@
-import { NestFactory } from '@nestjs/core';
+import { ClassSerializerInterceptor } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { LoggingInterceptor } from './utils/logging.interceptor';
+import { createValidationPipe } from './utils/validation-pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalPipes(createValidationPipe());
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new ClassSerializerInterceptor(app.get(Reflector)),
+  );
 
   app.enableCors({
-    origin: '*', // to be made more precise later on, okay for testig
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
   });

@@ -47,10 +47,12 @@ export class CoachsService {
 
   async update(id: string, updateCoachDto: UpdateCoachDto): Promise<Coach> {
     const coach = await this.findOne(id);
-    const { tagNames, ...rest } = updateCoachDto;
+    const { tagNames, specialty, bio } = updateCoachDto;
     coach.tags = tagNames ? await this.tagsService.findByNames(tagNames) : [];
+    if (specialty !== undefined) coach.specialty = specialty;
+    if (bio !== undefined) coach.bio = bio;
 
-    return this.coachRepository.save({ ...coach, ...rest });
+    return this.coachRepository.save(coach);
   }
 
   async remove(id: string): Promise<void> {
