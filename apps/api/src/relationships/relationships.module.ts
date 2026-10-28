@@ -6,17 +6,10 @@ import { Relationship } from './entities/relationship.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { Athlete } from '../athletes/entities/athlete.entity';
 import { Coach } from '../coachs/entities/coach.entity';
-import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Relationship,
-      Notification,
-      Athlete,
-      Coach,
-      User,
-    ]),
+    TypeOrmModule.forFeature([Relationship, Notification, Athlete, Coach]),
   ],
   controllers: [RelationshipsController],
   providers: [RelationshipsService],

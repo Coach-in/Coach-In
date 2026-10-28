@@ -13,8 +13,10 @@ import { CreateAthleteDto } from '../../athletes/dto/create-athlete.dto';
 import { CreateCoachDto } from '../../coachs/dto/create-coach.dto';
 import { CreateAdminDto } from '../../admins/dto/create-admin.dto';
 import { UserRole } from '../../utils/types/jwt.types';
+import { NormalizeEmail } from '../../utils/normalize-email';
 
 export class CreateUserWithProfileDto {
+  @NormalizeEmail()
   @IsEmail()
   email: string;
 

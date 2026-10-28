@@ -78,7 +78,7 @@ describe('NotificationsService', () => {
         (notification: Notification) => Promise.resolve(notification),
       );
 
-      const result = await service.markAsSeen(unseen.id);
+      const result = await service.markAsSeen(unseen.id, receiver.id);
 
       expect(result.status).toBe(NotificationStatus.SEEN);
       expect(notificationRepositoryMock.save).toHaveBeenCalledWith(
@@ -89,10 +89,21 @@ describe('NotificationsService', () => {
       );
     });
 
+    it('only looks up notifications owned by the requester', async () => {
+      notificationRepositoryMock.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.markAsSeen(unseen.id, 'someone-else'),
+      ).rejects.toThrow(NotFoundException);
+      expect(notificationRepositoryMock.findOne).toHaveBeenCalledWith({
+        where: { id: unseen.id, receiver: { id: 'someone-else' } },
+      });
+    });
+
     it('raises NotFound when the notification does not exist', async () => {
       notificationRepositoryMock.findOne.mockResolvedValue(null);
 
-      await expect(service.markAsSeen('missing')).rejects.toThrow(
+      await expect(service.markAsSeen('missing', receiver.id)).rejects.toThrow(
         NotFoundException,
       );
       expect(notificationRepositoryMock.save).not.toHaveBeenCalled();
@@ -104,7 +115,7 @@ describe('NotificationsService', () => {
       notificationRepositoryMock.findOne.mockResolvedValue(unseen);
       notificationRepositoryMock.remove.mockResolvedValue(unseen);
 
-      await service.deleteOne(unseen.id);
+      await service.deleteOne(unseen.id, receiver.id);
 
       expect(notificationRepositoryMock.remove).toHaveBeenCalledWith(unseen);
     });
@@ -112,7 +123,7 @@ describe('NotificationsService', () => {
     it('raises NotFound when the notification does not exist', async () => {
       notificationRepositoryMock.findOne.mockResolvedValue(null);
 
-      await expect(service.deleteOne('missing')).rejects.toThrow(
+      await expect(service.deleteOne('missing', receiver.id)).rejects.toThrow(
         NotFoundException,
       );
       expect(notificationRepositoryMock.remove).not.toHaveBeenCalled();

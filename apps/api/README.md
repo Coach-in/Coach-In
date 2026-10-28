@@ -46,8 +46,10 @@ Si l'API ne démarre pas au premier `docker compose up` : elle dépend de
 | Console MinIO | http://localhost:9001 (`minioadmin` / `minioadmin`) |
 | Postgres | `localhost:5432` (`coachin`) |
 
-Le schéma est créé **automatiquement** au démarrage
-(`synchronize: true`, `app.module.ts:47`). Aucune migration n'existe.
+Hors production le schéma est synchronisé **automatiquement** au démarrage
+(`synchronize`). En production il est géré par les migrations de
+`src/database/migrations`, jouées au démarrage. Voir
+[ARCHITECTURE.md](./ARCHITECTURE.md#base-de-données-et-migrations).
 
 ---
 
@@ -57,12 +59,16 @@ Lues via `ConfigModule` (`isGlobal`). Voir `apps/api/.env.example`.
 
 | Variable | Rôle | Défaut |
 |---|---|---|
-| `JWT_SECRET` | signature des JWT | **aucun** → l'API refuse de signer |
-| `DB_HOST` / `DB_PORT` | Postgres | — |
-| `DB_USER` / `DB_PASSWORD` / `DB_NAME` | identifiants | — |
+| `JWT_SECRET` | signature des JWT | **requis** → l'API refuse de démarrer sans |
+| `DB_HOST` / `DB_PORT` | Postgres | `DB_HOST` requis |
+| `DB_USER` / `DB_PASSWORD` / `DB_NAME` | identifiants | requis |
+| `NODE_ENV` | `production` active les migrations, coupe Swagger et CORS ouvert | — |
+| `CORS_ORIGINS` | origines autorisées, séparées par des virgules | tout hors production, rien en production |
+| `SWAGGER_ENABLED` | `true` pour exposer Swagger en production | exposé hors production |
+| `DB_SYNCHRONIZE` | `true` / `false` pour forcer `synchronize` | `true` hors production |
 | `MINIO_ENDPOINT` | S3 **interne** (conteneur) | `http://minio:9000` |
 | `MINIO_PUBLIC_ENDPOINT` | S3 **public** (navigateur) | `http://localhost:9000` |
-| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | credentials S3 | `minioadmin` |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | credentials S3 | `minioadmin` hors production, **requis** en production |
 | `MINIO_BUCKET` | bucket des documents | `coach-documents` |
 | `PORT` | port d'écoute | `3000` |
 
@@ -88,6 +94,8 @@ Toutes depuis `apps/api`.
 | Lint (corrige) | `npm run lint` |
 | Format | `npm run format` |
 | Vérification type seule | `npx tsc --noEmit` |
+| Démarrer en production | `npm run build` puis `npm run start:prod` |
+| Générer / jouer / annuler une migration | `npm run migration:generate -- src/database/migrations/Nom` · `migration:run` · `migration:revert` |
 
 `npm test` **n'a besoin de rien** : tous les dépôts et clients S3 sont mockés.
 `npm run test:e2e` est le seul qui parle au vrai Postgres et au vrai MinIO.

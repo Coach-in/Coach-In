@@ -34,7 +34,7 @@ Un module par domaine. Chaque module suit le même triplet :
 ```
 <domain>/
   <domain>.module.ts      déclare ce que le module expose et importe
-  <domain>.controller.ts  HTTP : routes, Swagger, extraction du token
+  <domain>.controller.ts  HTTP : routes, Swagger, décorateurs d'accès
   <domain>.service.ts     logique métier, repository TypeORM
   dto/                    entrées/sorties validées
   entities/               entités TypeORM
@@ -148,76 +148,108 @@ sécurité du projet : sans document validé, un coach est invisible. Le test
 
 ---
 
-## Flux d'authentification
+## Authentification et autorisation
 
-Pas de `@nestjs/jwt` : c'est `jsonwebtoken` directement.
+Pas de `@nestjs/jwt` : c'est `jsonwebtoken` directement, dans un seul endroit,
+`JwtAuthGuard` (`src/auth/`).
 
 ```
-POST /users/auth/signup
-  ├─ vérifie l'email libre
+POST /users/auth/signup  (public)
+  ├─ role admin : refusé sauf appelant admin, ou si aucun admin n'existe encore
+  ├─ email libre (insensible à la casse), sinon 409
   ├─ bcrypt.hash(password, 10)
-  ├─ jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '10d' })
-  └─ crée le profil correspondant au role (coach | athlete | admin)
+  ├─ transaction : User + profil (coach | athlete | admin)
+  └─ jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '10d' })
 
-POST /users/auth/login   → bcrypt.compare, puis même token
-GET  /users/me           → vérifie le Bearer, puis userRepository.findMe
+POST /users/auth/login   (public, 10 tentatives / 15 min par IP + email)
+  └─ 401 identique pour email inconnu et mauvais mot de passe
+
+GET  /users/me           → utilisateur du token
 ```
 
 Le payload est volontairement minimal (`{ userId, email }`, type
-`TokenContent`) : le rôle est relu en base à chaque requête, donc un changement
-de rôle prend effet immédiatement.
+`TokenContent`) : `JwtAuthGuard` relit l'utilisateur en base à chaque requête.
+Le rôle est donc toujours celui de la base, un changement de rôle prend effet
+immédiatement et le token d'un compte supprimé cesse de fonctionner.
 
-> `User.refresh_token` **existe mais n'est jamais émis** : il est mis à `null`
-> partout et il n'y a pas de route `/auth/refresh`.
+> `User.refresh_token` **existe mais n'est jamais émis**, et il n'y a pas de
+> route `/auth/refresh`. Le token de 10 jours est le seul credential.
 
-### Le problème de l'extraction du token
+### Les trois couches
 
-Six contrôleurs (`users`, `coachs`, `athletes`, `admins`, `relationships`,
-`notifications`) recopient le même bloc :
+| Couche | Où | Rôle |
+|---|---|---|
+| `JwtAuthGuard` (global) | `src/auth/jwt-auth.guard.ts` | Toute route exige un Bearer valide, sauf `@Public()`. Renvoie 401, jamais 500. Pose `request.user` (`AuthUser`) |
+| `RolesGuard` (global) | `src/auth/roles.guard.ts` | `@Roles(UserRole.ADMIN)` sur une route ou un contrôleur, sinon 403 |
+| Propriété | `src/auth/ownership.ts` | `assertSelfOrAdmin(requester, ownerUserId)` appelé **dans les services** : on ne modifie que sa propre ressource, sauf admin |
 
-```ts
-const authHeader = request.headers.authorization;
-const token = authHeader?.split(' ')[1];
-const decoded = jwt.verify(token, secret) as TokenContent;
-```
+Les contrôleurs récupèrent l'appelant avec `@CurrentUser()`, les services
+reçoivent `requester: AuthUser` en dernier paramètre.
 
-C'est de l'**authentification** (le token est-il valide ?), pas de
-**vérification d'accès** (cette personne a-t-elle le droit ?). Il n'y a **aucun
-guard** dans l'application, et trois contrôleurs n'extraient même pas de token :
-`coach-documents` (3 routes : upload, accept, refuse), `tags` et
-`tag-categories` (création et suppression de tags). Le reste de l'API est
-« authentifié » mais jamais « autorisé ». Un `JwtAuthGuard` + des `@Roles()`
-remplaceraient les six copies d'un coup.
+Routes publiques : `GET /`, `POST /users/auth/signup`, `POST /users/auth/login`,
+`GET /coachs` (catalogue web, coachs approuvés seulement), `GET /tags`,
+`GET /tags/:id`, `GET /tag-categories`, `GET /tag-categories/:id` (le formulaire
+d'inscription en a besoin avant d'avoir un token). Tout le reste exige un token.
 
 ---
 
 ## Cycle d'une requête
 
-`main.ts` installe un seul interceptor global, `LoggingInterceptor`
-(`${method} ${url} → ${status} (${ms}ms)`), et **aucun** pipe global.
+`main.ts` installe, dans l'ordre :
 
-Conséquence directe et non intuitive : **les décorateurs `class-validator` des
-DTO ne sont jamais exécutés**. Un `CreateUserWithProfileDto` peut arriver avec
-`role: 'admin'` et un email invalide, et TypeORM l'acceptera. Ajouter
-`ValidationPipe` dans `main.ts` est une modification d'une ligne qui change
-le comportement de toute l'API.
+1. en-têtes de sécurité (`nosniff`, `X-Frame-Options`, `Referrer-Policy`),
+   `x-powered-by` désactivé ;
+2. `ValidationPipe` global (`whitelist`, `transform`) : les champs sans
+   décorateur sur le DTO sont **retirés**, ce qui empêche d'écrire
+   `isApproved` ou `role` par un `PATCH` ;
+3. `AllExceptionsFilter` : garde le format Nest `{ statusCode, message, error }`,
+   traduit les erreurs Postgres (23505 → 409, 23503 → 409, 22P02 → 400) et masque
+   les erreurs inattendues derrière un 500 générique, loguées côté serveur ;
+4. `LoggingInterceptor` et `ClassSerializerInterceptor` : `User.password` et
+   `User.refresh_token` portent `@Exclude()` et ne sortent dans **aucune**
+   réponse, y compris quand l'utilisateur est imbriqué dans un profil.
+
+`ClassSerializerInterceptor` n'agit que sur des **instances de classe** : un
+service doit renvoyer des entités (ou `new User()`), jamais un objet littéral
+contenant un utilisateur.
+
+CORS : `CORS_ORIGINS` (liste séparée par des virgules). Sans valeur, tout est
+autorisé hors production et rien en production. Swagger n'est exposé qu'hors
+production, ou avec `SWAGGER_ENABLED=true`.
+
+## Base de données et migrations
+
+`synchronize` vaut `true` hors production et `false` en production
+(`DB_SYNCHRONIZE=true|false` pour forcer). En production les migrations de
+`src/database/migrations` sont jouées au démarrage (`migrationsRun`).
+
+```bash
+npm run migration:generate -- src/database/migrations/NomDeLaMigration
+npm run migration:run
+npm run migration:revert
+```
+
+Ces commandes lisent `DB_*` dans l'environnement du shell. Toute modification
+d'entité doit s'accompagner d'une migration générée. Une base de production
+créée auparavant par `synchronize` doit être marquée comme déjà migrée (insérer
+la migration initiale dans la table `migrations`) ou recréée.
 
 ## Décisions en place, et leur coût
 
 | Décision | Pourquoi | Ce que ça coûte |
 |---|---|---|
-| `synchronize: true` | Zéro migration à gérer en dev | Perte de données possible ; **aucune** stratégie de migration |
+| `synchronize` actif hors production | Itération rapide en dev | Dev et prod n'utilisent pas le même chemin de schéma |
 | Rôle en `string` sur `User` | Simplicité du schéma | Pas de type-sécurité, pas de contrainte en base |
-| Profils en tables séparées | Auth simple, profils homogènes | Jointure par contrôle d'accès ; pas de rollback inscription |
-| `jsonwebtoken` en direct | Pas de dépendance supplémentaire | Extraction du token dupliquée 6 fois, pas de guard |
+| Profils en tables séparées | Auth simple, profils homogènes | Jointure par contrôle d'accès ; l'inscription est transactionnelle |
+| `jsonwebtoken` en direct | Pas de dépendance supplémentaire | Pas de refresh token, pas de révocation avant expiration (hors suppression du compte) |
+| Limiteur de login en mémoire | Pas de dépendance supplémentaire | Compteurs perdus au redémarrage et non partagés entre instances |
 | MinIO via SDK S3 | Compatible avec un vrai S3 en prod | Config double endpoint à maintenir |
-| `eager: true` sur `User`, `Athlete`, `Coach`, `Notification` | Évite des jointures explicites | Sur-tirer le graphe d'entités à chaque `find()`, y compris sur les listes |
+| `eager: true` sur `User`, `Athlete`, `Coach`, `Notification` | Évite des jointures explicites ; réponses stables pour web et mobile | Sur-tire le graphe d'entités à chaque `find()`, y compris sur les listes |
 | Enums pour `status` (relationships, notifications) | Contrainte en base | — (bon choix, à étendre à `User.role`) |
 
 ## Ce qui n'est pas testé, et pourquoi
 
-Les contrôleurs ne sont pas testés, à une exception près (`users.controller`).
-Ce ne serait pas rentable : c'est essentiellement des décorateurs Swagger et
-de la délégation au service. Tester la duplication du token six fois serait du
-gaspillage — la supprimer (guard) est la vraie réponse.
-
+Les contrôleurs sont peu testés (`users.controller` seulement) : ce sont
+essentiellement des décorateurs Swagger et de la délégation au service. Les
+règles d'accès sont testées là où elles vivent : `JwtAuthGuard`, `RolesGuard`,
+`ownership` et les services.

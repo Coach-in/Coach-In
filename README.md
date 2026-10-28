@@ -69,13 +69,16 @@ Infra           →  Docker Compose · CI/CD · Cloud Provider
 
 | Domaine | Routes |
 |---|---|
-| Auth | `POST /api/auth/login` · `POST /api/auth/register` · `GET /api/auth/me` |
-| Utilisateurs | `GET /api/users/:id` · `GET /api/users/coaches/:id` |
-| Connexions | `POST /api/connections` · `GET /api/connections` |
-| Programmes | `GET/POST/PATCH/DELETE /api/programmes/:id` |
-| Exercices | `GET /api/exercices` · CRUD sur `/api/programmes/:id/exercises` |
-| Chat | `POST/PATCH/DELETE /api/message` · `GET /api/chat/:userId` |
-| Posts | CRUD sur `/api/posts` |
+| Auth | `POST /users/auth/signup` · `POST /users/auth/login` · `GET /users/me` |
+| Utilisateurs | `GET /users` (admin) · `GET/PATCH/DELETE /users/:id` (soi-même ou admin) |
+| Coachs | `GET /coachs` (public) · `GET /coachs/me` · `GET/PATCH/DELETE /coachs/:id` |
+| Athlètes | `GET /athletes/me` · `GET/PATCH/DELETE /athletes/:id` |
+| Relations | `POST /relationships` · `GET /relationships` · `POST /relationships/:id/accept` · `POST /relationships/:id/refuse` |
+| Notifications | `GET /notifications` · `PATCH /notifications/:id/seen` · `DELETE /notifications/:id` |
+| Vérification des coachs | `POST /coach-documents/upload/:coachId` · `GET /coach-documents` (admin) · `POST /coach-documents/:id/accept` · `…/refuse` (admin) |
+| Tags | `GET /tags` · `GET /tag-categories` (public) · création et suppression réservées aux admins |
+
+Toutes les routes exigent un `Authorization: Bearer <token>` sauf celles marquées publiques. La liste à jour est dans Swagger (`/api/docs`).
 
 ---
 
@@ -108,17 +111,10 @@ Juste des professionnels sérieux, des sportifs motivés, et les outils pour les
 ```
 /
 ├── apps/
+│   ├── api/             # NestJS API (auth, users, coachs, athletes, admins,
+│   │                    #   coach-documents, relationships, notifications, tags)
 │   ├── mobile/          # Flutter (iOS & Android)
 │   └── web/             # Next.js 14
-├── backend/             # NestJS API
-│   ├── src/
-│   │   ├── auth/
-│   │   ├── users/
-│   │   ├── programmes/
-│   │   ├── exercises/
-│   │   ├── chat/
-│   │   └── posts/
-│   └── ...
 ├── docker-compose.yml
 └── README.md
 ```

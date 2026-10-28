@@ -5,8 +5,7 @@ import {
   Param,
   Body,
   Logger,
-  Headers,
-  UnauthorizedException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,11 +15,10 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
-import jwt from 'jsonwebtoken';
-import { TokenContent } from '../utils/types/jwt.types';
 import { RelationshipsService } from './relationships.service';
 import { CreateRelationshipDto } from './dto/create-relationship.dto';
+import { CurrentUser } from '../auth/current-user.decorator';
+import type { AuthUser } from '../auth/auth.types';
 
 const relationshipExample = {
   id: 'rel-uuid-1234',
@@ -71,25 +69,7 @@ const relationshipExample = {
 export class RelationshipsController {
   private readonly logger = new Logger(RelationshipsController.name);
 
-  constructor(
-    private readonly relationshipsService: RelationshipsService,
-    private readonly config: ConfigService,
-  ) {}
-
-  private extractUserId(authHeader: string): string {
-    const [name, token] = authHeader?.split(' ') ?? [];
-    if (name !== 'Bearer' || !token)
-      throw new UnauthorizedException('Token is missing or invalid');
-    const secret = this.config.get<string>('JWT_SECRET');
-    if (!secret)
-      throw new Error('JWT_SECRET is not defined in environment variables');
-    try {
-      const payload = jwt.verify(token, secret) as TokenContent;
-      return payload.userId;
-    } catch {
-      throw new UnauthorizedException('Token is missing or invalid');
-    }
-  }
+  constructor(private readonly relationshipsService: RelationshipsService) {}
 
   @Post()
   @ApiOperation({
@@ -111,11 +91,14 @@ export class RelationshipsController {
     schema: { example: relationshipExample },
   })
   @ApiResponse({ status: 404, description: 'Athlete or Coach not found.' })
-  async create(@Body() dto: CreateRelationshipDto) {
+  async create(
+    @Body() dto: CreateRelationshipDto,
+    @CurrentUser() user: AuthUser,
+  ) {
     this.logger.debug(
       `[POST /relationships] Request from athleteId=${dto.athleteId} to coachId=${dto.coachId}`,
     );
-    const result = await this.relationshipsService.create(dto);
+    const result = await this.relationshipsService.create(dto, user);
     this.logger.log(
       `[POST /relationships] Relationship created id=${result.id}`,
     );
@@ -133,10 +116,9 @@ export class RelationshipsController {
     schema: { example: [relationshipExample] },
   })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async findAll(@Headers('authorization') auth: string) {
+  async findAll(@CurrentUser() user: AuthUser) {
     this.logger.debug(`[GET /relationships] Received request`);
-    const userId = this.extractUserId(auth);
-    return this.relationshipsService.findAll(userId);
+    return this.relationshipsService.findAll(user.id);
   }
 
   @Post(':id/accept')
@@ -155,9 +137,12 @@ export class RelationshipsController {
     schema: { example: { ...relationshipExample, status: 'accepted' } },
   })
   @ApiResponse({ status: 404, description: 'Relationship not found.' })
-  async accept(@Param('id') id: string) {
+  async accept(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
     this.logger.debug(`[POST /relationships/${id}/accept] Accept request`);
-    const result = await this.relationshipsService.accept(id);
+    const result = await this.relationshipsService.accept(id, user);
     this.logger.log(
       `[POST /relationships/${id}/accept] Relationship accepted, athlete notified`,
     );
@@ -179,9 +164,12 @@ export class RelationshipsController {
     schema: { example: { ...relationshipExample, status: 'refused' } },
   })
   @ApiResponse({ status: 404, description: 'Relationship not found.' })
-  async refuse(@Param('id') id: string) {
+  async refuse(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
     this.logger.debug(`[POST /relationships/${id}/refuse] Refuse request`);
-    const result = await this.relationshipsService.refuse(id);
+    const result = await this.relationshipsService.refuse(id, user);
     this.logger.log(
       `[POST /relationships/${id}/refuse] Relationship refused, athlete notified`,
     );

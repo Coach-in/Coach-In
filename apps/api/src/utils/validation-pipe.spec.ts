@@ -99,6 +99,14 @@ describe('createValidationPipe', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  it('trims and lower-cases emails', async () => {
+    const result = (await pipe.transform(
+      { email: '  John@Example.COM ', password: 'x' },
+      body(LoginUserDto),
+    )) as LoginUserDto;
+    expect(result.email).toBe('john@example.com');
+  });
+
   it('accepts a short password on login (legacy accounts)', async () => {
     await expect(
       pipe.transform(

@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { TagsService } from './tags.service';
@@ -50,6 +50,11 @@ describe('TagsService', () => {
   });
 
   describe('findByNames', () => {
+    it('returns an empty list without querying when no name is requested', async () => {
+      await expect(service.findByNames([])).resolves.toEqual([]);
+      expect(tagRepositoryMock.createQueryBuilder).not.toHaveBeenCalled();
+    });
+
     it('lowercases the requested names before querying', async () => {
       queryBuilderMock.getMany.mockResolvedValue([football]);
 
@@ -59,6 +64,17 @@ describe('TagsService', () => {
         'LOWER(tag.name) IN (:...names)',
         { names: ['football', 'tennis'] },
       );
+    });
+  });
+
+  describe('create', () => {
+    it('rejects a name that only differs by case from an existing tag', async () => {
+      queryBuilderMock.getMany.mockResolvedValue([football]);
+
+      await expect(service.create({ name: 'FOOTBALL' })).rejects.toThrow(
+        ConflictException,
+      );
+      expect(tagRepositoryMock.save).not.toHaveBeenCalled();
     });
   });
 

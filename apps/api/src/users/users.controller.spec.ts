@@ -1,11 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConfigService } from '@nestjs/config';
-import { UnauthorizedException } from '@nestjs/common';
-import * as jwt from 'jsonwebtoken';
 
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
+import { AuthUser } from '../auth/auth.types';
+import { UserRole } from '../utils/types/jwt.types';
 
 describe('UsersController', () => {
   let controller: UsersController;
@@ -15,71 +14,74 @@ describe('UsersController', () => {
     login: jest.fn(),
     findAll: jest.fn(),
     findOneId: jest.fn(),
+    findOneAs: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
   };
 
-  const jwtSecret = 'unit-test-secret';
-  const configServiceMock = {
-    get: jest.fn((key: string) =>
-      key === 'JWT_SECRET' ? jwtSecret : undefined,
-    ),
-  };
-
-  const userId = '3f0c2a1e-0000-4000-8000-000000000001';
-  const currentUser = {
-    id: userId,
+  const requester: AuthUser = {
+    id: '3f0c2a1e-0000-4000-8000-000000000001',
     email: 'john@example.com',
-  } as User;
+    role: UserRole.ATHLETE,
+  };
+  const currentUser = { id: requester.id, email: requester.email } as User;
 
   beforeEach(async () => {
     jest.clearAllMocks();
     usersServiceMock.findOneId.mockResolvedValue(currentUser);
+    usersServiceMock.findOneAs.mockResolvedValue(currentUser);
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [
-        { provide: UsersService, useValue: usersServiceMock },
-        { provide: ConfigService, useValue: configServiceMock },
-      ],
+      providers: [{ provide: UsersService, useValue: usersServiceMock }],
     }).compile();
 
     controller = module.get<UsersController>(UsersController);
   });
 
-  describe('findMe', () => {
-    it('returns the user matching a valid bearer token', async () => {
-      const token = jwt.sign({ userId, email: currentUser.email }, jwtSecret);
+  it('returns the authenticated user for /me', async () => {
+    await expect(controller.findMe(requester)).resolves.toBe(currentUser);
+    expect(usersServiceMock.findOneId).toHaveBeenCalledWith(requester.id);
+  });
 
-      await expect(controller.findMe(`Bearer ${token}`)).resolves.toEqual(
-        currentUser,
-      );
-      expect(usersServiceMock.findOneId).toHaveBeenCalledWith(userId);
-    });
+  it('passes the requester to the service when reading a user', async () => {
+    await controller.findOne(requester.id, requester);
 
-    it('rejects a missing authorization header', async () => {
-      await expect(
-        controller.findMe(undefined as unknown as string),
-      ).rejects.toThrow(UnauthorizedException);
-    });
+    expect(usersServiceMock.findOneAs).toHaveBeenCalledWith(
+      requester.id,
+      requester,
+    );
+  });
 
-    it('rejects a header that is not a bearer scheme', async () => {
-      const token = jwt.sign({ userId, email: currentUser.email }, jwtSecret);
+  it('passes the requester to the service when updating a user', async () => {
+    await controller.update(requester.id, { username: 'new' }, requester);
 
-      await expect(controller.findMe(`Basic ${token}`)).rejects.toThrow(
-        UnauthorizedException,
-      );
-    });
+    expect(usersServiceMock.update).toHaveBeenCalledWith(
+      requester.id,
+      { username: 'new' },
+      requester,
+    );
+  });
 
-    it('rejects a token signed with the wrong secret', async () => {
-      const token = jwt.sign(
-        { userId, email: currentUser.email },
-        'not-the-right-secret',
-      );
+  it('passes the requester to the service when deleting a user', async () => {
+    await controller.remove(requester.id, requester);
 
-      await expect(controller.findMe(`Bearer ${token}`)).rejects.toBeInstanceOf(
-        Error,
-      );
-    });
+    expect(usersServiceMock.remove).toHaveBeenCalledWith(
+      requester.id,
+      requester,
+    );
+  });
+
+  it('passes the optional requester to signup', async () => {
+    const dto = {
+      email: 'admin@example.com',
+      username: 'admin',
+      password: 'password123',
+      role: UserRole.ADMIN,
+    };
+
+    await controller.create(dto, undefined);
+
+    expect(usersServiceMock.create).toHaveBeenCalledWith(dto, undefined);
   });
 });

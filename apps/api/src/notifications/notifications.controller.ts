@@ -4,10 +4,9 @@ import {
   Patch,
   Delete,
   Param,
-  Headers,
   Logger,
-  UnauthorizedException,
   HttpCode,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,11 +15,9 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
-import jwt from 'jsonwebtoken';
-import { TokenContent } from '../utils/types/jwt.types';
-import { errorMessage } from '../utils/error';
 import { NotificationsService } from './notifications.service';
+import { CurrentUser } from '../auth/current-user.decorator';
+import type { AuthUser } from '../auth/auth.types';
 
 const notificationExample = {
   id: 'notif-uuid-1234',
@@ -47,36 +44,7 @@ const notificationExample = {
 export class NotificationsController {
   private readonly logger = new Logger(NotificationsController.name);
 
-  constructor(
-    private readonly notificationsService: NotificationsService,
-    private readonly config: ConfigService,
-  ) {}
-
-  private extractUserId(authHeader: string): string {
-    this.logger.debug(`[extractUserId] Authorization header: ${authHeader}`);
-    const [name, token] = authHeader?.split(' ') ?? [];
-    if (name !== 'Bearer' || !token) {
-      this.logger.warn(
-        `[extractUserId] Missing or invalid Authorization header`,
-      );
-      throw new UnauthorizedException('Token is missing or invalid');
-    }
-    const secret = this.config.get<string>('JWT_SECRET');
-    if (!secret)
-      throw new Error('JWT_SECRET is not defined in environment variables');
-    try {
-      const payload = jwt.verify(token, secret) as TokenContent;
-      this.logger.debug(
-        `[extractUserId] Token valid, userId=${payload.userId}`,
-      );
-      return payload.userId;
-    } catch (err) {
-      this.logger.warn(
-        `[extractUserId] Token verification failed: ${errorMessage(err)}`,
-      );
-      throw new UnauthorizedException('Token is missing or invalid');
-    }
-  }
+  constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
   @ApiOperation({
@@ -115,9 +83,9 @@ export class NotificationsController {
     status: 401,
     description: 'Unauthorized — missing or invalid JWT.',
   })
-  async findMine(@Headers('authorization') auth: string) {
+  async findMine(@CurrentUser() user: AuthUser) {
     this.logger.debug(`[GET /notifications] Received request`);
-    const userId = this.extractUserId(auth);
+    const userId = user.id;
     const result = await this.notificationsService.findMyNotifications(userId);
     this.logger.log(
       `[GET /notifications] Returning ${result.length} notification(s) for userId=${userId}`,
@@ -139,9 +107,12 @@ export class NotificationsController {
     schema: { example: { ...notificationExample, status: 'seen' } },
   })
   @ApiResponse({ status: 404, description: 'Notification not found.' })
-  async markAsSeen(@Param('id') id: string) {
+  async markAsSeen(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
     this.logger.debug(`[PATCH /notifications/${id}/seen] Received request`);
-    const result = await this.notificationsService.markAsSeen(id);
+    const result = await this.notificationsService.markAsSeen(id, user.id);
     this.logger.log(
       `[PATCH /notifications/${id}/seen] Notification marked as seen`,
     );
@@ -158,9 +129,12 @@ export class NotificationsController {
   })
   @ApiResponse({ status: 204, description: 'Notification deleted.' })
   @ApiResponse({ status: 404, description: 'Notification not found.' })
-  async deleteOne(@Param('id') id: string) {
+  async deleteOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: AuthUser,
+  ) {
     this.logger.debug(`[DELETE /notifications/${id}] Received request`);
-    await this.notificationsService.deleteOne(id);
+    await this.notificationsService.deleteOne(id, user.id);
     this.logger.log(`[DELETE /notifications/${id}] Notification deleted`);
   }
 }

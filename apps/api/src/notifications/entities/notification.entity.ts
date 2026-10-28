@@ -5,6 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
@@ -35,6 +36,7 @@ export class Notification {
   @JoinColumn({ name: 'sender_id' })
   sender: User;
 
+  @Index()
   @ManyToOne(() => User, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'receiver_id' })
   receiver: User;

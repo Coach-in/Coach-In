@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 
 import { CoachsService } from './coachs.service';
@@ -8,6 +8,8 @@ import { Coach } from './entities/coach.entity';
 import { Tag } from '../tags/entities/tag.entity';
 import { TagsService } from '../tags/tags.service';
 import { User } from '../users/entities/user.entity';
+import { AuthUser } from '../auth/auth.types';
+import { UserRole } from '../utils/types/jwt.types';
 
 describe('CoachsService', () => {
   let service: CoachsService;
@@ -34,6 +36,17 @@ describe('CoachsService', () => {
     tags: [football],
     user: owner,
   } as Coach;
+
+  const ownerAuth: AuthUser = {
+    id: owner.id,
+    email: 'jane@example.com',
+    role: UserRole.COACH,
+  };
+  const strangerAuth: AuthUser = {
+    id: 'user-2',
+    email: 'other@example.com',
+    role: UserRole.COACH,
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -139,7 +152,7 @@ describe('CoachsService', () => {
       coachRepositoryMock.findOne.mockResolvedValue(coach);
       coachRepositoryMock.remove.mockResolvedValue(coach);
 
-      await service.remove(coach.id);
+      await service.remove(coach.id, ownerAuth);
 
       expect(coachRepositoryMock.remove).toHaveBeenCalledWith(coach);
     });
@@ -147,8 +160,17 @@ describe('CoachsService', () => {
     it('raises NotFound and removes nothing when the coach does not exist', async () => {
       coachRepositoryMock.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('missing')).rejects.toThrow(
+      await expect(service.remove('missing', ownerAuth)).rejects.toThrow(
         NotFoundException,
+      );
+      expect(coachRepositoryMock.remove).not.toHaveBeenCalled();
+    });
+
+    it('forbids deleting the profile of another coach', async () => {
+      coachRepositoryMock.findOne.mockResolvedValue(coach);
+
+      await expect(service.remove(coach.id, strangerAuth)).rejects.toThrow(
+        ForbiddenException,
       );
       expect(coachRepositoryMock.remove).not.toHaveBeenCalled();
     });

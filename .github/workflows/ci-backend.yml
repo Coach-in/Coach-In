@@ -2,7 +2,7 @@ name: CI Backend
 
 on:
   push:
-    branches: ['dev', 'main', 'ci-create']
+    branches: ['dev', 'main']
   pull_request:
     branches: ['dev', 'main']
 
@@ -37,12 +37,9 @@ jobs:
       - name: Type-check
         run: npx tsc --noEmit
 
-  # Pour l'instant ne cause pas de problèmes en cas de  fail, mais a changer après
-  # s'être concerté sur le linter.
   lint:
     name: Lint (eslint)
     runs-on: ubuntu-latest
-    continue-on-error: true
     defaults:
       run:
         working-directory: apps/api
@@ -85,6 +82,16 @@ jobs:
 
       - name: Run unit tests
         run: npx jest --ci
+
+  docker-build:
+    name: Docker build (production image)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build the production image
+        run: docker build --target production apps/api
 
   docker-compose:
     name: Docker Compose config
