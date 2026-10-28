@@ -2,8 +2,6 @@ import { instanceToPlain } from 'class-transformer';
 import { User } from './user.entity';
 import { Coach } from '../../coachs/entities/coach.entity';
 
-// ClassSerializerInterceptor serializes responses with instanceToPlain, so
-// these tests cover what clients actually receive.
 describe('User serialization', () => {
   const makeUser = () =>
     Object.assign(new User(), {

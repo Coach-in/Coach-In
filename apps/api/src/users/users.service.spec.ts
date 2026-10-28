@@ -58,8 +58,8 @@ describe('UsersService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    userRepositoryMock.save.mockImplementation(
-      (user: Partial<User>) => ({ id: storedUser.id, ...user }) as User,
+    userRepositoryMock.save.mockImplementation((user: User) =>
+      Object.assign(user, { id: storedUser.id }),
     );
 
     const module: TestingModule = await Test.createTestingModule({
