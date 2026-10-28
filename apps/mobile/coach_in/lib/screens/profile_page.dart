@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
 import '../widgets/app_bottom_nav.dart';
+import './explore_page.dart';
+import './notifications_page.dart';
 import './start_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -354,7 +356,17 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> _openNotifications() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NotificationsPage()),
+    );
+    if (mounted) _fetchProfile();
+  }
+
   Widget _buildNotificationsCard() {
+    final unread = _notifications.where((n) => n['status'] != 'seen').length;
+
     return Container(
       margin: const EdgeInsets.only(top: 18),
       padding: const EdgeInsets.all(16),
@@ -366,13 +378,30 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'NOTIFICATIONS',
-            style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                unread > 0 ? 'NOTIFICATIONS ($unread new)' : 'NOTIFICATIONS',
+                style: GoogleFonts.montserrat(
+                  color: const Color(0xffffd398),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+              if (_notifications.isNotEmpty)
+                GestureDetector(
+                  onTap: _openNotifications,
+                  child: Text(
+                    'View all',
+                    style: GoogleFonts.montserrat(
+                      color: Colors.white70,
+                      fontSize: 12,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+            ],
           ),
 
           const SizedBox(height: 12),
@@ -385,6 +414,7 @@ class _ProfilePageState extends State<ProfilePage> {
           else
             Column(
               children: _notifications
+                  .take(3)
                   .map((n) => _buildNotificationCard(n))
                   .toList(),
             )
