@@ -38,7 +38,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
   String? _errorMessage;
 
   List<Map<String, dynamic>> _availableTags = [];
-  List<Map<String, dynamic>> _selectedTags = [];
+  final List<Map<String, dynamic>> _selectedTags = [];
 
   File? _certificationFile;
   String? _certificationFileName;

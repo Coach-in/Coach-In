@@ -98,14 +98,11 @@ class ApiService {
 
       final token = await getAccessToken();
       if (token != null) headers['Authorization'] = 'Bearer $token';
-      developer.log("4");
     }
 
     http.Response response = await requestFn(headers);
 
     if (withAuth && response.statusCode == 401) {
-      developer.log("5");
-
       final refreshed = await _refreshToken();
       if (refreshed) {
         final newToken = await getAccessToken();
@@ -115,7 +112,6 @@ class ApiService {
         throw Exception('Session expired. Please log in again.');
       }
     }
-    developer.log("end of send request");
     return response;
   }
 
@@ -335,7 +331,6 @@ class ApiService {
   }
 
   Future<void> requestRelationship(String athleteId, String coachId) async {
-    developer.log("here");
     final response = await post(
       '/relationships',
       {
@@ -395,7 +390,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
+          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
           'details': response.body
         };
       }
@@ -422,7 +417,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
+          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
           'details': response.body
         };
       }
@@ -439,15 +434,8 @@ class AuthService {
       });
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final access = data['access_token'];
-        final refresh = data['refresh_token'];
-
-        if (access != null && refresh != null) {
-          await _apiService.saveTokens(access, refresh);
-        }
-
-        return {'success': true, 'data': data};
+        // The screen persists the tokens (login returns `{user, token}`).
+        return {'success': true, 'data': jsonDecode(response.body)};
       } else {
         developer.log(response.body.toString());
         return {

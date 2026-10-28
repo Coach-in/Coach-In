@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
 import './coach_detail_page.dart';
-import './start_page.dart';
 import './profile_page.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -62,33 +61,6 @@ class _ExplorePageState extends State<ExplorePage> {
     } finally {
       setState(() => _isLoading = false);
     }
-  }
-
-  Future<void> _logout() async {
-    setState(() {
-      // _isLoggingOut = true;
-      _errorMessage = null;
-    });
-
-    await _apiService.clearTokens();
-
-    // final result = await _authService.logout();
-
-    // if (!mounted) return;
-
-    // setState(() => _isLoggingOut = false);
-
-    // if (result['success']) {
-    //   if (!mounted) return;
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const StartPage()),
-    );
-    // } else {
-    //   setState(() {
-    //     _errorMessage = result['message'];
-    //   });
-    // }
   }
 
   Widget _buildCoachCard(Map<String, dynamic> coach) {
