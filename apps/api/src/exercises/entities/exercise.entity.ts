@@ -8,6 +8,7 @@ import {
   RelationId,
 } from 'typeorm';
 import { Coach } from '../../coachs/entities/coach.entity';
+import { Athlete } from '../../athletes/entities/athlete.entity';
 
 @Entity()
 export class Exercise {
@@ -23,7 +24,7 @@ export class Exercise {
   @Column({ nullable: true })
   s3Key?: string;
 
-  // null = built-in exercise available to every coach
+  // Creator when it is a coach. Both creators null = built-in exercise
   @ManyToOne(() => Coach, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'created_by' })
   createdBy?: Coach | null;
@@ -31,6 +32,14 @@ export class Exercise {
   // Exposes the creator without loading the coach (and its user) relation
   @RelationId((exercise: Exercise) => exercise.createdBy)
   createdById?: string | null;
+
+  // Creator when it is an athlete
+  @ManyToOne(() => Athlete, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'created_by_athlete' })
+  createdByAthlete?: Athlete | null;
+
+  @RelationId((exercise: Exercise) => exercise.createdByAthlete)
+  createdByAthleteId?: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

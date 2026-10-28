@@ -8,6 +8,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ExercisesService } from './exercises.service';
 import { Exercise } from './entities/exercise.entity';
 import { Coach } from '../coachs/entities/coach.entity';
+import { Athlete } from '../athletes/entities/athlete.entity';
 import { ProgrammeExercise } from '../programmes/entities/programme-exercise.entity';
 import { StorageService } from '../storage/storage.service';
 
@@ -15,6 +16,7 @@ describe('ExercisesService', () => {
   let service: ExercisesService;
 
   const coach = { id: 'coach-1' } as Coach;
+  const athlete = { id: 'athlete-1' } as Athlete;
   const ownExercise = {
     id: 'ex-1',
     name: 'Bench press',
@@ -31,6 +33,7 @@ describe('ExercisesService', () => {
     remove: jest.fn(),
   };
   const coachRepository = { findOne: jest.fn() };
+  const athleteRepository = { findOne: jest.fn() };
   const programmeExerciseRepository = { count: jest.fn() };
   const storageService = {
     upload: jest.fn(),
@@ -53,6 +56,7 @@ describe('ExercisesService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
     coachRepository.findOne.mockResolvedValue(coach);
+    athleteRepository.findOne.mockResolvedValue(null);
     programmeExerciseRepository.count.mockResolvedValue(0);
 
     const module: TestingModule = await Test.createTestingModule({
@@ -60,6 +64,7 @@ describe('ExercisesService', () => {
         ExercisesService,
         { provide: getRepositoryToken(Exercise), useValue: exerciseRepository },
         { provide: getRepositoryToken(Coach), useValue: coachRepository },
+        { provide: getRepositoryToken(Athlete), useValue: athleteRepository },
         {
           provide: getRepositoryToken(ProgrammeExercise),
           useValue: programmeExerciseRepository,
@@ -104,7 +109,24 @@ describe('ExercisesService', () => {
       expect(result.id).toBe('new');
     });
 
-    it('rejects callers that are not coaches', async () => {
+    it('lets an athlete create an exercise as its creator', async () => {
+      coachRepository.findOne.mockResolvedValue(null);
+      athleteRepository.findOne.mockResolvedValue(athlete);
+      mockExercises();
+      exerciseRepository.save.mockImplementation((data: Exercise) => {
+        mockExercises({ ...data, id: 'new' });
+        return Promise.resolve({ ...data, id: 'new' });
+      });
+
+      await service.create('user-2', { name: 'Burpees' });
+
+      expect(exerciseRepository.save).toHaveBeenCalledWith({
+        name: 'Burpees',
+        createdByAthlete: athlete,
+      });
+    });
+
+    it('rejects callers that are neither coaches nor athletes', async () => {
       coachRepository.findOne.mockResolvedValue(null);
 
       await expect(
@@ -136,6 +158,32 @@ describe('ExercisesService', () => {
 
       await expect(
         service.update('user-1', 'ex-1', { description: 'x' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('lets an athlete edit their own exercise', async () => {
+      coachRepository.findOne.mockResolvedValue(null);
+      athleteRepository.findOne.mockResolvedValue(athlete);
+      mockExercises({
+        ...ownExercise,
+        createdById: null,
+        createdByAthleteId: 'athlete-1',
+      } as Exercise);
+
+      await service.update('user-2', 'ex-1', { description: 'x' });
+
+      expect(exerciseRepository.update).toHaveBeenCalledWith('ex-1', {
+        description: 'x',
+      });
+    });
+
+    it('forbids an athlete from editing a coach exercise', async () => {
+      coachRepository.findOne.mockResolvedValue(null);
+      athleteRepository.findOne.mockResolvedValue(athlete);
+      mockExercises(ownExercise);
+
+      await expect(
+        service.update('user-2', 'ex-1', { description: 'x' }),
       ).rejects.toBeInstanceOf(ForbiddenException);
     });
 

@@ -7,7 +7,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, In, Repository } from 'typeorm';
+import {
+  DeepPartial,
+  FindOptionsWhere,
+  In,
+  IsNull,
+  Not,
+  Repository,
+} from 'typeorm';
 import { Programme } from './entities/programme.entity';
 import { ProgrammeDay } from './entities/programme-day.entity';
 import { ProgrammeExercise } from './entities/programme-exercise.entity';
@@ -22,10 +29,15 @@ import {
 import { Notification } from '../notifications/entities/notification.entity';
 import { CreateProgrammeDto } from './dto/create-programme.dto';
 import { UpdateProgrammeDto } from './dto/update-programme.dto';
+import { AssignProgrammeDto } from './dto/assign-programme.dto';
 import { CreateProgrammeDayDto } from './dto/create-programme-day.dto';
 import { UpdateProgrammeDayDto } from './dto/update-programme-day.dto';
 import { CreateProgrammeExerciseDto } from './dto/create-programme-exercise.dto';
 import { UpdateProgrammeExerciseDto } from './dto/update-programme-exercise.dto';
+
+type Actor =
+  | { kind: 'coach'; coach: Coach }
+  | { kind: 'athlete'; athlete: Athlete };
 
 @Injectable()
 export class ProgrammesService {
@@ -53,26 +65,23 @@ export class ProgrammesService {
   // ---------- Programmes ----------
 
   async create(userId: string, dto: CreateProgrammeDto): Promise<Programme> {
-    const coach = await this.getCoachForUser(userId);
+    const actor = await this.getActorForUser(userId);
 
-    const athlete = await this.athleteRepository.findOne({
-      where: { id: dto.athleteId },
-    });
-    if (!athlete) {
-      throw new NotFoundException(`Athlete #${dto.athleteId} not found`);
-    }
-
-    const relationship = await this.relationshipRepository.findOne({
-      where: {
-        coach: { id: coach.id },
-        athlete: { id: athlete.id },
-        status: RelationshipStatus.ACCEPTED,
-      },
-    });
-    if (!relationship) {
-      throw new ForbiddenException(
-        'You can only create programmes for athletes you coach',
-      );
+    let coach: Coach | null = null;
+    let athlete: Athlete | null = null;
+    if (actor.kind === 'coach') {
+      coach = actor.coach;
+      // No athlete: the programme is a template, assigned later
+      if (dto.athleteId) {
+        athlete = await this.getCoachedAthlete(coach, dto.athleteId);
+      }
+    } else {
+      if (dto.athleteId && dto.athleteId !== actor.athlete.id) {
+        throw new ForbiddenException(
+          'Athletes can only create programmes for themselves',
+        );
+      }
+      athlete = actor.athlete;
     }
 
     this.assertDateRange(dto.startDate, dto.endDate);
@@ -95,26 +104,82 @@ export class ProgrammesService {
       }),
     );
     this.logger.log(
-      `[create] Programme ${programme.id} created by coach ${coach.id} for athlete ${athlete.id}`,
+      `[create] Programme ${programme.id} created by ${actor.kind} ${userId} (athlete: ${athlete?.id ?? 'none'})`,
     );
 
-    await this.notificationRepository.save(
-      this.notificationRepository.create({
-        message: `${coach.user.username} vous a créé un nouveau programme : ${programme.name}.`,
-        sender: coach.user,
-        receiver: athlete.user,
-      }),
-    );
+    if (coach && athlete) {
+      await this.notifyAthlete(coach, athlete, programme.name);
+    }
 
     return this.findOne(userId, programme.id);
   }
 
-  async findAll(userId: string): Promise<Programme[]> {
+  // Copies a programme (typically a template) for one of the coach's athletes.
+  // The source is left untouched so it can be reused for other athletes.
+  async assign(
+    userId: string,
+    id: string,
+    dto: AssignProgrammeDto,
+  ): Promise<Programme> {
+    const owned = await this.getOwnedProgramme(userId, id);
+    const { coach } = owned;
+    if (!coach) {
+      throw new ForbiddenException('Only coaches can assign programmes');
+    }
+    const athlete = await this.getCoachedAthlete(coach, dto.athleteId);
+
+    const source = await this.findOne(userId, id);
+    const startDate = dto.startDate ?? source.startDate;
+    const endDate = dto.endDate ?? source.endDate;
+    this.assertDateRange(startDate, endDate);
+
+    const copy = await this.programmeRepository.save(
+      this.programmeRepository.create({
+        name: source.name,
+        objectives: source.objectives,
+        startDate,
+        endDate,
+        coach,
+        athlete,
+        days: source.days.map((day) => ({
+          dayIndex: day.dayIndex,
+          name: day.name,
+          notes: day.notes,
+          exercises: day.exercises.map((entry) => ({
+            order: entry.order,
+            sets: entry.sets,
+            reps: entry.reps,
+            weight: entry.weight,
+            rpe: entry.rpe,
+            restSeconds: entry.restSeconds,
+            notes: entry.notes,
+            exercise: { id: entry.exercise.id },
+          })),
+        })),
+      }),
+    );
+    this.logger.log(
+      `[assign] Programme ${id} copied to ${copy.id} for athlete ${athlete.id}`,
+    );
+
+    await this.notifyAthlete(coach, athlete, copy.name);
+    return this.findOne(userId, copy.id);
+  }
+
+  // template: true = only your unassigned coach templates, false = no templates
+  async findAll(userId: string, template?: boolean): Promise<Programme[]> {
+    const owned = { coach: { user: { id: userId } } };
+    const assigned = { athlete: { user: { id: userId } } };
+
+    let where: FindOptionsWhere<Programme>[] = [owned, assigned];
+    if (template === true) {
+      where = [{ ...owned, athlete: IsNull() }];
+    } else if (template === false) {
+      where = [{ ...owned, athlete: Not(IsNull()) }, assigned];
+    }
+
     const programmes = await this.programmeRepository.find({
-      where: [
-        { coach: { user: { id: userId } } },
-        { athlete: { user: { id: userId } } },
-      ],
+      where,
       order: { createdAt: 'DESC' },
     });
     return programmes.map((programme) => this.stripCredentials(programme));
@@ -128,8 +193,8 @@ export class ProgrammesService {
     });
     if (!programme) throw new NotFoundException(`Programme #${id} not found`);
 
-    const isCoach = programme.coach.user.id === userId;
-    const isAthlete = programme.athlete.user.id === userId;
+    const isCoach = programme.coach?.user.id === userId;
+    const isAthlete = programme.athlete?.user.id === userId;
     if (!isCoach && !isAthlete) {
       throw new ForbiddenException('You do not have access to this programme');
     }
@@ -265,16 +330,63 @@ export class ProgrammesService {
 
   // ---------- Helpers ----------
 
-  private async getCoachForUser(userId: string): Promise<Coach> {
+  private async getActorForUser(userId: string): Promise<Actor> {
     const coach = await this.coachRepository.findOne({
       where: { user: { id: userId } },
     });
-    if (!coach) {
-      throw new ForbiddenException('Only coaches can manage programmes');
-    }
-    return coach;
+    if (coach) return { kind: 'coach', coach };
+
+    const athlete = await this.athleteRepository.findOne({
+      where: { user: { id: userId } },
+    });
+    if (athlete) return { kind: 'athlete', athlete };
+
+    throw new ForbiddenException(
+      'Only coaches and athletes can manage programmes',
+    );
   }
 
+  private async getCoachedAthlete(
+    coach: Coach,
+    athleteId: string,
+  ): Promise<Athlete> {
+    const athlete = await this.athleteRepository.findOne({
+      where: { id: athleteId },
+    });
+    if (!athlete) {
+      throw new NotFoundException(`Athlete #${athleteId} not found`);
+    }
+
+    const relationship = await this.relationshipRepository.findOne({
+      where: {
+        coach: { id: coach.id },
+        athlete: { id: athlete.id },
+        status: RelationshipStatus.ACCEPTED,
+      },
+    });
+    if (!relationship) {
+      throw new ForbiddenException(
+        'You can only create programmes for athletes you coach',
+      );
+    }
+    return athlete;
+  }
+
+  private async notifyAthlete(
+    coach: Coach,
+    athlete: Athlete,
+    programmeName: string,
+  ): Promise<void> {
+    await this.notificationRepository.save(
+      this.notificationRepository.create({
+        message: `${coach.user.username} vous a créé un nouveau programme : ${programmeName}.`,
+        sender: coach.user,
+        receiver: athlete.user,
+      }),
+    );
+  }
+
+  // The coach owns the programme; an athlete-owned programme has no coach
   private async getOwnedProgramme(
     userId: string,
     id: string,
@@ -283,9 +395,10 @@ export class ProgrammesService {
       where: { id },
     });
     if (!programme) throw new NotFoundException(`Programme #${id} not found`);
-    if (programme.coach.user.id !== userId) {
+    const ownerUserId = (programme.coach ?? programme.athlete)?.user.id;
+    if (ownerUserId !== userId) {
       throw new ForbiddenException(
-        'Only the coach who created this programme can modify it',
+        'Only the owner of this programme can modify it',
       );
     }
     return programme;

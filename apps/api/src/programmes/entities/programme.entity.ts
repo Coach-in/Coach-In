@@ -17,21 +17,23 @@ export class Programme {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  // Owner when set. null = athlete-owned programme (the athlete is the owner)
   @ManyToOne(() => Coach, {
     eager: true,
-    nullable: false,
+    nullable: true,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'coach_id' })
-  coach: Coach;
+  coach: Coach | null;
 
+  // Assignee. null = coach template, not assigned to any athlete yet
   @ManyToOne(() => Athlete, {
     eager: true,
-    nullable: false,
+    nullable: true,
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'athlete_id' })
-  athlete: Athlete;
+  athlete: Athlete | null;
 
   @Column()
   name: string;

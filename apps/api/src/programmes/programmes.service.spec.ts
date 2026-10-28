@@ -16,6 +16,7 @@ import { Athlete } from '../athletes/entities/athlete.entity';
 import { Relationship } from '../relationships/entities/relationship.entity';
 import { Notification } from '../notifications/entities/notification.entity';
 import { CreateProgrammeDto } from './dto/create-programme.dto';
+import { IsNull, Not } from 'typeorm';
 
 type Mock = jest.Mock;
 interface RepoMock {
@@ -130,12 +131,60 @@ describe('ProgrammesService', () => {
       );
     });
 
-    it('rejects callers that are not coaches', async () => {
+    it('rejects callers that are neither coaches nor athletes', async () => {
       coaches.findOne.mockResolvedValue(null);
+      athletes.findOne.mockResolvedValue(null);
 
       await expect(service.create('user-x', baseDto)).rejects.toBeInstanceOf(
         ForbiddenException,
       );
+    });
+
+    it('lets an athlete create their own programme without notification', async () => {
+      coaches.findOne.mockResolvedValue(null);
+
+      await service.create(athleteUser.id, {
+        name: 'Own block',
+        startDate: '2026-10-05',
+      });
+
+      expect(programmes.save).toHaveBeenCalledWith(
+        expect.objectContaining({ coach: null, athlete }),
+      );
+      expect(relationships.findOne).not.toHaveBeenCalled();
+      expect(notifications.save).not.toHaveBeenCalled();
+    });
+
+    it('lets an athlete pass their own athleteId', async () => {
+      coaches.findOne.mockResolvedValue(null);
+
+      await service.create(athleteUser.id, baseDto);
+
+      expect(programmes.save).toHaveBeenCalledWith(
+        expect.objectContaining({ coach: null, athlete }),
+      );
+    });
+
+    it('forbids an athlete from creating a programme for another athlete', async () => {
+      coaches.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.create(athleteUser.id, { ...baseDto, athleteId: 'athlete-2' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(programmes.save).not.toHaveBeenCalled();
+    });
+
+    it('lets a coach create a template without athlete nor notification', async () => {
+      await service.create(coachUser.id, {
+        name: 'Template',
+        startDate: '2026-10-05',
+      });
+
+      expect(programmes.save).toHaveBeenCalledWith(
+        expect.objectContaining({ coach, athlete: null }),
+      );
+      expect(relationships.findOne).not.toHaveBeenCalled();
+      expect(notifications.save).not.toHaveBeenCalled();
     });
 
     it('returns 404 for an unknown athlete', async () => {
@@ -190,12 +239,72 @@ describe('ProgrammesService', () => {
     });
   });
 
+  describe('findAll', () => {
+    it('lists owned and assigned programmes by default', async () => {
+      programmes.find.mockResolvedValue([{ ...programme }]);
+
+      await service.findAll(coachUser.id);
+
+      expect(programmes.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: [
+            { coach: { user: { id: coachUser.id } } },
+            { athlete: { user: { id: coachUser.id } } },
+          ],
+        }),
+      );
+    });
+
+    it('only lists unassigned coach templates when template=true', async () => {
+      programmes.find.mockResolvedValue([]);
+
+      await service.findAll(coachUser.id, true);
+
+      expect(programmes.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: [{ coach: { user: { id: coachUser.id } }, athlete: IsNull() }],
+        }),
+      );
+    });
+
+    it('excludes templates when template=false', async () => {
+      programmes.find.mockResolvedValue([]);
+
+      await service.findAll(coachUser.id, false);
+
+      expect(programmes.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: [
+            { coach: { user: { id: coachUser.id } }, athlete: Not(IsNull()) },
+            { athlete: { user: { id: coachUser.id } } },
+          ],
+        }),
+      );
+    });
+  });
+
   describe('findOne', () => {
     it('lets the athlete read the programme without credentials', async () => {
       const result = await service.findOne(athleteUser.id, 'prog-1');
 
       expect(result.id).toBe('prog-1');
-      expect(result.coach.user).not.toHaveProperty('password');
+      expect(result.coach?.user).not.toHaveProperty('password');
+    });
+
+    it('lets an athlete read their own programme', async () => {
+      programmes.findOne.mockResolvedValue({ ...programme, coach: null });
+
+      const result = await service.findOne(athleteUser.id, 'prog-1');
+
+      expect(result.coach).toBeNull();
+    });
+
+    it('lets a coach read their unassigned template', async () => {
+      programmes.findOne.mockResolvedValue({ ...programme, athlete: null });
+
+      const result = await service.findOne(coachUser.id, 'prog-1');
+
+      expect(result.athlete).toBeNull();
     });
 
     it('forbids users outside the programme', async () => {
@@ -225,6 +334,26 @@ describe('ProgrammesService', () => {
       expect(programmes.remove).not.toHaveBeenCalled();
     });
 
+    it('lets an athlete modify and delete their own programme', async () => {
+      programmes.findOne.mockResolvedValue({ ...programme, coach: null });
+
+      await service.update(athleteUser.id, 'prog-1', { name: 'Mine' });
+      await service.remove(athleteUser.id, 'prog-1');
+
+      expect(programmes.update).toHaveBeenCalledWith('prog-1', {
+        name: 'Mine',
+      });
+      expect(programmes.remove).toHaveBeenCalled();
+    });
+
+    it('forbids a coach from modifying an athlete-owned programme', async () => {
+      programmes.findOne.mockResolvedValue({ ...programme, coach: null });
+
+      await expect(
+        service.update(coachUser.id, 'prog-1', { name: 'Hacked' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
     it('checks the date range against the stored startDate', async () => {
       await expect(
         service.update(coachUser.id, 'prog-1', { endDate: '2026-01-01' }),
@@ -235,6 +364,107 @@ describe('ProgrammesService', () => {
       await service.update(coachUser.id, 'prog-1', {});
 
       expect(programmes.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('assign', () => {
+    const template = {
+      ...programme,
+      athlete: null,
+      days: [
+        {
+          dayIndex: 1,
+          name: 'Push',
+          notes: null,
+          exercises: [
+            {
+              order: 1,
+              sets: 4,
+              reps: 8,
+              weight: 60,
+              rpe: null,
+              restSeconds: 90,
+              notes: null,
+              exercise: { id: 'ex-1' },
+            },
+          ],
+        },
+      ],
+    } as unknown as Programme;
+
+    beforeEach(() => {
+      programmes.findOne.mockResolvedValue({ ...template });
+    });
+
+    it('copies the template for the athlete and notifies them', async () => {
+      await service.assign(coachUser.id, 'prog-1', {
+        athleteId: 'athlete-1',
+        startDate: '2026-11-02',
+      });
+
+      expect(programmes.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Block',
+          startDate: '2026-11-02',
+          coach,
+          athlete,
+          days: [
+            {
+              dayIndex: 1,
+              name: 'Push',
+              notes: null,
+              exercises: [
+                {
+                  order: 1,
+                  sets: 4,
+                  reps: 8,
+                  weight: 60,
+                  rpe: null,
+                  restSeconds: 90,
+                  notes: null,
+                  exercise: { id: 'ex-1' },
+                },
+              ],
+            },
+          ],
+        }),
+      );
+      expect(notifications.save).toHaveBeenCalledWith(
+        expect.objectContaining({ sender: coachUser, receiver: athleteUser }),
+      );
+    });
+
+    it('requires an accepted relationship with the athlete', async () => {
+      relationships.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.assign(coachUser.id, 'prog-1', { athleteId: 'athlete-1' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(programmes.save).not.toHaveBeenCalled();
+    });
+
+    it('forbids users who do not own the programme', async () => {
+      await expect(
+        service.assign('someone-else', 'prog-1', { athleteId: 'athlete-1' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('forbids assigning an athlete-owned programme', async () => {
+      programmes.findOne.mockResolvedValue({ ...programme, coach: null });
+
+      await expect(
+        service.assign(athleteUser.id, 'prog-1', { athleteId: 'athlete-1' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+    });
+
+    it('rejects an endDate before the overridden startDate', async () => {
+      await expect(
+        service.assign(coachUser.id, 'prog-1', {
+          athleteId: 'athlete-1',
+          startDate: '2026-12-01',
+          endDate: '2026-11-01',
+        }),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 
