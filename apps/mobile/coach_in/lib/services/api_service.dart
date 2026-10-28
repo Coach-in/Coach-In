@@ -98,14 +98,11 @@ class ApiService {
 
       final token = await getAccessToken();
       if (token != null) headers['Authorization'] = 'Bearer $token';
-      developer.log("4");
     }
 
     http.Response response = await requestFn(headers);
 
     if (withAuth && response.statusCode == 401) {
-      developer.log("5");
-
       final refreshed = await _refreshToken();
       if (refreshed) {
         final newToken = await getAccessToken();
@@ -115,7 +112,6 @@ class ApiService {
         throw Exception('Session expired. Please log in again.');
       }
     }
-    developer.log("end of send request");
     return response;
   }
 
@@ -182,6 +178,18 @@ class ApiService {
     return _sendRequest(
       (headers) => http
           .put(url, headers: headers, body: jsonEncode(body))
+          .timeout(ApiConfig.requestTimeout),
+      withAuth: withAuth,
+    );
+  }
+
+  Future<http.Response> delete(String endpoint, {bool withAuth = false}) async {
+    final baseUrl = ApiConfig.getBaseUrl();
+    final url = Uri.parse('$baseUrl$endpoint');
+
+    return _sendRequest(
+      (headers) => http
+          .delete(url, headers: headers)
           .timeout(ApiConfig.requestTimeout),
       withAuth: withAuth,
     );
@@ -335,7 +343,6 @@ class ApiService {
   }
 
   Future<void> requestRelationship(String athleteId, String coachId) async {
-    developer.log("here");
     final response = await post(
       '/relationships',
       {
@@ -350,6 +357,25 @@ class ApiService {
     }
   }
 
+  Future<List<dynamic>> fetchRelationships() async {
+    final response = await get('/relationships', withAuth: true);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch relationships');
+    }
+  }
+
+  Future<void> reviewRelationship(String id, String action) async {
+    assert(action == 'accept' || action == 'refuse');
+    final response = await post('/relationships/$id/$action', {}, withAuth: true);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to $action relationship');
+    }
+  }
+
   Future<List<dynamic>> fetchNotifications() async {
     final response = await get('/notifications', withAuth: true);
 
@@ -357,6 +383,14 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to fetch notifications');
+    }
+  }
+
+  Future<void> deleteNotification(String id) async {
+    final response = await delete('/notifications/$id', withAuth: true);
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete notification');
     }
   }
 
@@ -395,7 +429,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
+          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
           'details': response.body
         };
       }
@@ -422,7 +456,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["detail"]} (${response.statusCode})',
+          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
           'details': response.body
         };
       }
@@ -439,15 +473,8 @@ class AuthService {
       });
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final access = data['access_token'];
-        final refresh = data['refresh_token'];
-
-        if (access != null && refresh != null) {
-          await _apiService.saveTokens(access, refresh);
-        }
-
-        return {'success': true, 'data': data};
+        // The screen persists the tokens (login returns `{user, token}`).
+        return {'success': true, 'data': jsonDecode(response.body)};
       } else {
         developer.log(response.body.toString());
         return {
