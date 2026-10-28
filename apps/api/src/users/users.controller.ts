@@ -9,11 +9,11 @@ import {
   Patch,
   Param,
   Delete,
-  Headers,
   HttpCode,
+  ParseUUIDPipe,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
-import { UnauthorizedException } from '@nestjs/common/exceptions';
-import { ConfigService } from '@nestjs/config';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -23,20 +23,22 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import jwt from 'jsonwebtoken';
-import { TokenContent } from '../utils/types/jwt.types';
 import { UsersService } from './users.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CurrentUser } from '../auth/current-user.decorator';
+import type { AuthUser } from '../auth/auth.types';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../utils/types/jwt.types';
+import { Public } from '../auth/public.decorator';
+import { PaginationQueryDto } from '../utils/pagination';
+import { LoginThrottleGuard } from '../auth/login-throttle.guard';
 
 @ApiTags('Users')
 @ApiExtraModels(CreateUserWithProfileDto, CreateAthleteDto, CreateCoachDto)
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly config: ConfigService,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Post('auth/signup')
   @ApiOperation({ summary: 'Register a new user (athlete or coach)' })
@@ -150,7 +152,6 @@ export class UsersController {
                 email: 'athlete@example.com',
                 username: 'john_athlete',
                 role: 'athlete',
-                refresh_token: null,
               },
               athlete: {
                 id: 'b1c2d3e4-1234-5678-abcd-ef0123456789',
@@ -180,7 +181,6 @@ export class UsersController {
                 email: 'coach@example.com',
                 username: 'jane_coach',
                 role: 'coach',
-                refresh_token: null,
               },
               coach: {
                 id: 'c1d2e3f4-1234-5678-abcd-ef0123456789',
@@ -210,7 +210,6 @@ export class UsersController {
                 email: 'admin@example.com',
                 username: 'admin_user',
                 role: 'admin',
-                refresh_token: null,
               },
               admin: {
                 id: 'd1e2f3a4-1234-5678-abcd-ef0123456789',
@@ -233,8 +232,12 @@ export class UsersController {
       },
     },
   })
-  async create(@Body() createUserWithProfileDto: CreateUserWithProfileDto) {
-    return await this.usersService.create(createUserWithProfileDto);
+  @Public()
+  async create(
+    @Body() createUserWithProfileDto: CreateUserWithProfileDto,
+    @CurrentUser() requester?: AuthUser,
+  ) {
+    return await this.usersService.create(createUserWithProfileDto, requester);
   }
 
   @Post('auth/login')
@@ -265,7 +268,6 @@ export class UsersController {
             email: 'athlete@example.com',
             username: 'john_athlete',
             role: 'athlete',
-            refresh_token: null,
           },
           token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature',
         },
@@ -283,17 +285,8 @@ export class UsersController {
       },
     },
   })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found',
-    schema: {
-      example: {
-        statusCode: 404,
-        message: 'User not found',
-        error: 'Not Found',
-      },
-    },
-  })
+  @Public()
+  @UseGuards(LoginThrottleGuard)
   async login(@Body() loginUserDto: LoginUserDto) {
     return await this.usersService.login(loginUserDto);
   }
@@ -310,7 +303,6 @@ export class UsersController {
         email: 'athlete@example.com',
         username: 'john_athlete',
         role: 'athlete',
-        refresh_token: null,
       },
     },
   })
@@ -325,17 +317,8 @@ export class UsersController {
       },
     },
   })
-  async findMe(@Headers('authorization') authHeader: string) {
-    const [name, token] = authHeader?.split(' ') ?? [];
-    if (name !== 'Bearer' || !token) {
-      throw new UnauthorizedException('Token is missing or invalid');
-    }
-    const secret = this.config.get<string>('JWT_SECRET');
-    if (!secret) {
-      throw new Error('JWT_SECRET is not defined in environment variables');
-    }
-    const decoded = jwt.verify(token, secret) as TokenContent;
-    return await this.usersService.findOneId(decoded.userId);
+  async findMe(@CurrentUser() user: AuthUser) {
+    return await this.usersService.findOneId(user.id);
   }
 
   @Get()
@@ -358,8 +341,9 @@ export class UsersController {
       ],
     },
   })
-  async findAll() {
-    return await this.usersService.findAll();
+  @Roles(UserRole.ADMIN)
+  async findAll(@Query() page: PaginationQueryDto) {
+    return await this.usersService.findAll(page);
   }
 
   @Get(':id')
@@ -391,8 +375,11 @@ export class UsersController {
       },
     },
   })
-  async findOne(@Param('id') id: string) {
-    return await this.usersService.findOneId(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() requester: AuthUser,
+  ) {
+    return await this.usersService.findOneAs(id, requester);
   }
 
   @Patch(':id')
@@ -425,8 +412,12 @@ export class UsersController {
       },
     },
   })
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return await this.usersService.update(id, updateUserDto);
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() requester: AuthUser,
+  ) {
+    return await this.usersService.update(id, updateUserDto, requester);
   }
 
   @Delete(':id')
@@ -458,7 +449,10 @@ export class UsersController {
       },
     },
   })
-  async remove(@Param('id') id: string) {
-    return await this.usersService.remove(id);
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() requester: AuthUser,
+  ) {
+    return await this.usersService.remove(id, requester);
   }
 }

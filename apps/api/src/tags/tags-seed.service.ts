@@ -13,54 +13,38 @@ export class TagsSeedService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap(): Promise<void> {
-    const existingCategories = await this.tagCategoriesService.findAll();
-    const existingTags = await this.tagsService.findAll();
+    const categories = new Map(
+      (await this.tagCategoriesService.findAll()).map((c) => [c.name, c]),
+    );
+    const tagNames = new Set(
+      (await this.tagsService.findAll()).map((t) => t.name.toLowerCase()),
+    );
 
-    if (existingCategories.length > 0 || existingTags.length > 0) {
-      this.logger.log(
-        'Some tags already exist, checking for missing entries...',
-      );
-    }
-
-    this.logger.log('Seeding default tag categories and tags...');
+    let createdCategories = 0;
+    let createdTags = 0;
 
     for (const entry of TAG_SEED) {
-      const existingCategory = await this.tagCategoriesService
-        .findAll()
-        .then((cats) => cats.find((c) => c.name === entry.category));
-
-      let category;
-      if (existingCategory) {
-        this.logger.log(
-          `[Category] "${entry.category}" already exists, skipping.`,
-        );
-        category = existingCategory;
-      } else {
-        this.logger.log(`[Category] Creating "${entry.category}"...`);
-        category = await this.tagCategoriesService.create({
+      if (!categories.has(entry.category)) {
+        const category = await this.tagCategoriesService.create({
           name: entry.category,
         });
+        categories.set(category.name, category);
+        createdCategories++;
       }
 
       for (const tagName of entry.tags) {
-        const existingTag = await this.tagsService
-          .findByNames([tagName])
-          .then((tags) => tags[0]);
-
-        if (existingTag) {
-          this.logger.log(`  [Tag] "${tagName}" already exists, skipping.`);
-        } else {
-          this.logger.log(
-            `  [Tag] Creating "${tagName}" in "${entry.category}"...`,
-          );
-          await this.tagsService.create({
-            name: tagName,
-            categoryName: category.name,
-          });
-        }
+        if (tagNames.has(tagName.toLowerCase())) continue;
+        await this.tagsService.create({
+          name: tagName,
+          categoryName: entry.category,
+        });
+        tagNames.add(tagName.toLowerCase());
+        createdTags++;
       }
     }
 
-    this.logger.log('Tags seeding complete.');
+    this.logger.log(
+      `Tags seeding complete: ${createdCategories} categorie(s) and ${createdTags} tag(s) created.`,
+    );
   }
 }

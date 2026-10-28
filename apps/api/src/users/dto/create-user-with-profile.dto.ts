@@ -2,6 +2,7 @@ import {
   IsEmail,
   IsEnum,
   IsNotEmpty,
+  IsDefined,
   MinLength,
   ValidateIf,
   ValidateNested,
@@ -12,8 +13,10 @@ import { CreateAthleteDto } from '../../athletes/dto/create-athlete.dto';
 import { CreateCoachDto } from '../../coachs/dto/create-coach.dto';
 import { CreateAdminDto } from '../../admins/dto/create-admin.dto';
 import { UserRole } from '../../utils/types/jwt.types';
+import { NormalizeEmail } from '../../utils/normalize-email';
 
 export class CreateUserWithProfileDto {
+  @NormalizeEmail()
   @IsEmail()
   email: string;
 
@@ -26,17 +29,19 @@ export class CreateUserWithProfileDto {
   @IsEnum(UserRole)
   role: UserRole;
 
-  @ValidateIf((o) => o.role === UserRole.ATHLETE)
+  @ValidateIf((o: CreateUserWithProfileDto) => o.role === UserRole.ATHLETE)
+  @IsDefined()
   @ValidateNested()
   @Type(() => CreateAthleteDto)
   athleteProfile?: CreateAthleteDto;
 
-  @ValidateIf((o) => o.role === UserRole.COACH)
+  @ValidateIf((o: CreateUserWithProfileDto) => o.role === UserRole.COACH)
+  @IsDefined()
   @ValidateNested()
   @Type(() => CreateCoachDto)
   coachProfile?: CreateCoachDto;
 
-  @ValidateIf((o) => o.role === UserRole.ADMIN)
+  @ValidateIf((o: CreateUserWithProfileDto) => o.role === UserRole.ADMIN)
   @ValidateNested()
   @Type(() => CreateAdminDto)
   adminProfile?: CreateAdminDto;
