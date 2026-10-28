@@ -1,0 +1,23 @@
+[
+  {
+    "id": "ex-squat",
+    "title": "Squat",
+    "description": "Descendre sous la parallaxe, genoux alignés sur les orteils. Resserrer le haut du dos avant chaque répétition.",
+    "videoUrl": "https://videos.exemple.fr/squat-barre",
+    "imageUrl": "/exercises/squat.jpg"
+  },
+  {
+    "id": "ex-deadlift",
+    "title": "Deadlift",
+    "description": "Pieds sous les hanches, barre près des tibias, dos gainé. Tirer en extension de hanches et de genoux.",
+    "videoUrl": "https://videos.exemple.fr/deadlift",
+    "imageUrl": "/exercises/deadlift.jpg"
+  },
+  {
+    "id": "ex-bench",
+    "title": "Bench",
+    "description": "Pieds bien ancrés, omoplates serrées, barre sur la ligne des mamelons. Descendre de manière contrôlée.",
+    "videoUrl": "https://videos.exemple.fr/benchpress",
+    "imageUrl": "/exercises/benchpress.jpg"
+  }
+]
