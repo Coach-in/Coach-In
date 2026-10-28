@@ -7,9 +7,11 @@ import {
   HttpCode,
   Logger,
   Param,
+  ParseBoolPipe,
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UnauthorizedException,
   UsePipes,
   ValidationPipe,
@@ -20,6 +22,7 @@ import {
   ApiBody,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
@@ -29,6 +32,7 @@ import { ProgrammesService } from './programmes.service';
 import { Programme } from './entities/programme.entity';
 import { CreateProgrammeDto } from './dto/create-programme.dto';
 import { UpdateProgrammeDto } from './dto/update-programme.dto';
+import { AssignProgrammeDto } from './dto/assign-programme.dto';
 import { CreateProgrammeDayDto } from './dto/create-programme-day.dto';
 import { UpdateProgrammeDayDto } from './dto/update-programme-day.dto';
 import { CreateProgrammeExerciseDto } from './dto/create-programme-exercise.dto';
@@ -126,12 +130,14 @@ export class ProgrammesController {
 
   @Post()
   @ApiOperation({
-    summary: 'Coach creates a programme (optionally with days and exercises)',
+    summary:
+      'Create a programme (optionally with days and exercises): a coach for an athlete or as a template, an athlete for themselves',
   })
   @ApiBody({ type: CreateProgrammeDto })
   @ApiResponse({
     status: 201,
-    description: 'Programme created. A notification is sent to the athlete.',
+    description:
+      'Programme created. When a coach assigns it to an athlete, a notification is sent to the athlete.',
     schema: { example: programmeExample },
   })
   @ApiResponse({
@@ -140,7 +146,8 @@ export class ProgrammesController {
   })
   @ApiResponse({
     status: 403,
-    description: 'Caller is not a coach or does not coach this athlete.',
+    description:
+      'Caller is not a coach or an athlete, does not coach this athlete, or an athlete targets someone else.',
   })
   @ApiResponse({ status: 404, description: 'Athlete not found.' })
   async create(
@@ -155,14 +162,25 @@ export class ProgrammesController {
 
   @Get()
   @ApiOperation({
-    summary: 'List your programmes (as coach or athlete), without days',
+    summary: 'List your programmes (owned or assigned to you), without days',
+  })
+  @ApiQuery({
+    name: 'template',
+    required: false,
+    type: Boolean,
+    description:
+      'true: only your coach templates (not assigned to an athlete). false: exclude templates.',
   })
   @ApiResponse({
     status: 200,
     schema: { example: [{ ...programmeExample, days: undefined }] },
   })
-  findAll(@Headers('authorization') auth: string): Promise<Programme[]> {
-    return this.programmesService.findAll(this.extractUserId(auth));
+  findAll(
+    @Headers('authorization') auth: string,
+    @Query('template', new ParseBoolPipe({ optional: true }))
+    template?: boolean,
+  ): Promise<Programme[]> {
+    return this.programmesService.findAll(this.extractUserId(auth), template);
   }
 
   @Get(':id')
@@ -181,11 +199,11 @@ export class ProgrammesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Owning coach updates programme information' })
+  @ApiOperation({ summary: 'Owner updates programme information' })
   @ApiParam(programmeIdParam)
   @ApiBody({ type: UpdateProgrammeDto })
   @ApiResponse({ status: 200, schema: { example: programmeExample } })
-  @ApiResponse({ status: 403, description: 'Not the owning coach.' })
+  @ApiResponse({ status: 403, description: 'Not the owner of the programme.' })
   @ApiResponse({ status: 404, description: 'Programme not found.' })
   update(
     @Headers('authorization') auth: string,
@@ -198,11 +216,11 @@ export class ProgrammesController {
   @Delete(':id')
   @HttpCode(204)
   @ApiOperation({
-    summary: 'Owning coach deletes a programme with its days and exercises',
+    summary: 'Owner deletes a programme with its days and exercises',
   })
   @ApiParam(programmeIdParam)
   @ApiResponse({ status: 204, description: 'Programme deleted.' })
-  @ApiResponse({ status: 403, description: 'Not the owning coach.' })
+  @ApiResponse({ status: 403, description: 'Not the owner of the programme.' })
   @ApiResponse({ status: 404, description: 'Programme not found.' })
   remove(
     @Headers('authorization') auth: string,
@@ -211,11 +229,39 @@ export class ProgrammesController {
     return this.programmesService.remove(this.extractUserId(auth), id);
   }
 
+  @Post(':id/assign')
+  @ApiOperation({
+    summary:
+      'Owning coach copies a programme (e.g. a template) for one of their athletes',
+  })
+  @ApiParam(programmeIdParam)
+  @ApiBody({ type: AssignProgrammeDto })
+  @ApiResponse({
+    status: 201,
+    description:
+      'A new programme is created for the athlete, who is notified. The source programme is unchanged.',
+    schema: { example: programmeExample },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid payload or date range.' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Not the owning coach, or no accepted relationship with the athlete.',
+  })
+  @ApiResponse({ status: 404, description: 'Programme or athlete not found.' })
+  assign(
+    @Headers('authorization') auth: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AssignProgrammeDto,
+  ): Promise<Programme> {
+    return this.programmesService.assign(this.extractUserId(auth), id, dto);
+  }
+
   // ---------- Days ----------
 
   @Post(':id/days')
   @ApiOperation({
-    summary: 'Owning coach adds a day (optionally with exercises)',
+    summary: 'Owner adds a day (optionally with exercises)',
   })
   @ApiParam(programmeIdParam)
   @ApiBody({ type: CreateProgrammeDayDto })
@@ -234,7 +280,7 @@ export class ProgrammesController {
   }
 
   @Patch(':id/days/:dayId')
-  @ApiOperation({ summary: 'Owning coach updates a day' })
+  @ApiOperation({ summary: 'Owner updates a day' })
   @ApiParam(programmeIdParam)
   @ApiParam(dayIdParam)
   @ApiBody({ type: UpdateProgrammeDayDto })
@@ -257,7 +303,7 @@ export class ProgrammesController {
 
   @Delete(':id/days/:dayId')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Owning coach deletes a day and its exercises' })
+  @ApiOperation({ summary: 'Owner deletes a day and its exercises' })
   @ApiParam(programmeIdParam)
   @ApiParam(dayIdParam)
   @ApiResponse({ status: 204, description: 'Day deleted.' })
@@ -277,7 +323,7 @@ export class ProgrammesController {
   // ---------- Exercises of a day ----------
 
   @Post(':id/days/:dayId/exercises')
-  @ApiOperation({ summary: 'Owning coach adds an exercise to a day' })
+  @ApiOperation({ summary: 'Owner adds an exercise to a day' })
   @ApiParam(programmeIdParam)
   @ApiParam(dayIdParam)
   @ApiBody({ type: CreateProgrammeExerciseDto })
@@ -303,7 +349,7 @@ export class ProgrammesController {
   }
 
   @Patch(':id/days/:dayId/exercises/:exerciseId')
-  @ApiOperation({ summary: 'Owning coach updates an exercise of a day' })
+  @ApiOperation({ summary: 'Owner updates an exercise of a day' })
   @ApiParam(programmeIdParam)
   @ApiParam(dayIdParam)
   @ApiParam(programmeExerciseIdParam)
@@ -328,7 +374,7 @@ export class ProgrammesController {
 
   @Delete(':id/days/:dayId/exercises/:exerciseId')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Owning coach removes an exercise from a day' })
+  @ApiOperation({ summary: 'Owner removes an exercise from a day' })
   @ApiParam(programmeIdParam)
   @ApiParam(dayIdParam)
   @ApiParam(programmeExerciseIdParam)
