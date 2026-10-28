@@ -357,6 +357,25 @@ class ApiService {
     }
   }
 
+  Future<List<dynamic>> fetchRelationships() async {
+    final response = await get('/relationships', withAuth: true);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to fetch relationships');
+    }
+  }
+
+  Future<void> reviewRelationship(String id, String action) async {
+    assert(action == 'accept' || action == 'refuse');
+    final response = await post('/relationships/$id/$action', {}, withAuth: true);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to $action relationship');
+    }
+  }
+
   Future<List<dynamic>> fetchNotifications() async {
     final response = await get('/notifications', withAuth: true);
 
