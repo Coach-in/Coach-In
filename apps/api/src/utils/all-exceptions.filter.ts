@@ -53,7 +53,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     if (body.statusCode >= SERVER_ERROR_THRESHOLD) {
       this.logger.error(
-        `${request.method} ${request.url} → ${body.statusCode}: ${errorMessage(exception)}`,
+        `${request.method} ${request.url.split('?')[0]} → ${body.statusCode}: ${errorMessage(exception)}`,
         errorStack(exception),
       );
     }

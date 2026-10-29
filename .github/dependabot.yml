@@ -1,0 +1,60 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /apps/api
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: sunday
+    open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore(api)
+    groups:
+      nestjs:
+        patterns: ['@nestjs/*']
+        update-types: [minor, patch]
+      aws-sdk:
+        patterns: ['@aws-sdk/*']
+        update-types: [minor, patch]
+      dev-tooling:
+        dependency-type: development
+        update-types: [minor, patch]
+      production-dependencies:
+        dependency-type: production
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: /apps/api
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: sunday
+    commit-message:
+      prefix: chore(api)
+    ignore:
+      - dependency-name: node
+        update-types: ['version-update:semver-major']
+
+  - package-ecosystem: docker-compose
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: sunday
+    commit-message:
+      prefix: chore(api)
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: dev
+    schedule:
+      interval: weekly
+      day: sunday
+    commit-message:
+      prefix: chore(ci)
+    groups:
+      github-actions:
+        patterns: ['*']
