@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
 import '../widgets/app_bottom_nav.dart';
+import './admin_profile_page.dart';
 import './explore_page.dart';
 import './notifications_page.dart';
 import './start_page.dart';
@@ -41,6 +42,15 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final user = await _apiService.fetchCurrentUser();
       final role = user['role'];
+
+      if (role == 'admin') {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const AdminProfilePage()),
+        );
+        return;
+      }
 
       Map<String, dynamic> profile;
 
@@ -446,7 +456,19 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               )
             : _errorMessage != null
-                ? Center(child: Text(_errorMessage!))
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(_errorMessage!),
+                        const SizedBox(height: 20),
+                        TextButton(
+                          onPressed: _logout,
+                          child: const Text('Log out'),
+                        ),
+                      ],
+                    ),
+                  )
                 : _profile == null
                     ? const Center(child: Text('Profile unavailable'))
                     : RefreshIndicator(
