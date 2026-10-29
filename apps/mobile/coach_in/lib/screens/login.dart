@@ -6,7 +6,6 @@ import 'register.dart';
 import 'start_page.dart';
 import './explore_page.dart';
 import 'coach_document_list.dart';
-import 'profile_page.dart';
 
 import '../services/api_service.dart';
 import '../services/oauth_service.dart';

@@ -6,3 +6,11 @@ dist
 .git
 *.log
 coverage
+coverage
+.git
+.env
+.env.*
+!.env.example
+npm-debug.log*
+*.tsbuildinfo
+apps/api/doc/

@@ -6,8 +6,8 @@ import {
   Patch,
   Param,
   Delete,
-  Headers,
-  UnauthorizedException,
+  ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,12 +17,15 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
-import jwt from 'jsonwebtoken';
-import { TokenContent } from '../utils/types/jwt.types';
 import { CoachsService } from './coachs.service';
 import { CreateCoachDto } from './dto/create-coach.dto';
 import { UpdateCoachDto } from './dto/update-coach.dto';
+import { CurrentUser } from '../auth/current-user.decorator';
+import type { AuthUser } from '../auth/auth.types';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../utils/types/jwt.types';
+import { Public } from '../auth/public.decorator';
+import { PaginationQueryDto } from '../utils/pagination';
 
 const coachExample = {
   id: 'uuid',
@@ -46,10 +49,7 @@ const coachExample = {
 @ApiTags('Coachs')
 @Controller('coachs')
 export class CoachsController {
-  constructor(
-    private readonly coachsService: CoachsService,
-    private readonly config: ConfigService,
-  ) {}
+  constructor(private readonly coachsService: CoachsService) {}
 
   @Get('me')
   @ApiBearerAuth('access-token')
@@ -63,14 +63,8 @@ export class CoachsController {
   })
   @ApiResponse({ status: 401, description: 'Token missing or invalid' })
   @ApiResponse({ status: 404, description: 'Coach profile not found' })
-  async findMe(@Headers('authorization') authHeader: string) {
-    const [scheme, token] = authHeader?.split(' ') ?? [];
-    if (scheme !== 'Bearer' || !token)
-      throw new UnauthorizedException('Token is missing or invalid');
-    const secret = this.config.get<string>('JWT_SECRET');
-    if (!secret) throw new Error('JWT_SECRET is not defined');
-    const decoded = jwt.verify(token, secret) as TokenContent;
-    return this.coachsService.findMe(decoded.userId);
+  async findMe(@CurrentUser() user: AuthUser) {
+    return this.coachsService.findMe(user.id);
   }
 
   @Post()
@@ -92,6 +86,7 @@ export class CoachsController {
     description: 'Coach created',
     schema: { example: coachExample },
   })
+  @Roles(UserRole.ADMIN)
   create(@Body() createCoachDto: CreateCoachDto) {
     return this.coachsService.create(createCoachDto);
   }
@@ -103,8 +98,9 @@ export class CoachsController {
     description: 'List of coaches',
     schema: { example: [coachExample] },
   })
-  findAll() {
-    return this.coachsService.findAll();
+  @Public()
+  findAll(@Query() page: PaginationQueryDto) {
+    return this.coachsService.findAll(page);
   }
 
   @Get(':id')
@@ -116,7 +112,7 @@ export class CoachsController {
     schema: { example: coachExample },
   })
   @ApiResponse({ status: 404, description: 'Coach not found' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.coachsService.findOne(id);
   }
 
@@ -137,8 +133,12 @@ export class CoachsController {
     schema: { example: coachExample },
   })
   @ApiResponse({ status: 404, description: 'Coach not found' })
-  update(@Param('id') id: string, @Body() updateCoachDto: UpdateCoachDto) {
-    return this.coachsService.update(id, updateCoachDto);
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateCoachDto: UpdateCoachDto,
+    @CurrentUser() requester: AuthUser,
+  ) {
+    return this.coachsService.update(id, updateCoachDto, requester);
   }
 
   @Delete(':id')
@@ -146,7 +146,10 @@ export class CoachsController {
   @ApiParam({ name: 'id', example: 'uuid' })
   @ApiResponse({ status: 200, description: 'Coach deleted' })
   @ApiResponse({ status: 404, description: 'Coach not found' })
-  remove(@Param('id') id: string) {
-    return this.coachsService.remove(id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() requester: AuthUser,
+  ) {
+    return this.coachsService.remove(id, requester);
   }
 }

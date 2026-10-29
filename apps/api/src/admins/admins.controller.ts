@@ -5,8 +5,7 @@ import {
   Delete,
   Param,
   Body,
-  Headers,
-  UnauthorizedException,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,11 +15,12 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
-import jwt from 'jsonwebtoken';
-import { TokenContent } from '../utils/types/jwt.types';
 import { AdminsService } from './admins.service';
 import { UpdateAdminDto } from './dto/update-admin.dto';
+import { CurrentUser } from '../auth/current-user.decorator';
+import type { AuthUser } from '../auth/auth.types';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../utils/types/jwt.types';
 
 const adminExample = {
   id: 'a1b2c3d4-1234-5678-abcd-ef0123456789',
@@ -29,17 +29,14 @@ const adminExample = {
     username: 'admin_user',
     email: 'admin@example.com',
     role: 'admin',
-    refresh_token: null,
   },
 };
 
 @ApiTags('Admins')
+@Roles(UserRole.ADMIN)
 @Controller('admins')
 export class AdminsController {
-  constructor(
-    private readonly adminsService: AdminsService,
-    private readonly config: ConfigService,
-  ) {}
+  constructor(private readonly adminsService: AdminsService) {}
 
   @Get('me')
   @ApiBearerAuth('access-token')
@@ -73,14 +70,8 @@ export class AdminsController {
       },
     },
   })
-  async findMe(@Headers('authorization') authHeader: string) {
-    const [scheme, token] = authHeader?.split(' ') ?? [];
-    if (scheme !== 'Bearer' || !token)
-      throw new UnauthorizedException('Token is missing or invalid');
-    const secret = this.config.get<string>('JWT_SECRET');
-    if (!secret) throw new Error('JWT_SECRET is not defined');
-    const decoded = jwt.verify(token, secret) as TokenContent;
-    return this.adminsService.findMe(decoded.userId);
+  async findMe(@CurrentUser() user: AuthUser) {
+    return this.adminsService.findMe(user.id);
   }
 
   @Get()
@@ -119,7 +110,7 @@ export class AdminsController {
       },
     },
   })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminsService.findOne(id);
   }
 
@@ -148,7 +139,10 @@ export class AdminsController {
       },
     },
   })
-  update(@Param('id') id: string, @Body() updateAdminDto: UpdateAdminDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateAdminDto: UpdateAdminDto,
+  ) {
     return this.adminsService.update(id, updateAdminDto);
   }
 
@@ -181,7 +175,7 @@ export class AdminsController {
       },
     },
   })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.adminsService.remove(id);
   }
 }
