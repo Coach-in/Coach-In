@@ -1,5 +1,6 @@
 import {
   Injectable,
+  BadRequestException,
   NotFoundException,
   OnModuleInit,
   Logger,
@@ -19,6 +20,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CoachDocument } from './entities/coach-document.entity';
 import { Coach } from '../coachs/entities/coach.entity';
+import { errorMessage, errorStack } from '../utils/error';
+import { extensionForContent } from '../utils/file-signature';
+import { Pagination } from '../utils/pagination';
+import { AuthUser } from '../auth/auth.types';
+import { assertSelfOrAdmin } from '../auth/ownership';
 
 @Injectable()
 export class CoachDocumentsService implements OnModuleInit {
@@ -69,15 +75,15 @@ export class CoachDocumentsService implements OnModuleInit {
       this.logger.log(`Bucket "${this.bucket}" already exists.`);
     } catch (err) {
       this.logger.warn(
-        `Bucket "${this.bucket}" not found (${err?.message}), creating...`,
+        `Bucket "${this.bucket}" not found (${errorMessage(err)}), creating...`,
       );
       try {
         await this.s3.send(new CreateBucketCommand({ Bucket: this.bucket }));
         this.logger.log(`Bucket "${this.bucket}" created successfully.`);
       } catch (createErr) {
         this.logger.error(
-          `Failed to create bucket "${this.bucket}": ${createErr?.message}`,
-          createErr?.stack,
+          `Failed to create bucket "${this.bucket}": ${errorMessage(createErr)}`,
+          errorStack(createErr),
         );
         throw createErr;
       }
@@ -87,6 +93,7 @@ export class CoachDocumentsService implements OnModuleInit {
   async upload(
     file: Express.Multer.File,
     coachId: string,
+    requester: AuthUser,
   ): Promise<CoachDocument> {
     this.logger.debug(
       `[upload] Request for coachId=${coachId}, file="${file.originalname}" (${file.mimetype}, ${file.size} bytes)`,
@@ -99,9 +106,15 @@ export class CoachDocumentsService implements OnModuleInit {
       this.logger.warn(`[upload] Coach #${coachId} not found`);
       throw new NotFoundException(`Coach #${coachId} not found`);
     }
+    assertSelfOrAdmin(requester, coach.user?.id);
     this.logger.debug(`[upload] Coach #${coachId} found`);
 
-    const ext = file.originalname.split('.').pop();
+    const ext = extensionForContent(file.mimetype, file.buffer);
+    if (!ext) {
+      throw new BadRequestException(
+        'File content does not match its declared type',
+      );
+    }
     const s3Key = `coach-documents/${coachId}/${uuidv4()}.${ext}`;
     this.logger.debug(`[upload] Uploading to S3 with key: ${s3Key}`);
 
@@ -117,8 +130,8 @@ export class CoachDocumentsService implements OnModuleInit {
       this.logger.log(`[upload] File uploaded to S3 successfully: ${s3Key}`);
     } catch (err) {
       this.logger.error(
-        `[upload] S3 upload failed for key ${s3Key}: ${err?.message}`,
-        err?.stack,
+        `[upload] S3 upload failed for key ${s3Key}: ${errorMessage(err)}`,
+        errorStack(err),
       );
       throw err;
     }
@@ -136,16 +149,22 @@ export class CoachDocumentsService implements OnModuleInit {
       return document;
     } catch (err) {
       this.logger.error(
-        `[upload] Failed to save document to DB: ${err?.message}`,
-        err?.stack,
+        `[upload] Failed to save document to DB: ${errorMessage(err)}`,
+        errorStack(err),
       );
       throw err;
     }
   }
 
-  async findAll(): Promise<(CoachDocument & { url: string })[]> {
+  async findAll(
+    page?: Pagination,
+  ): Promise<(CoachDocument & { url: string })[]> {
     this.logger.debug(`[findAll] Fetching all documents from DB`);
-    const documents = await this.documentRepository.find();
+    const documents = await this.documentRepository.find({
+      order: { uploadedAt: 'ASC' },
+      take: page?.limit,
+      skip: page?.offset,
+    });
     this.logger.debug(`[findAll] Found ${documents.length} document(s)`);
 
     const result = await Promise.all(
@@ -161,8 +180,8 @@ export class CoachDocumentsService implements OnModuleInit {
           return { ...doc, url };
         } catch (err) {
           this.logger.error(
-            `[findAll] Failed to generate presigned URL for id=${doc.id}: ${err?.message}`,
-            err?.stack,
+            `[findAll] Failed to generate presigned URL for id=${doc.id}: ${errorMessage(err)}`,
+            errorStack(err),
           );
           throw err;
         }
@@ -182,23 +201,17 @@ export class CoachDocumentsService implements OnModuleInit {
       `[accept] Document found, linked to coachId=${document.coach.id}`,
     );
 
-    try {
-      await this.coachRepository.update(document.coach.id, {
-        isApproved: true,
-      });
-      this.logger.log(
-        `[accept] Coach #${document.coach.id} marked as approved`,
-      );
-    } catch (err) {
-      this.logger.error(
-        `[accept] Failed to update coach approval status: ${err?.message}`,
-        err?.stack,
-      );
-      throw err;
-    }
+    await this.deleteStoredObject(document);
 
-    await this.deleteDocument(document);
-    this.logger.log(`[accept] Document id=${id} deleted after approval`);
+    await this.documentRepository.manager.transaction(async (manager) => {
+      await manager
+        .getRepository(Coach)
+        .update(document.coach.id, { isApproved: true });
+      await manager.getRepository(CoachDocument).remove(document);
+    });
+    this.logger.log(
+      `[accept] Coach #${document.coach.id} approved, document id=${id} deleted`,
+    );
     return {
       message: `Coach ${document.coach.id} approved and document deleted.`,
     };
@@ -211,7 +224,8 @@ export class CoachDocumentsService implements OnModuleInit {
       `[refuse] Document found, linked to coachId=${document.coach.id}`,
     );
 
-    await this.deleteDocument(document);
+    await this.deleteStoredObject(document);
+    await this.documentRepository.remove(document);
     this.logger.log(`[refuse] Document id=${id} refused and deleted`);
     return { message: `Document ${id} refused and deleted.` };
   }
@@ -236,32 +250,21 @@ export class CoachDocumentsService implements OnModuleInit {
     );
   }
 
-  private async deleteDocument(document: CoachDocument): Promise<void> {
+  private async deleteStoredObject(document: CoachDocument): Promise<void> {
     this.logger.debug(
-      `[deleteDocument] Deleting from S3: key=${document.s3Key}`,
+      `[deleteStoredObject] Deleting from S3: key=${document.s3Key}`,
     );
     try {
       await this.s3.send(
         new DeleteObjectCommand({ Bucket: this.bucket, Key: document.s3Key }),
       );
-      this.logger.log(`[deleteDocument] S3 object deleted: ${document.s3Key}`);
-    } catch (err) {
-      this.logger.error(
-        `[deleteDocument] Failed to delete S3 object ${document.s3Key}: ${err?.message}`,
-        err?.stack,
-      );
-      throw err;
-    }
-
-    try {
-      await this.documentRepository.remove(document);
       this.logger.log(
-        `[deleteDocument] Document id=${document.id} removed from DB`,
+        `[deleteStoredObject] S3 object deleted: ${document.s3Key}`,
       );
     } catch (err) {
       this.logger.error(
-        `[deleteDocument] Failed to remove document id=${document.id} from DB: ${err?.message}`,
-        err?.stack,
+        `[deleteStoredObject] Failed to delete S3 object ${document.s3Key}: ${errorMessage(err)}`,
+        errorStack(err),
       );
       throw err;
     }

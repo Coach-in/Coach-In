@@ -5,6 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import type { TagCategory } from './tag-category.entity';
 
 @Entity()
 export class Tag {
@@ -20,5 +21,5 @@ export class Tag {
     eager: true,
   })
   @JoinColumn({ name: 'category_id' })
-  category?: any;
+  category?: TagCategory;
 }

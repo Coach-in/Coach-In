@@ -6,6 +6,7 @@ import {
   JoinTable,
   OneToOne,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { Tag } from '../../tags/entities/tag.entity';
 import { User } from '../../users/entities/user.entity';
@@ -25,6 +26,7 @@ export class Coach {
   @Column({ nullable: true })
   bio?: string;
 
+  @Index()
   @Column({ default: false })
   isApproved: boolean;
 
