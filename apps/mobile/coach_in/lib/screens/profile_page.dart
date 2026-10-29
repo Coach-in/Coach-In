@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
 import '../widgets/app_bottom_nav.dart';
+import './edit_profile_page.dart';
 import './explore_page.dart';
 import './notifications_page.dart';
 import './start_page.dart';
@@ -66,6 +67,19 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _openEditProfile() async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditProfilePage(
+          profile: _profile!,
+          isCoach: _role == 'coach',
+        ),
+      ),
+    );
+    if (saved == true && mounted) _fetchProfile();
+  }
+
   Future<void> _logout() async {
     setState(() {
       _isLoggingOut = true;
@@ -118,7 +132,11 @@ class _ProfilePageState extends State<ProfilePage> {
             ],
           ),
         ),
-        const Icon(Icons.edit, color: Color(0xffffd398))
+        IconButton(
+          icon: const Icon(Icons.edit, color: Color(0xffffd398)),
+          onPressed: _openEditProfile,
+          tooltip: 'Edit profile',
+        ),
       ],
     );
   }

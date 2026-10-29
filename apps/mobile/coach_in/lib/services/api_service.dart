@@ -158,13 +158,15 @@ class ApiService {
     return http.Response.fromStream(streamed);
   }
 
-  Future<http.Response> patch(String endpoint, {bool withAuth = false}) async {
+  Future<http.Response> patch(String endpoint,
+      {Map<String, dynamic>? body, bool withAuth = false}) async {
     final baseUrl = ApiConfig.getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
 
     return _sendRequest(
       (headers) => http
-          .patch(url, headers: headers)
+          .patch(url,
+              headers: headers, body: body == null ? null : jsonEncode(body))
           .timeout(ApiConfig.requestTimeout),
       withAuth: withAuth,
     );
@@ -401,6 +403,31 @@ class ApiService {
       throw Exception('Failed to mark notification as seen');
     }
   }
+
+  Future<void> _patchResource(String path, Map<String, dynamic> body) async {
+    final response = await patch(path, body: body, withAuth: true);
+
+    if (response.statusCode != 200) {
+      String message = 'Failed to update profile (${response.statusCode})';
+      try {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map && decoded['message'] != null) {
+          final m = decoded['message'];
+          message = m is List ? m.join(', ') : m.toString();
+        }
+      } catch (_) {}
+      throw Exception(message);
+    }
+  }
+
+  Future<void> updateUser(String userId, Map<String, dynamic> body) =>
+      _patchResource('/users/$userId', body);
+
+  Future<void> updateAthlete(String athleteId, Map<String, dynamic> body) =>
+      _patchResource('/athletes/$athleteId', body);
+
+  Future<void> updateCoach(String coachId, Map<String, dynamic> body) =>
+      _patchResource('/coachs/$coachId', body);
 
 }
 
