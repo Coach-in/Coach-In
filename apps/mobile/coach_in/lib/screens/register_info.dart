@@ -98,8 +98,9 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
         return false;
       }
     } else {
-      if (_ageController.text.trim().isEmpty) {
-        setState(() => _errorMessage = 'Age is required.');
+      final age = int.tryParse(_ageController.text.trim());
+      if (age == null || age <= 0) {
+        setState(() => _errorMessage = 'A valid age is required.');
         return false;
       }
       if (_goalController.text.trim().isEmpty) {
@@ -139,13 +140,11 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
 
     if (result['success'] == true) {
       final data = result['data'];
-      final user = data['user'];
       final coach = data['coach'];
       final id = coach['id'];
       final accessToken = data['token'] as String;
 
       await _storage.write(key: 'accessToken', value: accessToken);
-      await _storage.write(key: 'refreshToken', value: user['refresh_token']);
       await _storage.write(key: 'rememberMe', value: true.toString());
 
       await _uploadCertification(id);
@@ -165,8 +164,8 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       widget.email,
       widget.password,
       {
-        'age': _ageController.text.trim(),
-        'goal': _goalController.text.trim(),
+        'age': int.parse(_ageController.text.trim()),
+        'goals': _goalController.text.trim(),
         'tagNames': _selectedTags.map((t) => t['name']).toList(),
       },
     );
@@ -176,10 +175,8 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
 
     if (result['success'] == true) {
       final data = result['data'];
-      final user = data['user'];
 
       await _storage.write(key: 'accessToken', value: data['token'] as String);
-      await _storage.write(key: 'refreshToken', value: user['refresh_token']);
       await _storage.write(key: 'rememberMe', value: true.toString());
 
       if (!mounted) return;
