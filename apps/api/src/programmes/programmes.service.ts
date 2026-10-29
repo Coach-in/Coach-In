@@ -30,6 +30,7 @@ import { Notification } from '../notifications/entities/notification.entity';
 import { CreateProgrammeDto } from './dto/create-programme.dto';
 import { UpdateProgrammeDto } from './dto/update-programme.dto';
 import { AssignProgrammeDto } from './dto/assign-programme.dto';
+import { DuplicateProgrammeDto } from './dto/duplicate-programme.dto';
 import { CreateProgrammeDayDto } from './dto/create-programme-day.dto';
 import { UpdateProgrammeDayDto } from './dto/update-programme-day.dto';
 import { CreateProgrammeExerciseDto } from './dto/create-programme-exercise.dto';
@@ -129,40 +130,57 @@ export class ProgrammesService {
     const athlete = await this.getCoachedAthlete(coach, dto.athleteId);
 
     const source = await this.findOne(userId, id);
-    const startDate = dto.startDate ?? source.startDate;
-    const endDate = dto.endDate ?? source.endDate;
-    this.assertDateRange(startDate, endDate);
-
-    const copy = await this.programmeRepository.save(
-      this.programmeRepository.create({
-        name: source.name,
-        objectives: source.objectives,
-        startDate,
-        endDate,
-        coach,
-        athlete,
-        days: source.days.map((day) => ({
-          dayIndex: day.dayIndex,
-          name: day.name,
-          notes: day.notes,
-          exercises: day.exercises.map((entry) => ({
-            order: entry.order,
-            sets: entry.sets,
-            reps: entry.reps,
-            weight: entry.weight,
-            rpe: entry.rpe,
-            restSeconds: entry.restSeconds,
-            notes: entry.notes,
-            exercise: { id: entry.exercise.id },
-          })),
-        })),
-      }),
-    );
+    const copy = await this.copyProgramme(source, {
+      coach,
+      athlete,
+      name: source.name,
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+    });
     this.logger.log(
       `[assign] Programme ${id} copied to ${copy.id} for athlete ${athlete.id}`,
     );
 
     await this.notifyAthlete(coach, athlete, copy.name);
+    return this.findOne(userId, copy.id);
+  }
+
+  // The owner duplicates one of their programmes. The copy keeps the owner and,
+  // unless another athlete is given, the athlete of the source programme.
+  async duplicate(
+    userId: string,
+    id: string,
+    dto: DuplicateProgrammeDto,
+  ): Promise<Programme> {
+    const owned = await this.getOwnedProgramme(userId, id);
+    const { coach } = owned;
+
+    let athlete = owned.athlete;
+    if (dto.athleteId) {
+      if (coach) {
+        athlete = await this.getCoachedAthlete(coach, dto.athleteId);
+      } else if (dto.athleteId !== athlete?.id) {
+        throw new ForbiddenException(
+          'Athletes can only duplicate programmes for themselves',
+        );
+      }
+    }
+
+    const source = await this.findOne(userId, id);
+    const copy = await this.copyProgramme(source, {
+      coach,
+      athlete,
+      name: dto.name ?? this.defaultCopyName(source.name),
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+    });
+    this.logger.log(
+      `[duplicate] Programme ${id} duplicated to ${copy.id} (athlete: ${athlete?.id ?? 'none'})`,
+    );
+
+    if (coach && athlete) {
+      await this.notifyAthlete(coach, athlete, copy.name);
+    }
     return this.findOne(userId, copy.id);
   }
 
@@ -329,6 +347,54 @@ export class ProgrammesService {
   }
 
   // ---------- Helpers ----------
+
+  // Copies days and prescriptions (not the catalogue exercises themselves)
+  private async copyProgramme(
+    source: Programme,
+    target: {
+      coach: Coach | null;
+      athlete: Athlete | null;
+      name: string;
+      startDate?: string;
+      endDate?: string;
+    },
+  ): Promise<Programme> {
+    const startDate = target.startDate ?? source.startDate;
+    const endDate = target.endDate ?? source.endDate;
+    this.assertDateRange(startDate, endDate);
+
+    return this.programmeRepository.save(
+      this.programmeRepository.create({
+        name: target.name,
+        objectives: source.objectives,
+        startDate,
+        endDate,
+        coach: target.coach,
+        athlete: target.athlete,
+        days: source.days.map((day) => ({
+          dayIndex: day.dayIndex,
+          name: day.name,
+          notes: day.notes,
+          exercises: day.exercises.map((entry) => ({
+            order: entry.order,
+            sets: entry.sets,
+            reps: entry.reps,
+            weight: entry.weight,
+            rpe: entry.rpe,
+            restSeconds: entry.restSeconds,
+            notes: entry.notes,
+            exercise: { id: entry.exercise.id },
+          })),
+        })),
+      }),
+    );
+  }
+
+  // Programme names are limited to 100 characters
+  private defaultCopyName(name: string): string {
+    const suffix = ' (copy)';
+    return `${name.slice(0, 100 - suffix.length)}${suffix}`;
+  }
 
   private async getActorForUser(userId: string): Promise<Actor> {
     const coach = await this.coachRepository.findOne({

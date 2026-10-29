@@ -468,6 +468,172 @@ describe('ProgrammesService', () => {
     });
   });
 
+  describe('duplicate', () => {
+    const days = [
+      {
+        dayIndex: 1,
+        name: 'Push',
+        notes: null,
+        exercises: [
+          {
+            order: 1,
+            sets: 4,
+            reps: 8,
+            weight: 60,
+            rpe: null,
+            restSeconds: 90,
+            notes: null,
+            exercise: { id: 'ex-1' },
+          },
+        ],
+      },
+    ];
+    const copiedDays = [
+      expect.objectContaining({
+        dayIndex: 1,
+        name: 'Push',
+        exercises: [
+          expect.objectContaining({ sets: 4, exercise: { id: 'ex-1' } }),
+        ],
+      }),
+    ];
+
+    const mockSource = (overrides: Partial<Programme> = {}): void => {
+      programmes.findOne.mockResolvedValue({
+        ...programme,
+        days,
+        ...overrides,
+      });
+    };
+
+    it('copies days and prescriptions for the same athlete and notifies them', async () => {
+      mockSource();
+
+      await service.duplicate(coachUser.id, 'prog-1', {});
+
+      expect(programmes.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Block (copy)',
+          startDate: '2026-10-05',
+          coach,
+          athlete,
+          days: copiedDays,
+        }),
+      );
+      expect(relationships.findOne).not.toHaveBeenCalled();
+      expect(notifications.save).toHaveBeenCalledWith(
+        expect.objectContaining({ sender: coachUser, receiver: athleteUser }),
+      );
+    });
+
+    it('duplicates for another athlete after checking the relationship', async () => {
+      mockSource();
+      const other = { id: 'athlete-2', user: { id: 'user-2' } } as Athlete;
+      athletes.findOne.mockResolvedValue(other);
+
+      await service.duplicate(coachUser.id, 'prog-1', {
+        athleteId: 'athlete-2',
+      });
+
+      expect(relationships.findOne).toHaveBeenCalledTimes(1);
+      expect(programmes.save).toHaveBeenCalledWith(
+        expect.objectContaining({ coach, athlete: other }),
+      );
+      expect(notifications.save).toHaveBeenCalledWith(
+        expect.objectContaining({ receiver: other.user }),
+      );
+    });
+
+    it('requires an accepted relationship with the other athlete', async () => {
+      mockSource();
+      relationships.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.duplicate(coachUser.id, 'prog-1', { athleteId: 'athlete-2' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(programmes.save).not.toHaveBeenCalled();
+    });
+
+    it('duplicates a template as a template without notification', async () => {
+      mockSource({ athlete: null });
+
+      await service.duplicate(coachUser.id, 'prog-1', {});
+
+      expect(programmes.save).toHaveBeenCalledWith(
+        expect.objectContaining({ coach, athlete: null }),
+      );
+      expect(notifications.save).not.toHaveBeenCalled();
+    });
+
+    it('applies the name and date overrides', async () => {
+      mockSource();
+
+      await service.duplicate(coachUser.id, 'prog-1', {
+        name: 'Deload week',
+        startDate: '2026-12-01',
+        endDate: '2026-12-07',
+      });
+
+      expect(programmes.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'Deload week',
+          startDate: '2026-12-01',
+          endDate: '2026-12-07',
+        }),
+      );
+    });
+
+    it('keeps the default copy name within 100 characters', async () => {
+      mockSource({ name: 'x'.repeat(100) });
+
+      await service.duplicate(coachUser.id, 'prog-1', {});
+
+      const [saved] = programmes.save.mock.calls[0] as [{ name: string }];
+      expect(saved.name).toHaveLength(100);
+      expect(saved.name.endsWith(' (copy)')).toBe(true);
+    });
+
+    it('rejects an endDate before the startDate', async () => {
+      mockSource();
+
+      await expect(
+        service.duplicate(coachUser.id, 'prog-1', { endDate: '2026-01-01' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(programmes.save).not.toHaveBeenCalled();
+    });
+
+    it('forbids users who do not own the programme', async () => {
+      mockSource();
+
+      await expect(
+        service.duplicate(athleteUser.id, 'prog-1', {}),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(programmes.save).not.toHaveBeenCalled();
+    });
+
+    it('lets an athlete duplicate their own programme', async () => {
+      mockSource({ coach: null });
+
+      await service.duplicate(athleteUser.id, 'prog-1', {
+        athleteId: 'athlete-1',
+      });
+
+      expect(programmes.save).toHaveBeenCalledWith(
+        expect.objectContaining({ coach: null, athlete, days: copiedDays }),
+      );
+      expect(notifications.save).not.toHaveBeenCalled();
+    });
+
+    it('forbids an athlete from duplicating for another athlete', async () => {
+      mockSource({ coach: null });
+
+      await expect(
+        service.duplicate(athleteUser.id, 'prog-1', { athleteId: 'athlete-2' }),
+      ).rejects.toBeInstanceOf(ForbiddenException);
+      expect(programmes.save).not.toHaveBeenCalled();
+    });
+  });
+
   describe('days', () => {
     it('rejects a dayIndex already used in the programme', async () => {
       days.findOne.mockResolvedValue({ id: 'day-1', dayIndex: 1 });
