@@ -33,6 +33,7 @@ import { Programme } from './entities/programme.entity';
 import { CreateProgrammeDto } from './dto/create-programme.dto';
 import { UpdateProgrammeDto } from './dto/update-programme.dto';
 import { AssignProgrammeDto } from './dto/assign-programme.dto';
+import { DuplicateProgrammeDto } from './dto/duplicate-programme.dto';
 import { CreateProgrammeDayDto } from './dto/create-programme-day.dto';
 import { UpdateProgrammeDayDto } from './dto/update-programme-day.dto';
 import { CreateProgrammeExerciseDto } from './dto/create-programme-exercise.dto';
@@ -255,6 +256,34 @@ export class ProgrammesController {
     @Body() dto: AssignProgrammeDto,
   ): Promise<Programme> {
     return this.programmesService.assign(this.extractUserId(auth), id, dto);
+  }
+
+  @Post(':id/duplicate')
+  @ApiOperation({
+    summary:
+      'Owner duplicates a programme with its days and prescriptions, optionally for another athlete',
+  })
+  @ApiParam(programmeIdParam)
+  @ApiBody({ type: DuplicateProgrammeDto })
+  @ApiResponse({
+    status: 201,
+    description:
+      'A new programme is created with the same owner. When a coach duplicates it for an athlete, that athlete is notified. The source programme is unchanged.',
+    schema: { example: programmeExample },
+  })
+  @ApiResponse({ status: 400, description: 'Invalid payload or date range.' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Not the owner, no accepted relationship with the athlete, or an athlete targets someone else.',
+  })
+  @ApiResponse({ status: 404, description: 'Programme or athlete not found.' })
+  duplicate(
+    @Headers('authorization') auth: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: DuplicateProgrammeDto,
+  ): Promise<Programme> {
+    return this.programmesService.duplicate(this.extractUserId(auth), id, dto);
   }
 
   // ---------- Days ----------
