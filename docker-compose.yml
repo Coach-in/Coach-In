@@ -21,7 +21,7 @@ services:
 
   minio:
     # Pinned by digest (Chainguard free tier only publishes :latest), minio RELEASE.2026-10-23T20-06-51Z
-    image: cgr.dev/chainguard/minio:latest@sha256:0dab2f9fee1c1139ae8753b5e35bb4461af2a276cfe0923a2504c75a6170bc64
+    image: cgr.dev/chainguard/minio:latest@sha256:3b6e40c30ecd5cea627e382ff0b82ca841f58c52294578787043ee80c8ef7c82
     container_name: coachin-minio
     # WARNING: runs as root so existing coachin-minio-data volumes stay writable. NEVER USE THIS IN PROD.
     user: "0:0"
