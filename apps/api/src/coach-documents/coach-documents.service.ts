@@ -20,6 +20,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CoachDocument } from './entities/coach-document.entity';
 import { Coach } from '../coachs/entities/coach.entity';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { errorMessage, errorStack } from '../utils/error';
 import { extensionForContent } from '../utils/file-signature';
 import { Pagination } from '../utils/pagination';
@@ -39,6 +41,7 @@ export class CoachDocumentsService implements OnModuleInit {
     @InjectRepository(Coach)
     private readonly coachRepository: Repository<Coach>,
     private readonly config: ConfigService,
+    private readonly notificationsService: NotificationsService,
   ) {
     this.bucket = this.config.get<string>('MINIO_BUCKET', 'coach-documents');
 
@@ -203,12 +206,25 @@ export class CoachDocumentsService implements OnModuleInit {
 
     await this.deleteStoredObject(document);
 
-    await this.documentRepository.manager.transaction(async (manager) => {
-      await manager
-        .getRepository(Coach)
-        .update(document.coach.id, { isApproved: true });
-      await manager.getRepository(CoachDocument).remove(document);
-    });
+    const notification = await this.documentRepository.manager.transaction(
+      async (manager) => {
+        await manager
+          .getRepository(Coach)
+          .update(document.coach.id, { isApproved: true });
+        await manager.getRepository(CoachDocument).remove(document);
+        return this.notificationsService.create(
+          {
+            type: NotificationType.COACH_APPROVED,
+            message:
+              'Votre diplôme a été validé : votre profil est maintenant visible des athlètes.',
+            receiver: document.coach.user,
+            data: { coachId: document.coach.id },
+          },
+          manager,
+        );
+      },
+    );
+    this.notificationsService.publish(notification);
     this.logger.log(
       `[accept] Coach #${document.coach.id} approved, document id=${id} deleted`,
     );
@@ -225,7 +241,22 @@ export class CoachDocumentsService implements OnModuleInit {
     );
 
     await this.deleteStoredObject(document);
-    await this.documentRepository.remove(document);
+    const notification = await this.documentRepository.manager.transaction(
+      async (manager) => {
+        await manager.getRepository(CoachDocument).remove(document);
+        return this.notificationsService.create(
+          {
+            type: NotificationType.COACH_DOCUMENT_REFUSED,
+            message:
+              'Votre document a été refusé. Vous pouvez en envoyer un nouveau.',
+            receiver: document.coach.user,
+            data: { coachId: document.coach.id },
+          },
+          manager,
+        );
+      },
+    );
+    this.notificationsService.publish(notification);
     this.logger.log(`[refuse] Document id=${id} refused and deleted`);
     return { message: `Document ${id} refused and deleted.` };
   }

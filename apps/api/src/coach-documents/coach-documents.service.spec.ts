@@ -20,6 +20,8 @@ import { CoachDocumentsService } from './coach-documents.service';
 import { CoachDocument } from './entities/coach-document.entity';
 import { Coach } from '../coachs/entities/coach.entity';
 import { User } from '../users/entities/user.entity';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AuthUser } from '../auth/auth.types';
 import { UserRole } from '../utils/types/jwt.types';
 
@@ -81,6 +83,12 @@ describe('CoachDocumentsService', () => {
     get: jest.fn((_key: string, fallback: string) => fallback),
   };
 
+  const createdNotification = { id: 'notif-1' };
+  const notificationsServiceMock = {
+    create: jest.fn(),
+    publish: jest.fn(),
+  };
+
   const owner = { id: 'user-c' } as User;
   const coach = { id: 'coach-1', user: owner } as Coach;
 
@@ -133,6 +141,9 @@ describe('CoachDocumentsService', () => {
     jest.clearAllMocks();
 
     mockSend.mockResolvedValue({});
+    notificationsServiceMock.create.mockResolvedValue(createdNotification);
+    transactionalDocuments.remove.mockResolvedValue(undefined);
+    transactionalCoaches.update.mockResolvedValue(undefined);
     mockGetSignedUrl.mockResolvedValue('http://localhost:9000/presigned');
     configMock.get.mockImplementation(
       (_key: string, fallback: string) => fallback,
@@ -160,6 +171,7 @@ describe('CoachDocumentsService', () => {
           useValue: coachRepositoryMock as unknown as Repository<Coach>,
         },
         { provide: ConfigService, useValue: configMock },
+        { provide: NotificationsService, useValue: notificationsServiceMock },
       ],
     }).compile();
 
@@ -340,6 +352,34 @@ describe('CoachDocumentsService', () => {
       expect(result.message).toContain(`Coach ${coach.id} approved`);
     });
 
+    it('tells the coach, inside the transaction, then publishes it live', async () => {
+      documentRepositoryMock.findOne.mockResolvedValue(document);
+
+      await service.accept(document.id);
+
+      expect(notificationsServiceMock.create).toHaveBeenCalledWith(
+        {
+          type: NotificationType.COACH_APPROVED,
+          message:
+            'Votre diplôme a été validé : votre profil est maintenant visible des athlètes.',
+          receiver: owner,
+          data: { coachId: coach.id },
+        },
+        managerMock,
+      );
+      expect(notificationsServiceMock.publish).toHaveBeenCalledWith(
+        createdNotification,
+      );
+    });
+
+    it('publishes nothing when the transaction fails', async () => {
+      documentRepositoryMock.findOne.mockResolvedValue(document);
+      transactionalDocuments.remove.mockRejectedValueOnce(new Error('db down'));
+
+      await expect(service.accept(document.id)).rejects.toThrow('db down');
+      expect(notificationsServiceMock.publish).not.toHaveBeenCalled();
+    });
+
     it('raises NotFound without approving or deleting anything', async () => {
       documentRepositoryMock.findOne.mockResolvedValue(null);
 
@@ -378,8 +418,38 @@ describe('CoachDocumentsService', () => {
       expect(coachRepositoryMock.update).not.toHaveBeenCalled();
       expect(mockSend).toHaveBeenCalledTimes(1);
       expect(commandsSent()[0]).toBeInstanceOf(DeleteObjectCommand);
-      expect(documentRepositoryMock.remove).toHaveBeenCalledWith(document);
+      expect(transactionalDocuments.remove).toHaveBeenCalledWith(document);
       expect(result.message).toContain(document.id);
+    });
+
+    it('tells the coach the document was refused, then publishes it live', async () => {
+      documentRepositoryMock.findOne.mockResolvedValue(document);
+
+      await service.refuse(document.id);
+
+      expect(notificationsServiceMock.create).toHaveBeenCalledWith(
+        {
+          type: NotificationType.COACH_DOCUMENT_REFUSED,
+          message:
+            'Votre document a été refusé. Vous pouvez en envoyer un nouveau.',
+          receiver: owner,
+          data: { coachId: coach.id },
+        },
+        managerMock,
+      );
+      expect(notificationsServiceMock.publish).toHaveBeenCalledWith(
+        createdNotification,
+      );
+    });
+
+    it('does not notify when the S3 delete fails, so the call can be retried', async () => {
+      documentRepositoryMock.findOne.mockResolvedValue(document);
+      mockSend.mockRejectedValue(new Error('S3 delete failed'));
+
+      await expect(service.refuse(document.id)).rejects.toThrow(
+        'S3 delete failed',
+      );
+      expect(notificationsServiceMock.create).not.toHaveBeenCalled();
     });
 
     it('raises NotFound when the document does not exist', async () => {
@@ -388,7 +458,7 @@ describe('CoachDocumentsService', () => {
       await expect(service.refuse('missing')).rejects.toThrow(
         NotFoundException,
       );
-      expect(documentRepositoryMock.remove).not.toHaveBeenCalled();
+      expect(transactionalDocuments.remove).not.toHaveBeenCalled();
     });
   });
 });
