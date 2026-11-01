@@ -77,7 +77,6 @@ class OAuthService {
           if (status == 'completed') {
             return {
               'access_token': data['access_token'],
-              'refresh_token': data['refresh_token'],
               'user_id': data['user_id'],
               'email': data['email'],
               'username': data['username'],
@@ -105,7 +104,7 @@ extension OAuthApiService on ApiService {
       final oauth = OAuthService();
       final result = await oauth.loginWithGoogle();
 
-      await saveTokens(result['access_token'], result['refresh_token']);
+      await saveTokens(result['access_token']);
 
       return {
         'success': true,

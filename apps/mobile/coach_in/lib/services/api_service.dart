@@ -18,16 +18,15 @@ class ApiService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<String?> getAccessToken() async => await _storage.read(key: 'accessToken');
-  Future<String?> getRefreshToken() async => await _storage.read(key: 'refreshToken');
   Future<String?> getIpAddress() async => await _storage.read(key: 'ip_address');
 
-  Future<void> saveTokens(String access, String refresh) async {
+  Future<void> saveTokens(String access) async {
     await _storage.write(key: 'accessToken', value: access);
-    await _storage.write(key: 'refreshToken', value: refresh);
   }
 
   Future<void> clearTokens() async {
     await _storage.delete(key: 'accessToken');
+    // Legacy key: the API no longer issues refresh tokens.
     await _storage.delete(key: 'refreshToken');
   }
 
@@ -54,34 +53,15 @@ class ApiService {
     return DateTime.now().isAfter(expiryDate.subtract(const Duration(minutes: 1)));
   }
 
-  Future<bool> _refreshToken() async {
+  /// Builds a readable message from an API error body. NestJS validation
+  /// errors (400) return `message` as a list of strings.
+  String _errorText(http.Response response, String fallback) {
     try {
-      final refreshToken = await getRefreshToken();
-      if (refreshToken == null) return false;
-
-      final baseUrl = ApiConfig.getBaseUrl();
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/refresh'),
-        headers: ApiConfig.defaultHeaders,
-        body: jsonEncode({'refresh_token': refreshToken}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final newAccess = data['access_token'] ?? data['accessToken'];
-        final newRefresh = data['refresh_token'] ?? data['refreshToken'];
-
-        if (newAccess != null && newRefresh != null) {
-          await saveTokens(newAccess, newRefresh);
-          return true;
-        }
-      }
-
-      await clearTokens();
-      return false;
-    } catch (e) {
-      return false;
-    }
+      final message = jsonDecode(response.body)['message'];
+      if (message is List) return message.join(', ');
+      if (message != null) return message.toString();
+    } catch (_) {}
+    return fallback;
   }
 
   Future<http.Response> _sendRequest(
@@ -92,25 +72,20 @@ class ApiService {
 
     if (withAuth) {
       if (await _isAccessTokenExpired()) {
-        final refreshed = await _refreshToken();
-        if (!refreshed) throw Exception('Session expired. Please log in again.');
+        await clearTokens();
+        throw Exception('Session expired. Please log in again.');
       }
 
       final token = await getAccessToken();
       if (token != null) headers['Authorization'] = 'Bearer $token';
     }
 
-    http.Response response = await requestFn(headers);
+    final http.Response response = await requestFn(headers);
 
+    // There is no refresh token: a 401 means the user must log in again.
     if (withAuth && response.statusCode == 401) {
-      final refreshed = await _refreshToken();
-      if (refreshed) {
-        final newToken = await getAccessToken();
-        headers['Authorization'] = 'Bearer $newToken';
-        response = await requestFn(headers);
-      } else {
-        throw Exception('Session expired. Please log in again.');
-      }
+      await clearTokens();
+      throw Exception('Session expired. Please log in again.');
     }
     return response;
   }
@@ -225,7 +200,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception('Failed to fetch admins (${response.statusCode})');
+        throw Exception(_errorText(response, 'Failed to fetch admins (${response.statusCode})'));
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
@@ -238,7 +213,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception('Failed to fetch coach documents (${response.statusCode})');
+        throw Exception(_errorText(response, 'Failed to fetch coach documents (${response.statusCode})'));
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
@@ -279,7 +254,7 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return;
       } else {
-        throw Exception('Failed to upload certification (${response.statusCode})');
+        throw Exception(_errorText(response, 'Failed to upload certification (${response.statusCode})'));
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
@@ -353,7 +328,7 @@ class ApiService {
     );
 
     if (response.statusCode != 201 && response.statusCode != 200) {
-      throw Exception('Failed to request relationship');
+      throw Exception(_errorText(response, 'Failed to request relationship'));
     }
   }
 
@@ -372,7 +347,7 @@ class ApiService {
     final response = await post('/relationships/$id/$action', {}, withAuth: true);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to $action relationship');
+      throw Exception(_errorText(response, 'Failed to $action relationship'));
     }
   }
 
@@ -429,7 +404,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
+          'message': '${_apiService._errorText(response, 'Request failed')} (${response.statusCode})',
           'details': response.body
         };
       }
@@ -456,7 +431,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
+          'message': '${_apiService._errorText(response, 'Request failed')} (${response.statusCode})',
           'details': response.body
         };
       }
@@ -479,7 +454,7 @@ class AuthService {
         developer.log(response.body.toString());
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
+          'message': '${_apiService._errorText(response, 'Request failed')} (${response.statusCode})',
           'details': response.body
         };
       }
