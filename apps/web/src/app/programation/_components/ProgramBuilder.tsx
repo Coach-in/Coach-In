@@ -7,11 +7,24 @@ import { useFlip } from "../lib/useFlip";
 import { Icon } from "../lib/styles";
 import { ICON } from "../lib/icons";
 
+export interface SaveState {
+  saving: boolean;
+  dirty: boolean;
+  // Programme written by a coach: can be viewed and downloaded, not saved
+  readOnly: boolean;
+  // Already stored on the account (vs a new, never-saved programme)
+  isSaved: boolean;
+}
+
 interface ProgramBuilderProps {
   programName: string;
   setProgramName: (name: string) => void;
   program: ProgramItem[];
   totalSets: number;
+  loading: boolean;
+  saveState: SaveState;
+  onSave: () => void;
+  onNew: () => void;
   drag: DragSource | null;
   dropIndex: number | null;
   setDropIndex: (slot: number | null) => void;
@@ -34,6 +47,10 @@ export function ProgramBuilder({
   setProgramName,
   program,
   totalSets,
+  loading,
+  saveState,
+  onSave,
+  onNew,
   drag,
   dropIndex,
   setDropIndex,
@@ -102,6 +119,17 @@ export function ProgramBuilder({
   };
 
   const isDragging = drag !== null;
+  const { saving, dirty, readOnly, isSaved } = saveState;
+
+  const status = readOnly
+    ? { text: "Programme de votre coach", className: "border-gold-border text-ink-muted" }
+    : saving
+      ? { text: "Enregistrement…", className: "border-gold-border text-gold" }
+      : dirty
+        ? { text: "Modifications non enregistrées", className: "border-warning-line text-warning-ink" }
+        : isSaved
+          ? { text: "Enregistré", className: "border-success-line text-success-ink" }
+          : null;
 
   const dropLine = (slot: number) => (
     <div className="relative h-3 shrink-0" aria-hidden>
@@ -121,9 +149,19 @@ export function ProgramBuilder({
       <section className="flex flex-1 flex-col lg:min-h-0 lg:overflow-y-auto">
         <div className="flex flex-wrap items-end gap-3 p-6">
           <div className="flex min-w-[16rem] flex-1 flex-col gap-1.5">
-            <label className="text-[0.7rem] font-semibold text-ink-muted tracking-wide uppercase" htmlFor="program-name">
-              Nom du programme
-            </label>
+            <div className="flex items-center gap-2">
+              <label className="text-[0.7rem] font-semibold text-ink-muted tracking-wide uppercase" htmlFor="program-name">
+                Nom du programme
+              </label>
+              {status && (
+                <span
+                  key={status.text}
+                  className={`animate-item-in rounded-full border px-2 py-0.5 text-[0.65rem] font-semibold ${status.className}`}
+                >
+                  {status.text}
+                </span>
+              )}
+            </div>
             <input
               id="program-name"
               type="text"
@@ -134,7 +172,17 @@ export function ProgramBuilder({
             />
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            {(isSaved || program.length > 0) && (
+              <button
+                type="button"
+                onClick={onNew}
+                title="Commencer un nouveau programme"
+                className="rounded-lg border border-gold-border px-3 py-2 text-xs font-semibold text-ink-muted transition-all hover:border-gold hover:text-gold-light"
+              >
+                + Nouveau
+              </button>
+            )}
             {program.length > 0 && (
               <>
                 <span className="mr-1 rounded-md border border-gold-border bg-gold-muted px-2.5 py-1.5 text-[0.7rem] font-semibold text-gold">
@@ -155,13 +203,32 @@ export function ProgramBuilder({
               onClick={downloadPdf}
               disabled={exporting || program.length === 0}
               title={program.length === 0 ? "Ajoutez des exercices pour exporter" : "Télécharger le programme en PDF"}
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-gold to-gold-light px-4 py-2 text-sm font-bold text-on-accent transition-all hover:-translate-y-0.5 hover:shadow-glow disabled:pointer-events-none disabled:opacity-50"
+              className="flex items-center gap-2 rounded-lg border border-gold-active px-4 py-2 text-sm font-bold text-gold transition-all hover:-translate-y-0.5 hover:bg-gold-muted disabled:pointer-events-none disabled:opacity-50"
             >
               <Icon path={ICON.download} size={15} />
-              {exporting ? "Génération…" : "Télécharger le PDF"}
+              {exporting ? "Génération…" : "PDF"}
             </button>
+            {!readOnly && (
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={saving || program.length === 0 || (isSaved && !dirty)}
+                title={program.length === 0 ? "Ajoutez des exercices pour enregistrer" : "Enregistrer dans mon profil"}
+                className="flex items-center gap-2 rounded-lg bg-gradient-to-br from-gold to-gold-light px-4 py-2 text-sm font-bold text-on-accent transition-all hover:-translate-y-0.5 hover:shadow-glow disabled:pointer-events-none disabled:opacity-50"
+              >
+                <Icon path={ICON.save} size={15} />
+                {saving ? "Enregistrement…" : "Enregistrer"}
+              </button>
+            )}
           </div>
         </div>
+
+        {readOnly && (
+          <p className="mx-6 rounded-lg border border-gold-border bg-gold-faint px-3 py-2 text-xs text-ink-muted">
+            Ce programme a été créé par votre coach : vous pouvez le consulter et le télécharger, mais vos modifications ne
+            seront pas enregistrées.
+          </p>
+        )}
 
         {exportError && <p className="px-6 text-sm text-danger-ink">{exportError}</p>}
 
@@ -180,7 +247,12 @@ export function ProgramBuilder({
             isDragging && program.length > 0 ? "bg-gold-faint ring-1 ring-gold-border" : "ring-1 ring-transparent"
           }`}
         >
-          {program.length === 0 ? (
+          {loading ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 py-20">
+              <span className="h-7 w-7 animate-spin rounded-full border-2 border-gold-soft border-t-gold" />
+              <p className="text-sm text-ink-muted">Chargement du programme…</p>
+            </div>
+          ) : program.length === 0 ? (
             <div
               className={`flex flex-1 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed px-8 py-20 text-center transition-all duration-200 ease-out-soft ${
                 dropIndex === 0
@@ -278,9 +350,10 @@ export function ProgramBuilder({
                           />
                           <span className="text-ink-muted">×</span>
                           <input
-                            type="text"
+                            type="number"
+                            min={1}
                             value={item.reps}
-                            onChange={(e) => updateItem(item.instanceId, { reps: e.target.value })}
+                            onChange={(e) => updateItem(item.instanceId, { reps: Math.max(1, Number(e.target.value) || 1) })}
                             title="Répétitions"
                             className={`${inlineInputClass} w-14`}
                           />

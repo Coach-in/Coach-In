@@ -10,13 +10,29 @@ interface CompressOptions {
   square?: boolean;
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+function decodeImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error(`Could not load image: ${src.slice(0, 80)}`));
     img.src = src;
   });
+}
+
+// Images stored in MinIO come from another origin: drawing them directly would taint the
+// canvas and make toDataURL throw. Fetching them as a blob (MinIO sends CORS headers) avoids it.
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  const crossOrigin = /^https?:/.test(src) && new URL(src).origin !== window.location.origin;
+  if (!crossOrigin) return decodeImage(src);
+
+  const res = await fetch(src, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Could not fetch image: ${res.status}`);
+  const objectUrl = URL.createObjectURL(await res.blob());
+  try {
+    return await decodeImage(objectUrl);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 export async function compressImage(
@@ -49,6 +65,10 @@ export async function compressImage(
   ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
   return canvas.toDataURL("image/jpeg", quality);
+}
+
+export async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
+  return (await fetch(dataUrl)).blob();
 }
 
 export async function compressImageFile(file: File, options?: CompressOptions): Promise<string> {

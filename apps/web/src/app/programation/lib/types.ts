@@ -6,6 +6,8 @@ export interface Exercise {
   description: string;
   videoUrl: string;
   imageUrl?: string;
+  // Default exercise from exercises.json: copied to the user's account the first time it's saved
+  isTemplate?: boolean;
 }
 
 export interface ProgramItem {
@@ -16,7 +18,7 @@ export interface ProgramItem {
   videoUrl: string;
   imageUrl?: string;
   sets: number;
-  reps: string;
+  reps: number;
 }
 
 export const EXERCISE_MIME = "application/x-coachin-exercise";
@@ -29,16 +31,5 @@ export type DragSource = { kind: "library"; exerciseId: string } | { kind: "item
 export const dropEffectFor = (e: React.DragEvent): DataTransfer["dropEffect"] =>
   e.dataTransfer.types.includes(EXERCISE_MIME) ? "copy" : "move";
 
-export const SEED_EXERCISES: Exercise[] = [
-  {
-    id: "ex-squat",
-    title: "Squat barre",
-    description:
-      "Descendre sous la parallaxe, genoux alignés sur les orteils. Resserrer le haut du dos avant chaque répétition.",
-    videoUrl: "https://videos.exemple.fr/squat-barre",
-    imageUrl: "/exercises/squat.jpg",
-  },
-];
-
 export const DEFAULT_SETS = 3;
-export const DEFAULT_REPS = "10";
+export const DEFAULT_REPS = 10;

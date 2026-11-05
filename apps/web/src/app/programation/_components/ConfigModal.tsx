@@ -13,14 +13,14 @@ export function ConfigModal({
 }: {
   exercise: Exercise;
   onCancel: () => void;
-  onConfirm: (sets: number, reps: string) => void;
+  onConfirm: (sets: number, reps: number) => void;
 }) {
   const [sets, setSets] = useState(DEFAULT_SETS);
   const [reps, setReps] = useState(DEFAULT_REPS);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    onConfirm(Math.max(1, Math.min(20, sets || DEFAULT_SETS)), reps.trim() || DEFAULT_REPS);
+    onConfirm(Math.max(1, Math.min(20, sets || DEFAULT_SETS)), Math.max(1, reps || DEFAULT_REPS));
   };
 
   return (
@@ -68,10 +68,10 @@ export function ConfigModal({
               </label>
               <input
                 id="cfg-reps"
-                type="text"
-                placeholder="8-12"
+                type="number"
+                min={1}
                 value={reps}
-                onChange={(e) => setReps(e.target.value)}
+                onChange={(e) => setReps(Number(e.target.value))}
                 className={inputClass}
               />
             </div>

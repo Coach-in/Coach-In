@@ -10,7 +10,8 @@ import { inputClass, labelClass } from "../lib/styles";
 interface LibrarySidebarProps {
   exercises: Exercise[];
   usedCount: (id: string) => number;
-  onCreateExercise: (exercise: Omit<Exercise, "id">) => void;
+  // Rejects with a user-facing message when the exercise could not be created
+  onCreateExercise: (exercise: Omit<Exercise, "id">) => Promise<void>;
   onAddToProgram: (exercise: Exercise) => void;
   onRemoveExercise: (id: string) => void;
   onSetExerciseImage: (id: string, imageUrl: string) => void;
@@ -32,7 +33,9 @@ export function LibrarySidebar({
 }: LibrarySidebarProps) {
   const [draft, setDraft] = useState({ title: "", description: "", videoUrl: "", imageUrl: "" });
   const [compressing, setCompressing] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const draftFileInput = useRef<HTMLInputElement>(null);
 
   // Every upload is downscaled before being kept, so the program and the PDF stay light
@@ -54,18 +57,28 @@ export function LibrarySidebar({
     if (draftFileInput.current) draftFileInput.current.value = "";
   };
 
-  const createExercise = (e: React.FormEvent) => {
+  const createExercise = async (e: React.FormEvent) => {
     e.preventDefault();
     const title = draft.title.trim();
     if (!title) return;
-    onCreateExercise({
-      title,
-      description: draft.description.trim(),
-      videoUrl: draft.videoUrl.trim(),
-      imageUrl: draft.imageUrl.trim() || undefined,
-    });
-    setDraft({ title: "", description: "", videoUrl: "", imageUrl: "" });
-    if (draftFileInput.current) draftFileInput.current.value = "";
+
+    setCreating(true);
+    setFormError(null);
+    try {
+      await onCreateExercise({
+        title,
+        description: draft.description.trim(),
+        videoUrl: draft.videoUrl.trim(),
+        imageUrl: draft.imageUrl.trim() || undefined,
+      });
+      // Only clear the form once the exercise exists, so a failure doesn't lose what was typed
+      setDraft({ title: "", description: "", videoUrl: "", imageUrl: "" });
+      if (draftFileInput.current) draftFileInput.current.value = "";
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Impossible de créer l'exercice.");
+    } finally {
+      setCreating(false);
+    }
   };
 
   return (
@@ -112,20 +125,6 @@ export function LibrarySidebar({
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className={labelClass} htmlFor="ex-video">
-            Lien vidéo
-          </label>
-          <input
-            id="ex-video"
-            type="url"
-            placeholder="https://…"
-            value={draft.videoUrl}
-            onChange={(e) => setDraft({ ...draft, videoUrl: e.target.value })}
-            className={inputClass}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
           <label className={labelClass} htmlFor="ex-image">
             Image
           </label>
@@ -168,13 +167,15 @@ export function LibrarySidebar({
           {imageError && <p className="text-[0.7rem] text-danger-ink">{imageError}</p>}
         </div>
 
+        {formError && <p className="animate-item-in text-[0.7rem] text-danger-ink">{formError}</p>}
+
         <button
           type="submit"
-          disabled={compressing}
+          disabled={compressing || creating}
           className="mt-1 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-gold to-gold-light py-2.5 text-sm font-bold text-on-accent transition-all hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
         >
           <Icon path={ICON.plus} size={15} />
-          Créer l&apos;exercice
+          {creating ? "Création…" : "Créer l'exercice"}
         </button>
       </form>
 
@@ -223,7 +224,17 @@ export function LibrarySidebar({
 
               {/* Not a <button>: Firefox won't start a drag from inside one. The "+" button covers keyboard use */}
               <div onClick={() => onAddToProgram(exercise)} title="Ajouter au programme" className="min-w-0 flex-1 cursor-pointer">
-                <span className="block truncate text-sm font-semibold text-ink">{exercise.title}</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="truncate text-sm font-semibold text-ink">{exercise.title}</span>
+                  {exercise.isTemplate && (
+                    <span
+                      title="Exercice par défaut, copié dans votre compte à la première sauvegarde"
+                      className="shrink-0 rounded border border-gold-soft bg-gold-muted px-1 text-[0.6rem] font-semibold text-gold"
+                    >
+                      Modèle
+                    </span>
+                  )}
+                </span>
                 <span className="block text-[0.68rem] text-ink-muted">
                   {uses > 0 ? `${uses}× dans le programme` : "Non utilisé"}
                 </span>
@@ -238,14 +249,16 @@ export function LibrarySidebar({
                 >
                   <Icon path={ICON.plus} size={14} />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => onRemoveExercise(exercise.id)}
-                  title="Retirer de la bibliothèque"
-                  className="rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-danger-surface hover:text-danger-ink"
-                >
-                  <Icon path={ICON.trash} size={14} />
-                </button>
+                {!exercise.isTemplate && (
+                  <button
+                    type="button"
+                    onClick={() => onRemoveExercise(exercise.id)}
+                    title="Supprimer de mes exercices"
+                    className="rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-danger-surface hover:text-danger-ink"
+                  >
+                    <Icon path={ICON.trash} size={14} />
+                  </button>
+                )}
               </div>
             </li>
           );
