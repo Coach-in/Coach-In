@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { api, ApiProgramme } from "../programation/lib/api";
+import { downloadProgramme, exerciseCount } from "../programation/lib/programmes";
 
 interface Tag {
   id: string;
@@ -25,17 +28,15 @@ interface AthleteMe {
   };
 }
 
-const MOCK_PROGRAMMES = [
-  { id: 1, name: "Préparation Championnats", length: "12 semaines", active: true, exercises: 5 },
-  { id: 2, name: "Bloc hypertrophie", length: "6 semaines", active: false, exercises: 4 },
-];
-
 const MOCK_MESSAGES = [
   { id: 1, from: "Mon coach", content: "Excellent travail sur le squat cette semaine !", time: "Il y a 2h", read: false },
   { id: 2, from: "Mon coach", content: "N'oublie pas de renseigner ton RPE après chaque séance.", time: "Hier", read: true },
 ];
 
 type Tab = "overview" | "programmes" | "messages";
+
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
 
 export default function AthleteProfile() {
   const router = useRouter();
@@ -45,6 +46,13 @@ export default function AthleteProfile() {
   const [tab, setTab] = useState<Tab>("overview");
   const [editGoals, setEditGoals] = useState(false);
   const [goals, setGoals] = useState("");
+
+  const [token, setToken] = useState<string | null>(null);
+  const [programmes, setProgrammes] = useState<ApiProgramme[]>([]);
+  const [programmesError, setProgrammesError] = useState("");
+  // Id of the programme whose PDF is being generated, or waiting for a delete confirmation
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -76,6 +84,13 @@ export default function AthleteProfile() {
         const data: AthleteMe = await res.json();
         setAthlete(data);
         setGoals(data.goals ?? "");
+        setToken(token);
+
+        try {
+          setProgrammes(await api.listProgrammes(token));
+        } catch {
+          setProgrammesError("Impossible de charger vos programmes.");
+        }
       } catch {
         setError("Impossible de charger le profil.");
       } finally {
@@ -89,6 +104,35 @@ export default function AthleteProfile() {
   const handleSaveGoals = async () => {
     setEditGoals(false);
   };
+
+  // The list only carries the exercise entries: fetch the full programme (with image URLs) for the PDF
+  const handleDownload = async (id: string) => {
+    if (!token) return;
+    setDownloadingId(id);
+    setProgrammesError("");
+    try {
+      await downloadProgramme(await api.getProgramme(token, id));
+    } catch {
+      setProgrammesError("Le téléchargement du PDF a échoué.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!token) return;
+    if (confirmDeleteId !== id) {
+      setConfirmDeleteId(id);
+      return;
+    }
+    setConfirmDeleteId(null);
+    try {
+      await api.deleteProgramme(token, id);
+      setProgrammes((prev) => prev.filter((p) => p.id !== id));
+    } catch {
+      setProgrammesError("La suppression a échoué.");
+    }
+  };
   
   const handleDisconnection = () => {
     fetch("/api/auth/set-token", {
@@ -99,6 +143,8 @@ export default function AthleteProfile() {
   };
 
   const unread = MOCK_MESSAGES.filter((m) => !m.read).length;
+  const ownProgrammes = programmes.filter((p) => p.coach === null);
+  const latest = programmes[0];
 
   const initials = athlete?.user.username
     .split("_")
@@ -171,8 +217,8 @@ export default function AthleteProfile() {
               </button>
               <div className="flex gap-0 border border-gold-border rounded-xl overflow-hidden">
                 {[
-                  { n: MOCK_PROGRAMMES.length, l: "Programmes" },
-                  { n: MOCK_PROGRAMMES.filter((p) => p.active).length, l: "En cours" },
+                  { n: programmes.length, l: "Programmes" },
+                  { n: ownProgrammes.length, l: "Créés par moi" },
                   { n: athlete.tags.length, l: "Tags" },
                 ].map((s, i) => (
                   <div key={i} className={`px-5 py-3 text-center ${i > 0 ? "border-l border-gold-border" : ""}`}>
@@ -271,19 +317,34 @@ export default function AthleteProfile() {
             <div className="border border-gold-heavy rounded-2xl p-5 bg-navy-900 flex flex-col gap-3 md:col-span-2">
               <div className="flex items-center gap-2 text-[0.7rem] font-semibold tracking-[2px] uppercase text-gold">
                 <span className="w-4 h-px bg-gold" />
-                Programme en cours
+                Dernier programme
               </div>
-              {MOCK_PROGRAMMES.filter((p) => p.active).map((prog) => (
-                <div key={prog.id} className="flex items-center justify-between gap-4 bg-navy-950 rounded-xl px-4 py-3 border border-gold-soft">
+              {latest ? (
+                <div className="flex items-center justify-between gap-4 bg-navy-950 rounded-xl px-4 py-3 border border-gold-soft">
                   <div>
-                    <div className="font-display font-bold text-ink text-sm">{prog.name}</div>
-                    <div className="text-ink-muted text-xs mt-0.5">{prog.length} · {prog.exercises} exercices</div>
+                    <div className="font-display font-bold text-ink text-sm">{latest.name}</div>
+                    <div className="text-ink-muted text-xs mt-0.5">
+                      {exerciseCount(latest)} exercices · modifié le {formatDate(latest.updatedAt)}
+                    </div>
                   </div>
-                  <button className="px-3 py-1.5 rounded-lg border border-gold-border text-gold text-xs font-semibold hover:bg-gold-muted transition-all shrink-0">
-                    Voir →
-                  </button>
+                  <Link
+                    href={`/programation?id=${latest.id}`}
+                    className="px-3 py-1.5 rounded-lg border border-gold-border text-gold text-xs font-semibold hover:bg-gold-muted transition-all shrink-0"
+                  >
+                    Ouvrir →
+                  </Link>
                 </div>
-              ))}
+              ) : (
+                <div className="flex items-center justify-between gap-4 rounded-xl border border-dashed border-gold-border px-4 py-3">
+                  <p className="text-ink-muted text-sm">Aucun programme pour l&apos;instant.</p>
+                  <Link
+                    href="/programation"
+                    className="px-3 py-1.5 rounded-lg bg-gradient-to-br from-gold to-gold-light text-on-accent text-xs font-bold shrink-0 hover:-translate-y-0.5 transition-all"
+                  >
+                    Créer un programme
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -291,30 +352,96 @@ export default function AthleteProfile() {
         {tab === "programmes" && (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
-              <p className="text-ink-muted text-sm">{MOCK_PROGRAMMES.length} programmes au total</p>
-              <button className="px-4 py-2 rounded-lg border border-gold-border text-ink-muted text-xs font-semibold hover:text-gold-light hover:border-gold transition-all">
+              <p className="text-ink-muted text-sm">
+                {programmes.length} programme{programmes.length > 1 ? "s" : ""} au total
+              </p>
+              <Link
+                href="/programation"
+                className="px-4 py-2 rounded-lg border border-gold-border text-ink-muted text-xs font-semibold hover:text-gold-light hover:border-gold transition-all"
+              >
                 + Nouveau
-              </button>
+              </Link>
             </div>
-            {MOCK_PROGRAMMES.map((prog) => (
-              <div key={prog.id} className={`rounded-2xl border p-5 bg-navy-900 flex items-center justify-between gap-4 hover:bg-navy-800 transition-colors ${prog.active ? "border-gold-active" : "border-gold-border"}`}>
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${prog.active ? "bg-gradient-to-br from-gold to-gold-light text-navy-950" : "bg-gold-muted border border-gold-border text-gold"}`}>
-                    {prog.id}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-display font-bold text-ink text-sm">{prog.name}</span>
-                      {prog.active && <span className="text-[0.62rem] font-bold px-1.5 py-0.5 rounded-full bg-success-surface text-success-ink">EN COURS</span>}
+
+            {programmesError && (
+              <p className="rounded-xl border border-danger-line bg-danger-surface px-4 py-2.5 text-sm text-danger-ink">
+                {programmesError}
+              </p>
+            )}
+
+            {programmes.length === 0 && !programmesError && (
+              <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-gold-border bg-navy-900 px-6 py-12 text-center">
+                <p className="text-ink-muted text-sm">
+                  Vous n&apos;avez pas encore de programme. Créez-en un et retrouvez-le ici.
+                </p>
+                <Link
+                  href="/programation"
+                  className="px-4 py-2 rounded-lg bg-gradient-to-br from-gold to-gold-light text-on-accent text-sm font-bold hover:-translate-y-0.5 transition-all"
+                >
+                  Créer mon premier programme
+                </Link>
+              </div>
+            )}
+
+            {programmes.map((prog, index) => {
+              const fromCoach = prog.coach !== null;
+              return (
+                <div
+                  key={prog.id}
+                  className={`rounded-2xl border p-5 bg-navy-900 flex flex-wrap items-center justify-between gap-4 hover:bg-navy-800 transition-colors ${index === 0 ? "border-gold-active" : "border-gold-border"}`}
+                >
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 ${index === 0 ? "bg-gradient-to-br from-gold to-gold-light text-navy-950" : "bg-gold-muted border border-gold-border text-gold"}`}
+                    >
+                      {index + 1}
                     </div>
-                    <div className="text-ink-muted text-xs mt-0.5">{prog.length} · {prog.exercises} exercices</div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-display font-bold text-ink text-sm truncate">{prog.name}</span>
+                        {fromCoach && (
+                          <span className="text-[0.62rem] font-bold px-1.5 py-0.5 rounded-full bg-gold-soft text-gold shrink-0">
+                            COACH @{prog.coach?.user.username}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-ink-muted text-xs mt-0.5">
+                        {exerciseCount(prog)} exercices · modifié le {formatDate(prog.updatedAt)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                      href={`/programation?id=${prog.id}`}
+                      className="px-3 py-1.5 rounded-lg border border-gold-border text-gold text-xs font-semibold hover:bg-gold-muted transition-all"
+                    >
+                      {fromCoach ? "Voir →" : "Modifier →"}
+                    </Link>
+                    <button
+                      onClick={() => handleDownload(prog.id)}
+                      disabled={downloadingId === prog.id}
+                      className="px-3 py-1.5 rounded-lg border border-gold-border text-ink-muted text-xs font-semibold hover:text-gold-light hover:border-gold transition-all disabled:opacity-50"
+                    >
+                      {downloadingId === prog.id ? "PDF…" : "PDF"}
+                    </button>
+                    {!fromCoach && (
+                      <button
+                        onClick={() => handleDelete(prog.id)}
+                        onBlur={() => setConfirmDeleteId(null)}
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                          confirmDeleteId === prog.id
+                            ? "border-danger-line-strong bg-danger-surface text-danger-ink"
+                            : "border-gold-border text-ink-muted hover:border-danger-line hover:text-danger-ink"
+                        }`}
+                      >
+                        {confirmDeleteId === prog.id ? "Confirmer ?" : "Supprimer"}
+                      </button>
+                    )}
                   </div>
                 </div>
-                <button className="px-3 py-1.5 rounded-lg border border-gold-border text-gold text-xs font-semibold hover:bg-gold-muted transition-all shrink-0">
-                  Voir →
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
