@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -8,6 +16,9 @@ import {
 } from '@nestjs/swagger';
 import { TagsService } from './tags.service';
 import { CreateTagDto } from './dto/create-tag.dto';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../utils/types/jwt.types';
+import { Public } from '../auth/public.decorator';
 
 @ApiTags('Tags')
 @Controller('tags')
@@ -34,6 +45,7 @@ export class TagsController {
     },
   })
   @ApiResponse({ status: 404, description: 'Category not found' })
+  @Roles(UserRole.ADMIN)
   create(@Body() createTagDto: CreateTagDto) {
     return this.tagsService.create(createTagDto);
   }
@@ -53,6 +65,7 @@ export class TagsController {
       ],
     },
   })
+  @Public()
   findAll() {
     return this.tagsService.findAll();
   }
@@ -72,7 +85,8 @@ export class TagsController {
     },
   })
   @ApiResponse({ status: 404, description: 'Tag not found' })
-  findOne(@Param('id') id: string) {
+  @Public()
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.tagsService.findOne(id);
   }
 
@@ -81,7 +95,8 @@ export class TagsController {
   @ApiParam({ name: 'id', example: 'uuid' })
   @ApiResponse({ status: 200, description: 'Tag deleted' })
   @ApiResponse({ status: 404, description: 'Tag not found' })
-  remove(@Param('id') id: string) {
+  @Roles(UserRole.ADMIN)
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.tagsService.remove(id);
   }
 }

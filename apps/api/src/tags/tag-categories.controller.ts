@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -8,6 +16,9 @@ import {
 } from '@nestjs/swagger';
 import { TagCategoriesService } from './tag-categories.service';
 import { CreateTagCategoryDto } from './dto/create-tag-category.dto';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../utils/types/jwt.types';
+import { Public } from '../auth/public.decorator';
 
 @ApiTags('Tag Categories')
 @Controller('tag-categories')
@@ -25,6 +36,7 @@ export class TagCategoriesController {
     description: 'Tag category created',
     schema: { example: { id: 'uuid', name: 'sport' } },
   })
+  @Roles(UserRole.ADMIN)
   create(@Body() dto: CreateTagCategoryDto) {
     return this.tagCategoriesService.create(dto);
   }
@@ -41,6 +53,7 @@ export class TagCategoriesController {
       ],
     },
   })
+  @Public()
   findAll() {
     return this.tagCategoriesService.findAll();
   }
@@ -54,7 +67,8 @@ export class TagCategoriesController {
     schema: { example: { id: 'uuid', name: 'sport' } },
   })
   @ApiResponse({ status: 404, description: 'Tag category not found' })
-  findOne(@Param('id') id: string) {
+  @Public()
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.tagCategoriesService.findOne(id);
   }
 
@@ -63,7 +77,8 @@ export class TagCategoriesController {
   @ApiParam({ name: 'id', example: 'uuid' })
   @ApiResponse({ status: 200, description: 'Tag category deleted' })
   @ApiResponse({ status: 404, description: 'Tag category not found' })
-  remove(@Param('id') id: string) {
+  @Roles(UserRole.ADMIN)
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.tagCategoriesService.remove(id);
   }
 }

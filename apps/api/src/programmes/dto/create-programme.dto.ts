@@ -13,12 +13,14 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CreateProgrammeDayDto } from './create-programme-day.dto';
 
 export class CreateProgrammeDto {
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'athlete-uuid',
-    description: 'UUID of the athlete (must have an accepted relationship)',
+    description:
+      'Coach: athlete to assign the programme to (accepted relationship required); omit to create a template. Athlete: omit, or your own athlete id.',
   })
+  @IsOptional()
   @IsUUID()
-  athleteId: string;
+  athleteId?: string;
 
   @ApiProperty({ example: 'Strength block — 6 weeks', maxLength: 100 })
   @IsString()

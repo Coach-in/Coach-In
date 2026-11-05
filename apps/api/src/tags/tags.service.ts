@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tag } from './entities/tag.entity';
@@ -15,6 +19,9 @@ export class TagsService {
 
   async create(createTagDto: CreateTagDto): Promise<Tag> {
     const { categoryName, ...rest } = createTagDto;
+    if ((await this.findByNames([rest.name])).length > 0) {
+      throw new ConflictException(`Tag "${rest.name}" already exists`);
+    }
     const category = categoryName
       ? await this.tagCategoriesService.findByName(categoryName)
       : undefined;
@@ -32,6 +39,7 @@ export class TagsService {
   }
 
   async findByNames(names: string[]): Promise<Tag[]> {
+    if (names.length === 0) return [];
     return this.tagRepository
       .createQueryBuilder('tag')
       .leftJoinAndSelect('tag.category', 'category')

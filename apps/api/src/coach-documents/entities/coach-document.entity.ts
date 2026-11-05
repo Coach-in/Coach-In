@@ -5,6 +5,7 @@ import {
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 import { Coach } from '../../coachs/entities/coach.entity';
 
@@ -13,6 +14,7 @@ export class CoachDocument {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index()
   @ManyToOne(() => Coach, { eager: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'coach_id' })
   coach: Coach;

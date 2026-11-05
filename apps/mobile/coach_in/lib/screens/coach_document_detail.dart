@@ -175,7 +175,7 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
                               color: Color(0xffffd398),
                             ),
                           ),
-                    errorBuilder: (_, __, ___) => _buildPreviewFallback(
+                    errorBuilder: (context, error, stackTrace) => _buildPreviewFallback(
                       Icons.broken_image_outlined,
                       'Could not load image.',
                     ),

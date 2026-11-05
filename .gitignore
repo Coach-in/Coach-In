@@ -7,3 +7,5 @@
 !.vscode/extensions.json
 
 *.txt
+
+apps/api/doc/

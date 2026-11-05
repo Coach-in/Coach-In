@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Admin } from './entities/admin.entity';
 import { User } from '../users/entities/user.entity';
 import { CreateAdminDto } from './dto/create-admin.dto';
@@ -13,9 +13,20 @@ export class AdminsService {
     private readonly adminRepository: Repository<Admin>,
   ) {}
 
-  async create(createAdminDto: CreateAdminDto, user: User): Promise<Admin> {
-    const admin = this.adminRepository.create({ ...createAdminDto, user });
-    return this.adminRepository.save(admin);
+  async create(
+    createAdminDto: CreateAdminDto,
+    user: User,
+    manager?: EntityManager,
+  ): Promise<Admin> {
+    const repository = manager
+      ? manager.getRepository(Admin)
+      : this.adminRepository;
+    const admin = repository.create({ ...createAdminDto, user });
+    return repository.save(admin);
+  }
+
+  async count(): Promise<number> {
+    return this.adminRepository.count();
   }
 
   async findAll(): Promise<Admin[]> {

@@ -10,4 +10,3 @@ export class CreateRelationshipDto {
   @IsUUID()
   coachId: string;
 }
-

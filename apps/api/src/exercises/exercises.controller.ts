@@ -44,6 +44,7 @@ const exerciseExample = {
   description: 'Lie on a flat bench, lower the bar to mid-chest, press up.',
   s3Key: 'exercises/exercise-uuid/file-uuid.png',
   createdById: 'coach-uuid',
+  createdByAthleteId: null,
   createdAt: '2026-09-29T10:00:00.000Z',
   imageUrl:
     'http://localhost:9000/coach-documents/exercises/...?X-Amz-Signature=...',
@@ -111,11 +112,16 @@ export class ExercisesController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Coach adds an exercise to the catalogue' })
+  @ApiOperation({
+    summary: 'Coach or athlete adds an exercise to the catalogue',
+  })
   @ApiBody({ type: CreateExerciseDto })
   @ApiResponse({ status: 201, schema: { example: exerciseExample } })
   @ApiResponse({ status: 400, description: 'Invalid payload.' })
-  @ApiResponse({ status: 403, description: 'Caller is not a coach.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Caller is neither a coach nor an athlete.',
+  })
   @ApiResponse({ status: 409, description: 'Name already used.' })
   async create(
     @Headers('authorization') auth: string,
@@ -128,7 +134,7 @@ export class ExercisesController {
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Creator coach updates an exercise' })
+  @ApiOperation({ summary: 'Creator updates an exercise' })
   @ApiParam(idParam)
   @ApiBody({ type: UpdateExerciseDto })
   @ApiResponse({ status: 200, schema: { example: exerciseExample } })
@@ -146,7 +152,7 @@ export class ExercisesController {
 
   @Delete(':id')
   @HttpCode(204)
-  @ApiOperation({ summary: 'Creator coach deletes an exercise' })
+  @ApiOperation({ summary: 'Creator deletes an exercise' })
   @ApiParam(idParam)
   @ApiResponse({ status: 204, description: 'Exercise deleted.' })
   @ApiResponse({ status: 403, description: 'Caller did not create it.' })
@@ -162,7 +168,7 @@ export class ExercisesController {
 
   @Post(':id/image')
   @ApiOperation({
-    summary: 'Creator coach uploads or replaces the exercise image',
+    summary: 'Creator uploads or replaces the exercise image',
   })
   @ApiParam(idParam)
   @ApiConsumes('multipart/form-data')

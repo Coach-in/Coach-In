@@ -7,6 +7,8 @@ import {
   UseInterceptors,
   BadRequestException,
   Logger,
+  ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -20,6 +22,11 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { CoachDocumentsService } from './coach-documents.service';
+import { CurrentUser } from '../auth/current-user.decorator';
+import type { AuthUser } from '../auth/auth.types';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../utils/types/jwt.types';
+import { PaginationQueryDto } from '../utils/pagination';
 
 const documentExample = {
   id: 'doc-uuid-1234',
@@ -90,8 +97,9 @@ export class CoachDocumentsController {
     }),
   )
   async upload(
-    @Param('coachId') coachId: string,
+    @Param('coachId', ParseUUIDPipe) coachId: string,
     @UploadedFile() file: Express.Multer.File,
+    @CurrentUser() user: AuthUser,
   ) {
     this.logger.debug(`[POST /upload/${coachId}] Received upload request`);
     if (!file) {
@@ -101,7 +109,7 @@ export class CoachDocumentsController {
     this.logger.debug(
       `[POST /upload/${coachId}] File: "${file.originalname}", type=${file.mimetype}, size=${file.size}`,
     );
-    const result = await this.coachDocumentsService.upload(file, coachId);
+    const result = await this.coachDocumentsService.upload(file, coachId, user);
     this.logger.log(
       `[POST /upload/${coachId}] Upload successful, documentId=${result.id}`,
     );
@@ -119,11 +127,12 @@ export class CoachDocumentsController {
       'List of all documents, each with a presigned URL valid for 15 minutes.',
     schema: { example: [documentExample] },
   })
-  findAll() {
+  @Roles(UserRole.ADMIN)
+  findAll(@Query() page: PaginationQueryDto) {
     this.logger.debug(
       `[GET /coach-documents] Received request to list all documents`,
     );
-    return this.coachDocumentsService.findAll();
+    return this.coachDocumentsService.findAll(page);
   }
 
   @Post(':id/accept')
@@ -145,7 +154,8 @@ export class CoachDocumentsController {
     },
   })
   @ApiResponse({ status: 404, description: 'Document not found.' })
-  accept(@Param('id') id: string) {
+  @Roles(UserRole.ADMIN)
+  accept(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.debug(`[POST /${id}/accept] Received accept request`);
     return this.coachDocumentsService.accept(id);
   }
@@ -169,7 +179,8 @@ export class CoachDocumentsController {
     },
   })
   @ApiResponse({ status: 404, description: 'Document not found.' })
-  refuse(@Param('id') id: string) {
+  @Roles(UserRole.ADMIN)
+  refuse(@Param('id', ParseUUIDPipe) id: string) {
     this.logger.debug(`[POST /${id}/refuse] Received refuse request`);
     return this.coachDocumentsService.refuse(id);
   }

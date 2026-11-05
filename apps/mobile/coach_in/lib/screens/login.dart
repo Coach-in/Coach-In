@@ -6,7 +6,6 @@ import 'register.dart';
 import 'start_page.dart';
 import './explore_page.dart';
 import 'coach_document_list.dart';
-import 'profile_page.dart';
 
 import '../services/api_service.dart';
 import '../services/oauth_service.dart';
@@ -97,12 +96,9 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success']) {
       final data = result['data'];
-      final user = data['user'];
       final accessToken = data['token'];
-      final refreshToken = user['refresh_token'];
 
       await _storage.write(key: 'accessToken', value: accessToken);
-      await _storage.write(key: 'refreshToken', value: refreshToken);
       await _storage.write(key: 'rememberMe', value: _rememberMe.toString());
       await _storage.write(key: 'userEmail', value: _emailController.text.trim());
 

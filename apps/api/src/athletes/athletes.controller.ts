@@ -6,8 +6,8 @@ import {
   Patch,
   Param,
   Delete,
-  Headers,
-  UnauthorizedException,
+  ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -17,12 +17,14 @@ import {
   ApiBody,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { ConfigService } from '@nestjs/config';
-import jwt from 'jsonwebtoken';
-import { TokenContent } from '../utils/types/jwt.types';
 import { AthletesService } from './athletes.service';
 import { CreateAthleteDto } from './dto/create-athlete.dto';
 import { UpdateAthleteDto } from './dto/update-athlete.dto';
+import { CurrentUser } from '../auth/current-user.decorator';
+import type { AuthUser } from '../auth/auth.types';
+import { Roles } from '../auth/roles.decorator';
+import { UserRole } from '../utils/types/jwt.types';
+import { PaginationQueryDto } from '../utils/pagination';
 
 const athleteExample = {
   id: 'uuid',
@@ -46,10 +48,7 @@ const athleteExample = {
 @ApiTags('Athletes')
 @Controller('athletes')
 export class AthletesController {
-  constructor(
-    private readonly athletesService: AthletesService,
-    private readonly config: ConfigService,
-  ) {}
+  constructor(private readonly athletesService: AthletesService) {}
 
   @Get('me')
   @ApiBearerAuth('access-token')
@@ -63,14 +62,8 @@ export class AthletesController {
   })
   @ApiResponse({ status: 401, description: 'Token missing or invalid' })
   @ApiResponse({ status: 404, description: 'Athlete profile not found' })
-  async findMe(@Headers('authorization') authHeader: string) {
-    const [scheme, token] = authHeader?.split(' ') ?? [];
-    if (scheme !== 'Bearer' || !token)
-      throw new UnauthorizedException('Token is missing or invalid');
-    const secret = this.config.get<string>('JWT_SECRET');
-    if (!secret) throw new Error('JWT_SECRET is not defined');
-    const decoded = jwt.verify(token, secret) as TokenContent;
-    return this.athletesService.findMe(decoded.userId);
+  async findMe(@CurrentUser() user: AuthUser) {
+    return this.athletesService.findMe(user.id);
   }
 
   @Post()
@@ -92,6 +85,7 @@ export class AthletesController {
     description: 'Athlete created',
     schema: { example: athleteExample },
   })
+  @Roles(UserRole.ADMIN)
   create(@Body() createAthleteDto: CreateAthleteDto) {
     return this.athletesService.create(createAthleteDto);
   }
@@ -103,8 +97,9 @@ export class AthletesController {
     description: 'List of athletes',
     schema: { example: [athleteExample] },
   })
-  findAll() {
-    return this.athletesService.findAll();
+  @Roles(UserRole.ADMIN)
+  findAll(@Query() page: PaginationQueryDto) {
+    return this.athletesService.findAll(page);
   }
 
   @Get(':id')
@@ -116,8 +111,11 @@ export class AthletesController {
     schema: { example: athleteExample },
   })
   @ApiResponse({ status: 404, description: 'Athlete not found' })
-  findOne(@Param('id') id: string) {
-    return this.athletesService.findOne(id);
+  findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() requester: AuthUser,
+  ) {
+    return this.athletesService.findOneAs(id, requester);
   }
 
   @Patch(':id')
@@ -137,8 +135,12 @@ export class AthletesController {
     schema: { example: athleteExample },
   })
   @ApiResponse({ status: 404, description: 'Athlete not found' })
-  update(@Param('id') id: string, @Body() updateAthleteDto: UpdateAthleteDto) {
-    return this.athletesService.update(id, updateAthleteDto);
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateAthleteDto: UpdateAthleteDto,
+    @CurrentUser() requester: AuthUser,
+  ) {
+    return this.athletesService.update(id, updateAthleteDto, requester);
   }
 
   @Delete(':id')
@@ -146,7 +148,10 @@ export class AthletesController {
   @ApiParam({ name: 'id', example: 'uuid' })
   @ApiResponse({ status: 200, description: 'Athlete deleted' })
   @ApiResponse({ status: 404, description: 'Athlete not found' })
-  remove(@Param('id') id: string) {
-    return this.athletesService.remove(id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() requester: AuthUser,
+  ) {
+    return this.athletesService.remove(id, requester);
   }
 }

@@ -10,10 +10,15 @@ import { Repository } from 'typeorm';
 import { randomUUID } from 'node:crypto';
 import { Exercise } from './entities/exercise.entity';
 import { Coach } from '../coachs/entities/coach.entity';
+import { Athlete } from '../athletes/entities/athlete.entity';
 import { ProgrammeExercise } from '../programmes/entities/programme-exercise.entity';
 import { StorageService } from '../storage/storage.service';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
+
+type Creator =
+  | { kind: 'coach'; coach: Coach }
+  | { kind: 'athlete'; athlete: Athlete };
 
 export type ExerciseResponse = Exercise & { imageUrl: string | null };
 
@@ -26,6 +31,8 @@ export class ExercisesService {
     private readonly exerciseRepository: Repository<Exercise>,
     @InjectRepository(Coach)
     private readonly coachRepository: Repository<Coach>,
+    @InjectRepository(Athlete)
+    private readonly athleteRepository: Repository<Athlete>,
     @InjectRepository(ProgrammeExercise)
     private readonly programmeExerciseRepository: Repository<ProgrammeExercise>,
     private readonly storageService: StorageService,
@@ -48,14 +55,19 @@ export class ExercisesService {
     userId: string,
     dto: CreateExerciseDto,
   ): Promise<ExerciseResponse> {
-    const coach = await this.getCoachForUser(userId);
+    const creator = await this.getCreatorForUser(userId);
     await this.assertNameAvailable(dto.name);
 
     const exercise = await this.exerciseRepository.save(
-      this.exerciseRepository.create({ ...dto, createdBy: coach }),
+      this.exerciseRepository.create({
+        ...dto,
+        ...(creator.kind === 'coach'
+          ? { createdBy: creator.coach }
+          : { createdByAthlete: creator.athlete }),
+      }),
     );
     this.logger.log(
-      `[create] Exercise ${exercise.id} created by coach ${coach.id}`,
+      `[create] Exercise ${exercise.id} created by ${creator.kind} ${userId}`,
     );
     return this.findOne(exercise.id);
   }
@@ -121,24 +133,34 @@ export class ExercisesService {
     userId: string,
     id: string,
   ): Promise<Exercise> {
-    const coach = await this.getCoachForUser(userId);
+    const creator = await this.getCreatorForUser(userId);
     const exercise = await this.getExercise(id);
-    if (exercise.createdById !== coach.id) {
+    const createdByCaller =
+      creator.kind === 'coach'
+        ? exercise.createdById === creator.coach.id
+        : exercise.createdByAthleteId === creator.athlete.id;
+    if (!createdByCaller) {
       throw new ForbiddenException(
-        'Only the coach who created this exercise can modify it',
+        'Only the user who created this exercise can modify it',
       );
     }
     return exercise;
   }
 
-  private async getCoachForUser(userId: string): Promise<Coach> {
+  private async getCreatorForUser(userId: string): Promise<Creator> {
     const coach = await this.coachRepository.findOne({
       where: { user: { id: userId } },
     });
-    if (!coach) {
-      throw new ForbiddenException('Only coaches can manage exercises');
-    }
-    return coach;
+    if (coach) return { kind: 'coach', coach };
+
+    const athlete = await this.athleteRepository.findOne({
+      where: { user: { id: userId } },
+    });
+    if (athlete) return { kind: 'athlete', athlete };
+
+    throw new ForbiddenException(
+      'Only coaches and athletes can manage exercises',
+    );
   }
 
   private async assertNameAvailable(name: string): Promise<void> {
