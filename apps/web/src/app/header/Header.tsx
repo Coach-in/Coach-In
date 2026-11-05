@@ -91,6 +91,15 @@ export default function Header() {
             Nos Coachs
           </Link>
 
+          {auth.role === "athlete" && (
+            <Link
+              href="/programation"
+              className="text-ink-muted hover:text-gold-light text-sm font-medium transition-colors"
+            >
+              Programmation
+            </Link>
+          )}
+
           {auth.authenticated && (
             <button
               onClick={() => setIsNotificationsOpen(true)}
