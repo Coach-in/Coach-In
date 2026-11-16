@@ -447,6 +447,15 @@ class ApiService {
   Future<void> updateUser(String userId, Map<String, dynamic> body) =>
       _patchResource('/users/$userId', body);
 
+  /// Permanently deletes the account (`DELETE /users/:id`) and clears the session.
+  Future<void> deleteAccount(String userId) async {
+    final response = await delete('/users/$userId', withAuth: true);
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw ApiException.fromResponse(response);
+    }
+    await clearTokens();
+  }
+
   Future<void> updateAthlete(String athleteId, Map<String, dynamic> body) =>
       _patchResource('/athletes/$athleteId', body);
 

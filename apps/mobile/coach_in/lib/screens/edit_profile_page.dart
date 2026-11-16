@@ -27,6 +27,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late final TextEditingController _bioController;
   late final TextEditingController _ageController;
   late final TextEditingController _goalsController;
+  final TextEditingController _passwordController = TextEditingController();
 
   List<Map<String, dynamic>> _availableTags = [];
   late final Set<String> _selectedTagNames;
@@ -57,6 +58,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _bioController.dispose();
     _ageController.dispose();
     _goalsController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -75,6 +77,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final username = _usernameController.text.trim();
     if (username.isEmpty) {
       setState(() => _errorMessage = 'Username cannot be empty.');
+      return;
+    }
+
+    final newPassword = _passwordController.text;
+    if (newPassword.isNotEmpty && newPassword.length < 8) {
+      setState(() => _errorMessage = 'Le mot de passe doit contenir au moins 8 caractères.');
       return;
     }
 
@@ -111,8 +119,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final userId = widget.profile['user']['id'] as String;
       final profileId = widget.profile['id'] as String;
 
-      if (username != widget.profile['user']['username']) {
-        await _apiService.updateUser(userId, {'username': username});
+      final userBody = <String, dynamic>{
+        if (username != widget.profile['user']['username']) 'username': username,
+        if (newPassword.isNotEmpty) 'password': newPassword,
+      };
+      if (userBody.isNotEmpty) {
+        await _apiService.updateUser(userId, userBody);
       }
       if (widget.isCoach) {
         await _apiService.updateCoach(profileId, profileBody);
@@ -126,7 +138,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (!mounted) return;
       setState(() {
         _isSaving = false;
-        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+        _errorMessage = errorMessage(e, fallback: e.toString().replaceFirst('Exception: ', ''));
       });
     }
   }
@@ -196,6 +208,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     IconData icon, {
     int maxLines = 1,
     TextInputType? keyboardType,
+    bool obscure = false,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
@@ -203,6 +216,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         controller: controller,
         maxLines: maxLines,
         keyboardType: keyboardType,
+        obscureText: obscure,
         decoration: InputDecoration(
           floatingLabelBehavior: FloatingLabelBehavior.always,
           labelText: label,
@@ -226,6 +240,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
         padding: const EdgeInsets.all(20),
         children: [
           _buildField(_usernameController, 'Username', Icons.person),
+          _buildField(_passwordController, 'Nouveau mot de passe (optionnel)', Icons.lock_outline,
+              obscure: true),
           if (widget.isCoach) ...[
             _buildField(_specialtyController, 'Specialty', Icons.fitness_center),
             _buildField(_bioController, 'Bio', Icons.info_outline, maxLines: 3),

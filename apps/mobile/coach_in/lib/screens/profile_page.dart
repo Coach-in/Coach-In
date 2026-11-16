@@ -96,6 +96,68 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> _deleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer le compte ?'),
+        content: const Text(
+            'Cette action est définitive : votre compte et votre profil seront supprimés.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await _apiService.deleteAccount(_profile!['user']['id'] as String);
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const StartPage()),
+        (_) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage(e, fallback: 'Suppression impossible.'))),
+      );
+    }
+  }
+
+  /// Shown to a coach until an admin accepts their diploma document.
+  Widget _buildPendingApprovalBanner() {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.orange),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.hourglass_top, color: Colors.orange),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              "Votre diplôme est en cours de vérification. Vous n'apparaîtrez dans le catalogue qu'après validation.",
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildHeader(Map<String, dynamic> profile) {
     final user = profile['user'];
 
@@ -472,6 +534,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: ListView(
                         children: [
                           _buildHeader(_profile!),
+                          if (_role == 'coach' && _profile!['isApproved'] != true)
+                            _buildPendingApprovalBanner(),
                           _buildNotificationsCard(),
                           _buildGoalsOrBioCard(_profile!),
                           _buildSpecialtyCard(_profile!),
@@ -506,6 +570,13 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                   ),
                             ),
+                          TextButton(
+                            onPressed: _isLoggingOut ? null : _deleteAccount,
+                            child: const Text(
+                              'Supprimer mon compte',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
                           ],
                         ),
                       ),
