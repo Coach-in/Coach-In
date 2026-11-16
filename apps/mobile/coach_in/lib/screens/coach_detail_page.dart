@@ -70,8 +70,8 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to send request'),
+        SnackBar(
+          content: Text(errorMessage(e, fallback: 'Failed to send request')),
           backgroundColor: Colors.red,
         ),
       );

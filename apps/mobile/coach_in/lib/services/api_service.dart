@@ -20,6 +20,51 @@ class SessionExpiredException implements Exception {
   String toString() => 'Session expired. Please log in again.';
 }
 
+/// A non-success API response, carrying a user-facing (French) message.
+class ApiException implements Exception {
+  final int statusCode;
+  final String message;
+  ApiException(this.statusCode, this.message);
+
+  /// Uses the API's own message when it has one, otherwise a message based
+  /// on the status code. 404 and 429 always use our own wording.
+  factory ApiException.fromResponse(http.Response response) {
+    final status = response.statusCode;
+    String? apiMessage;
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['message'] != null) {
+        final m = decoded['message'];
+        apiMessage = m is List ? m.join(', ') : m.toString();
+      }
+    } catch (_) {}
+
+    final message = switch (status) {
+      400 => apiMessage ?? 'Données invalides.',
+      401 => apiMessage ?? 'Identifiants invalides.',
+      403 => apiMessage ?? "Vous n'avez pas le droit d'effectuer cette action.",
+      404 => 'Élément introuvable.',
+      409 => apiMessage ?? 'Cette action a déjà été effectuée.',
+      429 => 'Trop de tentatives. Réessayez dans quelques instants.',
+      _ => apiMessage ?? 'Une erreur est survenue ($status).',
+    };
+    return ApiException(status, message);
+  }
+
+  @override
+  String toString() => message;
+}
+
+/// Returns a message safe to show the user for any thrown error.
+String errorMessage(Object e, {String fallback = 'Une erreur est survenue.'}) {
+  if (e is ApiException) return e.message;
+  if (e is SessionExpiredException) return 'Session expirée. Veuillez vous reconnecter.';
+  if (e is TimeoutException || e is SocketException) {
+    return 'Impossible de joindre le serveur.';
+  }
+  return fallback;
+}
+
 class ApiService {
   /// Used to send the user back to the start page when the session expires.
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -334,7 +379,7 @@ class ApiService {
     );
 
     if (response.statusCode != 201 && response.statusCode != 200) {
-      throw Exception('Failed to request relationship');
+      throw ApiException.fromResponse(response);
     }
   }
 
@@ -353,7 +398,7 @@ class ApiService {
     final response = await post('/relationships/$id/$action', {}, withAuth: true);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to $action relationship');
+      throw ApiException.fromResponse(response);
     }
   }
 
@@ -386,17 +431,7 @@ class ApiService {
   Future<void> _patchResource(String path, Map<String, dynamic> body) async {
     final response = await patch(path, body: body, withAuth: true);
 
-    if (response.statusCode != 200) {
-      String message = 'Failed to update profile (${response.statusCode})';
-      try {
-        final decoded = jsonDecode(response.body);
-        if (decoded is Map && decoded['message'] != null) {
-          final m = decoded['message'];
-          message = m is List ? m.join(', ') : m.toString();
-        }
-      } catch (_) {}
-      throw Exception(message);
-    }
+    if (response.statusCode != 200) throw ApiException.fromResponse(response);
   }
 
   Future<void> updateUser(String userId, Map<String, dynamic> body) =>
@@ -435,7 +470,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
+          'message': ApiException.fromResponse(response).message,
           'details': response.body
         };
       }
@@ -462,7 +497,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
+          'message': ApiException.fromResponse(response).message,
           'details': response.body
         };
       }
@@ -485,7 +520,7 @@ class AuthService {
         developer.log(response.body.toString());
         return {
           'success': false,
-          'message': '${jsonDecode(response.body)["message"]} (${response.statusCode})',
+          'message': ApiException.fromResponse(response).message,
           'details': response.body
         };
       }
