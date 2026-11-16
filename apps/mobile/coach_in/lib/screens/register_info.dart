@@ -139,13 +139,11 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
 
     if (result['success'] == true) {
       final data = result['data'];
-      final user = data['user'];
       final coach = data['coach'];
       final id = coach['id'];
       final accessToken = data['token'] as String;
 
       await _storage.write(key: 'accessToken', value: accessToken);
-      await _storage.write(key: 'refreshToken', value: user['refresh_token']);
       await _storage.write(key: 'rememberMe', value: true.toString());
 
       await _uploadCertification(id);
@@ -176,10 +174,8 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
 
     if (result['success'] == true) {
       final data = result['data'];
-      final user = data['user'];
 
       await _storage.write(key: 'accessToken', value: data['token'] as String);
-      await _storage.write(key: 'refreshToken', value: user['refresh_token']);
       await _storage.write(key: 'rememberMe', value: true.toString());
 
       if (!mounted) return;

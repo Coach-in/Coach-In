@@ -16,6 +16,7 @@ class CoachIn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: ApiService.navigatorKey,
       title: 'Coach\'In',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(

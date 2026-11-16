@@ -5,12 +5,25 @@ import 'package:http_parser/http_parser.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
+
 import '../config/api_config.dart';
+import '../screens/start_page.dart';
 
 import 'dart:developer' as developer;
 import 'package:pretty_json/pretty_json.dart';
 
+/// Thrown when the access token is expired or rejected. The API issues
+/// 10-day access tokens and has no refresh endpoint, so the user must log in again.
+class SessionExpiredException implements Exception {
+  @override
+  String toString() => 'Session expired. Please log in again.';
+}
+
 class ApiService {
+  /// Used to send the user back to the start page when the session expires.
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
@@ -18,17 +31,25 @@ class ApiService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<String?> getAccessToken() async => await _storage.read(key: 'accessToken');
-  Future<String?> getRefreshToken() async => await _storage.read(key: 'refreshToken');
   Future<String?> getIpAddress() async => await _storage.read(key: 'ip_address');
 
-  Future<void> saveTokens(String access, String refresh) async {
+  Future<void> saveToken(String access) async {
     await _storage.write(key: 'accessToken', value: access);
-    await _storage.write(key: 'refreshToken', value: refresh);
   }
 
   Future<void> clearTokens() async {
     await _storage.delete(key: 'accessToken');
     await _storage.delete(key: 'refreshToken');
+  }
+
+  /// Clears the stored session and sends the user back to the start page.
+  Future<Never> _expireSession() async {
+    await clearTokens();
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const StartPage()),
+      (_) => false,
+    );
+    throw SessionExpiredException();
   }
 
   Map<String, dynamic>? _decodeJwt(String token) {
@@ -54,36 +75,6 @@ class ApiService {
     return DateTime.now().isAfter(expiryDate.subtract(const Duration(minutes: 1)));
   }
 
-  Future<bool> _refreshToken() async {
-    try {
-      final refreshToken = await getRefreshToken();
-      if (refreshToken == null) return false;
-
-      final baseUrl = ApiConfig.getBaseUrl();
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/auth/refresh'),
-        headers: ApiConfig.defaultHeaders,
-        body: jsonEncode({'refresh_token': refreshToken}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final newAccess = data['access_token'] ?? data['accessToken'];
-        final newRefresh = data['refresh_token'] ?? data['refreshToken'];
-
-        if (newAccess != null && newRefresh != null) {
-          await saveTokens(newAccess, newRefresh);
-          return true;
-        }
-      }
-
-      await clearTokens();
-      return false;
-    } catch (e) {
-      return false;
-    }
-  }
-
   Future<http.Response> _sendRequest(
     Future<http.Response> Function(Map<String, String>) requestFn, {
     bool withAuth = false,
@@ -91,27 +82,15 @@ class ApiService {
     Map<String, String> headers = Map.from(ApiConfig.defaultHeaders);
 
     if (withAuth) {
-      if (await _isAccessTokenExpired()) {
-        final refreshed = await _refreshToken();
-        if (!refreshed) throw Exception('Session expired. Please log in again.');
-      }
+      if (await _isAccessTokenExpired()) await _expireSession();
 
       final token = await getAccessToken();
       if (token != null) headers['Authorization'] = 'Bearer $token';
     }
 
-    http.Response response = await requestFn(headers);
+    final response = await requestFn(headers);
 
-    if (withAuth && response.statusCode == 401) {
-      final refreshed = await _refreshToken();
-      if (refreshed) {
-        final newToken = await getAccessToken();
-        headers['Authorization'] = 'Bearer $newToken';
-        response = await requestFn(headers);
-      } else {
-        throw Exception('Session expired. Please log in again.');
-      }
-    }
+    if (withAuth && response.statusCode == 401) await _expireSession();
     return response;
   }
 
