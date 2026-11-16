@@ -258,9 +258,19 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> fetchCoachDocuments() async {
+  /// Builds `endpoint?limit=..&offset=..`. The API accepts limit 1-100 and
+  /// offset >= 0, and returns everything when neither is given.
+  static String paginated(String endpoint, {int? limit, int? offset}) {
+    final params = <String, String>{
+      if (limit != null) 'limit': '${limit.clamp(1, 100)}',
+      if (offset != null) 'offset': '${offset < 0 ? 0 : offset}',
+    };
+    return params.isEmpty ? endpoint : Uri(path: endpoint, queryParameters: params).toString();
+  }
+
+  Future<List<dynamic>> fetchCoachDocuments({int? limit, int? offset}) async {
     try {
-      final response = await get('/coach-documents', withAuth: true);
+      final response = await get(paginated('/coach-documents', limit: limit, offset: offset), withAuth: true);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
@@ -312,9 +322,9 @@ class ApiService {
     }
   }
 
-  Future<List<dynamic>> fetchCoaches() async {
+  Future<List<dynamic>> fetchCoaches({int? limit, int? offset}) async {
     try {
-      final response = await get('/coachs', withAuth: true);
+      final response = await get(paginated('/coachs', limit: limit, offset: offset), withAuth: true);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {

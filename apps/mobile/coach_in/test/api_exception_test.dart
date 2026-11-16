@@ -32,4 +32,12 @@ void main() {
       expect(errorMessage(SessionExpiredException()), contains('Session expirée'));
     });
   });
+
+  group('ApiService.paginated', () {
+    test('adds clamped limit and offset only when given', () {
+      expect(ApiService.paginated('/coachs'), '/coachs');
+      expect(ApiService.paginated('/coachs', limit: 500, offset: -3), '/coachs?limit=100&offset=0');
+      expect(ApiService.paginated('/coachs', limit: 20), '/coachs?limit=20');
+    });
+  });
 }
