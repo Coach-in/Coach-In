@@ -12,7 +12,8 @@ import {
   Relationship,
   RelationshipStatus,
 } from './entities/relationship.entity';
-import { Notification } from '../notifications/entities/notification.entity';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { Athlete } from '../athletes/entities/athlete.entity';
 import { Coach } from '../coachs/entities/coach.entity';
 import { User } from '../users/entities/user.entity';
@@ -49,16 +50,14 @@ describe('RelationshipsService', () => {
       Promise.resolve({ id: 'rel-1', ...input }),
     ),
   };
-  const transactionalNotifications = {
-    create: jest.fn((input: Partial<Notification>) => input),
-    save: jest.fn((input: Partial<Notification>) => Promise.resolve(input)),
-  };
   const managerMock = {
-    getRepository: jest.fn((entity: unknown) =>
-      entity === Notification
-        ? transactionalNotifications
-        : transactionalRelationships,
-    ),
+    getRepository: jest.fn(() => transactionalRelationships),
+  };
+  const createdNotification = { id: 'notif-1' };
+  const notificationsServiceMock = {
+    create: jest.fn(),
+    publish: jest.fn(),
+    markRelationshipRequestSeen: jest.fn(),
   };
 
   const relationshipRepositoryMock = {
@@ -86,6 +85,10 @@ describe('RelationshipsService', () => {
 
     athleteRepositoryMock.findOne.mockResolvedValue(athlete);
     coachRepositoryMock.findOne.mockResolvedValue(coach);
+    notificationsServiceMock.create.mockResolvedValue(createdNotification);
+    notificationsServiceMock.markRelationshipRequestSeen.mockResolvedValue(
+      undefined,
+    );
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -99,6 +102,7 @@ describe('RelationshipsService', () => {
           useValue: athleteRepositoryMock,
         },
         { provide: getRepositoryToken(Coach), useValue: coachRepositoryMock },
+        { provide: NotificationsService, useValue: notificationsServiceMock },
       ],
     }).compile();
 
@@ -121,12 +125,44 @@ describe('RelationshipsService', () => {
         coach,
         status: RelationshipStatus.PENDING,
       });
-      expect(transactionalNotifications.create).toHaveBeenCalledWith({
-        message: 'john_athlete souhaite être coaché par vous.',
-        sender: athleteUser,
-        receiver: coachUser,
-      });
+      expect(notificationsServiceMock.create).toHaveBeenCalledWith(
+        {
+          type: NotificationType.RELATIONSHIP_REQUESTED,
+          message: 'john_athlete souhaite être coaché par vous.',
+          sender: athleteUser,
+          receiver: coachUser,
+          data: {
+            relationshipId: 'rel-1',
+            athleteId: athlete.id,
+            athleteName: 'john_athlete',
+          },
+          link: '/relationships/rel-1',
+        },
+        managerMock,
+      );
       expect(result.id).toBe('rel-1');
+    });
+
+    it('publishes the notification live once the transaction is committed', async () => {
+      relationshipRepositoryMock.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(pending());
+
+      await service.create(dto, athleteAuth);
+
+      expect(notificationsServiceMock.publish).toHaveBeenCalledWith(
+        createdNotification,
+      );
+    });
+
+    it('publishes nothing when the transaction fails', async () => {
+      relationshipRepositoryMock.findOne.mockResolvedValueOnce(null);
+      relationshipRepositoryMock.manager.transaction.mockRejectedValueOnce(
+        new Error('db down'),
+      );
+
+      await expect(service.create(dto, athleteAuth)).rejects.toThrow('db down');
+      expect(notificationsServiceMock.publish).not.toHaveBeenCalled();
     });
 
     it('forbids requesting a relationship for another athlete', async () => {
@@ -194,9 +230,19 @@ describe('RelationshipsService', () => {
   });
 
   describe.each([
-    ['accept', RelationshipStatus.ACCEPTED, 'a accepté'],
-    ['refuse', RelationshipStatus.REFUSED, 'a refusé'],
-  ] as const)('%s', (method, status, wording) => {
+    [
+      'accept',
+      RelationshipStatus.ACCEPTED,
+      'a accepté',
+      NotificationType.RELATIONSHIP_ACCEPTED,
+    ],
+    [
+      'refuse',
+      RelationshipStatus.REFUSED,
+      'a refusé',
+      NotificationType.RELATIONSHIP_REFUSED,
+    ],
+  ] as const)('%s', (method, status, wording, notificationType) => {
     it(`marks the relationship ${status} and notifies the athlete`, async () => {
       const relationship = pending();
       relationshipRepositoryMock.findOne
@@ -208,12 +254,48 @@ describe('RelationshipsService', () => {
       expect(transactionalRelationships.save).toHaveBeenCalledWith(
         expect.objectContaining({ status }),
       );
-      expect(transactionalNotifications.create).toHaveBeenCalledWith({
-        message: `jane_coach ${wording} votre demande de coaching.`,
-        sender: coachUser,
-        receiver: athleteUser,
-      });
+      expect(notificationsServiceMock.create).toHaveBeenCalledWith(
+        {
+          type: notificationType,
+          message: `jane_coach ${wording} votre demande de coaching.`,
+          sender: coachUser,
+          receiver: athleteUser,
+          data: {
+            relationshipId: 'rel-1',
+            coachId: coach.id,
+            coachName: 'jane_coach',
+          },
+          link: '/relationships/rel-1',
+        },
+        managerMock,
+      );
       expect(result.status).toBe(status);
+    });
+
+    it('marks the coach request notification as seen in the same transaction', async () => {
+      const relationship = pending();
+      relationshipRepositoryMock.findOne
+        .mockResolvedValueOnce(relationship)
+        .mockResolvedValueOnce({ ...relationship, status });
+
+      await service[method](relationship.id, coachAuth);
+
+      expect(
+        notificationsServiceMock.markRelationshipRequestSeen,
+      ).toHaveBeenCalledWith('rel-1', coachUser.id, managerMock);
+    });
+
+    it('publishes the answer live to the athlete after the commit', async () => {
+      const relationship = pending();
+      relationshipRepositoryMock.findOne
+        .mockResolvedValueOnce(relationship)
+        .mockResolvedValueOnce({ ...relationship, status });
+
+      await service[method](relationship.id, coachAuth);
+
+      expect(notificationsServiceMock.publish).toHaveBeenCalledWith(
+        createdNotification,
+      );
     });
 
     it('raises NotFound for an unknown relationship', async () => {
@@ -246,6 +328,7 @@ describe('RelationshipsService', () => {
         ConflictException,
       );
       expect(transactionalRelationships.save).not.toHaveBeenCalled();
+      expect(notificationsServiceMock.publish).not.toHaveBeenCalled();
     });
   });
 });

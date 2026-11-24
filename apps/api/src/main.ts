@@ -46,6 +46,7 @@ async function bootstrap() {
     origin: corsOrigin(config),
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Accept', 'Authorization'],
+    exposedHeaders: ['X-Next-Cursor'],
   });
 
   if (!production || config.get<string>('SWAGGER_ENABLED') === 'true') {

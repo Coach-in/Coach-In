@@ -78,12 +78,13 @@ class ApiService {
   Future<String?> getAccessToken() async => await _storage.read(key: 'accessToken');
   Future<String?> getIpAddress() async => await _storage.read(key: 'ip_address');
 
-  Future<void> saveToken(String access) async {
+  Future<void> saveTokens(String access) async {
     await _storage.write(key: 'accessToken', value: access);
   }
 
   Future<void> clearTokens() async {
     await _storage.delete(key: 'accessToken');
+    // Legacy key: the API no longer issues refresh tokens.
     await _storage.delete(key: 'refreshToken');
   }
 
@@ -251,7 +252,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception('Failed to fetch admins (${response.statusCode})');
+        throw ApiException.fromResponse(response);
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
@@ -274,7 +275,7 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception('Failed to fetch coach documents (${response.statusCode})');
+        throw ApiException.fromResponse(response);
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
@@ -315,7 +316,7 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return;
       } else {
-        throw Exception('Failed to upload certification (${response.statusCode})');
+        throw ApiException.fromResponse(response);
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
