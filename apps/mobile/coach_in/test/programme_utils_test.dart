@@ -162,4 +162,38 @@ void main() {
       );
     });
   });
+
+  group('copy helpers', () {
+    test('acceptedAthletes keeps only accepted relationships', () {
+      final athletes = acceptedAthletes([
+        {'status': 'accepted', 'athlete': {'id': 'a1'}},
+        {'status': 'pending', 'athlete': {'id': 'a2'}},
+        {'status': 'accepted', 'athlete': null},
+      ]);
+      expect(athletes.map((a) => a['id']), ['a1']);
+    });
+
+    test('defaultCopyName adds a suffix within 100 characters', () {
+      expect(defaultCopyName('Force'), 'Force (copie)');
+      expect(defaultCopyName('x' * 100).length, 100);
+      expect(defaultCopyName('x' * 100), endsWith(' (copie)'));
+    });
+
+    test('buildAssignPayload only includes the dates that were set', () {
+      expect(buildAssignPayload(athleteId: 'a'), {'athleteId': 'a'});
+      expect(
+        buildAssignPayload(
+            athleteId: 'a', startDate: DateTime(2026, 12, 1), endDate: DateTime(2027, 1, 5)),
+        {'athleteId': 'a', 'startDate': '2026-12-01', 'endDate': '2027-01-05'},
+      );
+    });
+
+    test('buildDuplicatePayload omits empty name, athlete and dates', () {
+      expect(buildDuplicatePayload(name: '  '), isEmpty);
+      expect(
+        buildDuplicatePayload(name: ' Copie ', athleteId: 'a', startDate: DateTime(2026, 12, 1)),
+        {'name': 'Copie', 'athleteId': 'a', 'startDate': '2026-12-01'},
+      );
+    });
+  });
 }

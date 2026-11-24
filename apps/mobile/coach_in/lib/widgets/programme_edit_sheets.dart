@@ -28,7 +28,8 @@ Future<T?> _showSheet<T>(BuildContext context, Widget child) {
   );
 }
 
-Widget _saveButton(VoidCallback onPressed) => ElevatedButton(
+Widget _saveButton(VoidCallback onPressed, {String label = 'Enregistrer'}) =>
+    ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -36,7 +37,7 @@ Widget _saveButton(VoidCallback onPressed) => ElevatedButton(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: Text(
-        'Enregistrer',
+        label,
         style: GoogleFonts.montserrat(
           color: Colors.black,
           fontWeight: FontWeight.bold,
@@ -349,6 +350,218 @@ class _ExerciseFormState extends State<_ExerciseForm> {
           ),
         const SizedBox(height: 16),
         SizedBox(width: double.infinity, child: _saveButton(_submit)),
+      ],
+    );
+  }
+}
+
+/// Asks how to copy a programme. With [assign] the coach picks the athlete
+/// (required) and the copy keeps the source's name; otherwise it is a
+/// duplicate with an editable name and, for a coach, an optional other athlete.
+/// Pops with the request body for `assign` / `duplicate`.
+Future<Map<String, dynamic>?> showCopySheet(
+  BuildContext context, {
+  required Map<String, dynamic> programme,
+  required List<Map<String, dynamic>> athletes,
+  required bool assign,
+  required bool isCoach,
+}) {
+  return _showSheet(
+    context,
+    _CopyForm(
+      programme: programme,
+      athletes: athletes,
+      assign: assign,
+      isCoach: isCoach,
+    ),
+  );
+}
+
+class _CopyForm extends StatefulWidget {
+  final Map<String, dynamic> programme;
+  final List<Map<String, dynamic>> athletes;
+  final bool assign;
+  final bool isCoach;
+
+  const _CopyForm({
+    required this.programme,
+    required this.athletes,
+    required this.assign,
+    required this.isCoach,
+  });
+
+  @override
+  State<_CopyForm> createState() => _CopyFormState();
+}
+
+class _CopyFormState extends State<_CopyForm> {
+  late final TextEditingController _name =
+      TextEditingController(text: defaultCopyName(widget.programme['name']));
+  String? _athleteId;
+  DateTime? _start;
+  DateTime? _end;
+  String? _error;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pick(bool isStart) async {
+    final fallback = DateTime.tryParse(
+            widget.programme[isStart ? 'startDate' : 'endDate'] ?? '') ??
+        DateTime.now();
+    final picked = await showAppDatePicker(
+      context: context,
+      initialDate: (isStart ? _start : _end) ?? fallback,
+    );
+    if (picked != null) setState(() => isStart ? _start = picked : _end = picked);
+  }
+
+  void _submit() {
+    if (widget.assign && _athleteId == null) {
+      setState(() => _error = 'Choisissez un athlète.');
+      return;
+    }
+    if (!widget.assign) {
+      final n = _name.text.trim();
+      if (n.isEmpty || n.length > 100) {
+        setState(() => _error = 'Le nom doit faire entre 1 et 100 caractères.');
+        return;
+      }
+    }
+    if (_start != null && _end != null && _end!.isBefore(_start!)) {
+      setState(() => _error = 'La date de fin doit être après la date de début.');
+      return;
+    }
+
+    Navigator.pop(
+      context,
+      widget.assign
+          ? buildAssignPayload(
+              athleteId: _athleteId!,
+              startDate: _start,
+              endDate: _end,
+            )
+          : buildDuplicatePayload(
+              name: _name.text,
+              athleteId: _athleteId,
+              startDate: _start,
+              endDate: _end,
+            ),
+    );
+  }
+
+  Widget _dateButton(String label, DateTime? date, bool isStart, VoidCallback onClear) {
+    return Expanded(
+      child: Row(
+        children: [
+          Expanded(
+            child: OutlinedButton(
+              onPressed: () => _pick(isStart),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xffffd398)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              child: Text(
+                date == null ? label : '$label : ${formatApiDate(date)}',
+                style: GoogleFonts.montserrat(
+                  color: const Color(0xffffd398),
+                  fontSize: 11,
+                ),
+              ),
+            ),
+          ),
+          if (date != null)
+            IconButton(
+              icon: const Icon(Icons.clear, size: 18, color: Colors.white54),
+              tooltip: 'Réinitialiser',
+              onPressed: onClear,
+            ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasAthlete = widget.programme['athlete'] != null;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.assign ? 'Assigner à un athlète' : 'Dupliquer le programme',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 6),
+        Text(
+          widget.assign
+              ? "Une copie est créée pour l'athlète, qui est notifié. L'original reste inchangé."
+              : "Une copie avec tous les jours et exercices est créée. L'original reste inchangé.",
+          style: GoogleFonts.montserrat(color: Colors.white54, fontSize: 12),
+        ),
+        const SizedBox(height: 14),
+        if (!widget.assign) ...[
+          TextField(
+            controller: _name,
+            maxLength: 100,
+            decoration: _decoration(context, 'Nom de la copie'),
+          ),
+          const SizedBox(height: 4),
+        ],
+        if (widget.isCoach) ...[
+          DropdownButtonFormField<String?>(
+            initialValue: _athleteId,
+            decoration: _decoration(context, 'Athlète'),
+            items: [
+              if (!widget.assign)
+                DropdownMenuItem(
+                  value: null,
+                  child: Text(hasAthlete ? "Comme l'original" : 'Aucun (modèle)'),
+                ),
+              for (final a in widget.athletes)
+                DropdownMenuItem(
+                  value: a['id'] as String,
+                  child: Text(a['user']?['username'] ?? ''),
+                ),
+            ],
+            onChanged: (v) => setState(() => _athleteId = v),
+          ),
+          if (widget.athletes.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(
+                "Aucun athlète avec une relation acceptée pour l'instant.",
+                style: GoogleFonts.montserrat(color: Colors.white54, fontSize: 12),
+              ),
+            ),
+          const SizedBox(height: 12),
+        ],
+        Text(
+          "Dates (facultatif, par défaut celles de l'original)",
+          style: GoogleFonts.montserrat(color: Colors.white54, fontSize: 12),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [
+            _dateButton('Début', _start, true, () => setState(() => _start = null)),
+            const SizedBox(width: 8),
+            _dateButton('Fin', _end, false, () => setState(() => _end = null)),
+          ],
+        ),
+        if (_error != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(_error!, style: const TextStyle(color: Colors.red)),
+          ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: _saveButton(_submit, label: widget.assign ? 'Assigner' : 'Dupliquer'),
+        ),
       ],
     );
   }
