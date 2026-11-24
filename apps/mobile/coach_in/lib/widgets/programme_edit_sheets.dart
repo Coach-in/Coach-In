@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../utils/date_picker.dart';
 import '../utils/programme_utils.dart';
 
 InputDecoration _decoration(BuildContext context, String label) =>
@@ -78,11 +79,9 @@ class _ProgrammeInfoFormState extends State<_ProgrammeInfoForm> {
   }
 
   Future<void> _pick(bool isStart) async {
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
       initialDate: (isStart ? _start : _end) ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
     );
     if (picked != null) setState(() => isStart ? _start = picked : _end = picked);
   }

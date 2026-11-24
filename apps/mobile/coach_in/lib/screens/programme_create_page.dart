@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import '../utils/date_picker.dart';
 import '../utils/programme_utils.dart';
 import '../widgets/exercise_picker.dart';
 
@@ -74,12 +75,7 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
 
   Future<void> _pickDate({required bool isStart}) async {
     final initial = (isStart ? _startDate : _endDate) ?? DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
+    final picked = await showAppDatePicker(context: context, initialDate: initial);
     if (picked == null) return;
     setState(() => isStart ? _startDate = picked : _endDate = picked);
   }
@@ -92,6 +88,7 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
       builder: (_) => ExercisePicker(catalogue: _catalogue),
     );
     if (chosen == null) return;
+    if (!_catalogue.any((e) => e['id'] == chosen['id'])) _catalogue.add(chosen);
     setState(() => day.exercises.add(
           DraftExercise(exerciseId: chosen['id'], name: chosen['name']),
         ));
@@ -288,7 +285,7 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
           for (final e in day.exercises) _buildExercise(day, e),
           const SizedBox(height: 8),
           TextButton.icon(
-            onPressed: _catalogue.isEmpty ? null : () => _addExercise(day),
+            onPressed: () => _addExercise(day),
             icon: const Icon(Icons.add, color: Color(0xffffd398)),
             label: const Text(
               'Ajouter un exercice',

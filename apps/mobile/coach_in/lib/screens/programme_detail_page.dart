@@ -143,6 +143,7 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
       builder: (_) => ExercisePicker(catalogue: _catalogue!),
     );
     if (chosen == null || !mounted) return;
+    if (!_catalogue!.any((e) => e['id'] == chosen['id'])) _catalogue!.add(chosen);
 
     final fields = await showExerciseSheet(context, title: chosen['name']);
     if (fields == null) return;

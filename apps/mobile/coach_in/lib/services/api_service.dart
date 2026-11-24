@@ -544,6 +544,18 @@ class ApiService {
     }
   }
 
+  /// Adds an exercise to the shared catalogue (`POST /exercices`).
+  Future<Map<String, dynamic>> createExercise(String name,
+      {String? description}) async {
+    final desc = description?.trim() ?? '';
+    final response = await post(
+      '/exercices',
+      {'name': name.trim(), if (desc.isNotEmpty) 'description': desc},
+      withAuth: true,
+    );
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
   /// The exercise catalogue (`GET /exercices`).
   Future<List<dynamic>> fetchExercises() async {
     final response = await get('/exercices', withAuth: true);
