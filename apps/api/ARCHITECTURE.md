@@ -193,6 +193,71 @@ d'inscription en a besoin avant d'avoir un token). Tout le reste exige un token.
 
 ---
 
+## Notifications
+
+Une notification est **enregistrée d'abord**, puis diffusée : la base reste la
+source de vérité, le flux en direct ne fait que prévenir le client.
+
+```
+action métier (transaction)
+  ├─ NotificationsService.create(input, manager)   INSERT, jamais de diffusion
+  └─ commit
+       └─ NotificationsService.publish(notification)   → flux SSE des clients connectés
+```
+
+`create` ne publie jamais : l'appelant publie **après** le commit, pour qu'une
+action annulée ne prévienne personne. Appelants actuels : `relationships`
+(demande, acceptation, refus) et `coach-documents` (diplôme validé ou refusé).
+
+### Modèle
+`type` (enum applicatif, colonne texte), `data` (jsonb), `link` (chemin relatif
+validé par `isSafeLink`), `readAt` (nullable, `status` reste synchronisé),
+`sentAt` (précision milliseconde, indispensable au curseur), `sender`, `receiver`.
+Index `(receiver, sentAt)` pour la liste et `sender` pour les suppressions en
+cascade. `message` reste un texte français écrit par l'API ; les clients peuvent
+le reconstruire depuis `type` et `data`.
+
+### Routes
+| Route | Rôle |
+|---|---|
+| `GET /notifications` | liste, plus récentes d'abord ; `limit`, `cursor`, `unread` ; curseur dans l'en-tête `X-Next-Cursor` |
+| `GET /notifications/unread-count` | compteur du badge |
+| `POST /notifications/read-all` | tout marquer lu |
+| `PATCH /notifications/:id/seen` | marquer lu (idempotent, garde le premier `readAt`) |
+| `DELETE /notifications/:id` | supprimer |
+| `POST /notifications/stream-ticket` | ticket de 60 s pour ouvrir le flux depuis un navigateur |
+| `GET /notifications/stream` | flux en direct (SSE) |
+
+Le curseur est opaque (`date|id` en base64url). Le tri est `sentAt DESC, id DESC`
+pour qu'il reste stable entre deux notifications créées à la même milliseconde.
+La liste reste un tableau JSON, ce qui garde la compatibilité avec le web et le mobile.
+
+### Flux en direct (SSE)
+`NotificationsStream` est un `Subject` RxJS en mémoire : `forUser(userId)` filtre
+les notifications adressées à l'utilisateur et ajoute un `heartbeat` toutes les
+25 secondes. Un navigateur ne peut pas envoyer d'en-tête `Authorization` avec
+`EventSource` : `POST /notifications/stream-ticket` délivre un JWT de 60 secondes,
+signé avec un secret dérivé (`JWT_SECRET:notifications-stream`) et un `purpose`
+dédié, donc il ne peut pas servir de token d'accès et inversement.
+`StreamAuthGuard` vérifie le ticket (ou le Bearer) **avant** l'ouverture du
+flux : lancer l'exception dans le handler SSE renverrait un `200` avec un
+événement `error`, jamais un `401`. Les journaux HTTP et d'erreurs retirent la
+query string pour ne pas écrire le ticket.
+
+Limites connues : une seule instance de l'API (le `Subject` est local ; prévoir
+`LISTEN/NOTIFY` de Postgres ou Redis avant de scaler), aucune relecture des
+notifications manquées pendant une coupure (le client refait un `GET`), et pas
+de push pour un mobile dont l'app est fermée.
+
+### Purge
+`NotificationsRetention` supprime au démarrage puis toutes les 24 h les
+notifications lues depuis plus de 30 jours et toutes celles de plus de 180 jours
+(`NOTIFICATIONS_READ_RETENTION_DAYS`, `NOTIFICATIONS_UNREAD_RETENTION_DAYS`,
+`0` désactive la règle). C'est un simple `setInterval`, sans `@nestjs/schedule` ;
+avec plusieurs instances elle s'exécute sur chacune, la suppression est idempotente.
+
+---
+
 ## Cycle d'une requête
 
 `main.ts` installe, dans l'ordre :

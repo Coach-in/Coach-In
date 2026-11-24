@@ -99,8 +99,9 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
         return false;
       }
     } else {
-      if (_ageController.text.trim().isEmpty) {
-        setState(() => _errorMessage = 'Age is required.');
+      final age = int.tryParse(_ageController.text.trim());
+      if (age == null || age <= 0) {
+        setState(() => _errorMessage = 'A valid age is required.');
         return false;
       }
       if (_goalController.text.trim().isEmpty) {
