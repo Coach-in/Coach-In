@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../screens/exercise_create_page.dart';
 import '../services/api_service.dart';
 import '../utils/exercise_utils.dart';
 
@@ -43,11 +44,10 @@ class _ExercisePickerState extends State<ExercisePicker> {
   }
 
   Future<void> _createExercise() async {
-    final created = await showDialog<Map<String, dynamic>>(
-      context: context,
-      builder: (_) => _NewExerciseDialog(
-        apiService: _apiService,
-        initialName: _query,
+    final created = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ExerciseCreatePage(initialName: _query),
       ),
     );
     if (created != null && mounted) Navigator.pop(context, created);
@@ -104,6 +104,19 @@ class _ExercisePickerState extends State<ExercisePicker> {
                         for (final e in matches)
                           ListTile(
                             enabled: _busyName == null,
+                            leading: e['imageUrl'] == null
+                                ? null
+                                : ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Image.network(
+                                      e['imageUrl'],
+                                      width: 48,
+                                      height: 48,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) =>
+                                          const SizedBox(width: 48, height: 48),
+                                    ),
+                                  ),
                             title: Text(e['name']),
                             subtitle: e['description'] == null
                                 ? null
@@ -138,101 +151,6 @@ class _ExercisePickerState extends State<ExercisePicker> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _NewExerciseDialog extends StatefulWidget {
-  final ApiService apiService;
-  final String initialName;
-
-  const _NewExerciseDialog({
-    required this.apiService,
-    required this.initialName,
-  });
-
-  @override
-  State<_NewExerciseDialog> createState() => _NewExerciseDialogState();
-}
-
-class _NewExerciseDialogState extends State<_NewExerciseDialog> {
-  late final TextEditingController _name =
-      TextEditingController(text: widget.initialName);
-  final TextEditingController _description = TextEditingController();
-  bool _isSaving = false;
-  String? _error;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _description.dispose();
-    super.dispose();
-  }
-
-  Future<void> _save() async {
-    if (_name.text.trim().isEmpty) {
-      setState(() => _error = "Le nom de l'exercice est obligatoire.");
-      return;
-    }
-    setState(() {
-      _isSaving = true;
-      _error = null;
-    });
-    try {
-      final created = await widget.apiService
-          .createExercise(_name.text, description: _description.text);
-      if (mounted) Navigator.pop(context, created);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isSaving = false;
-        _error = errorMessage(e, fallback: "Création de l'exercice impossible.");
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Nouvel exercice'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _name,
-            autofocus: true,
-            maxLength: 100,
-            decoration: const InputDecoration(labelText: 'Nom'),
-          ),
-          TextField(
-            controller: _description,
-            maxLines: 3,
-            decoration:
-                const InputDecoration(labelText: 'Description (facultatif)'),
-          ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(_error!, style: const TextStyle(color: Colors.red)),
-            ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: _isSaving ? null : () => Navigator.pop(context),
-          child: const Text('Annuler'),
-        ),
-        TextButton(
-          onPressed: _isSaving ? null : _save,
-          child: _isSaving
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Text('Créer'),
-        ),
-      ],
     );
   }
 }

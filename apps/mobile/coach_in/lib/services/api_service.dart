@@ -173,7 +173,8 @@ class ApiService {
       'pdf'           => 'application/pdf',
       'png'           => 'image/png',
       'jpg' || 'jpeg' => 'image/jpeg',
-      _ => throw Exception('Unsupported file type: $extension. Must be PDF, PNG, or JPEG.'),
+      'webp'          => 'image/webp',
+      _ => throw Exception('Unsupported file type: $extension. Must be PDF, PNG, JPEG, or WEBP.'),
     };
 
     final request = http.MultipartRequest('POST', url)
@@ -554,6 +555,15 @@ class ApiService {
       {'name': name.trim(), if (desc.isNotEmpty) 'description': desc},
       withAuth: true,
     );
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  /// Uploads or replaces an exercise image (`POST /exercices/:id/image`).
+  /// Only the exercise's creator may do it. Returns the updated exercise.
+  Future<Map<String, dynamic>> uploadExerciseImage(
+      String exerciseId, File file, String extension) async {
+    final response = await filePost('/exercices/$exerciseId/image', file, extension,
+        withAuth: true);
     return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
   }
 

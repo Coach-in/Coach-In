@@ -29,3 +29,25 @@ List<Map<String, dynamic>> mergeWithDefaults(
     ...catalogue,
   ];
 }
+
+/// Limits of `POST /exercices/:id/image`.
+const int maxExerciseImageBytes = 5 * 1024 * 1024;
+const List<String> exerciseImageExtensions = ['png', 'jpg', 'jpeg', 'webp'];
+
+String? validateExerciseName(String name) {
+  final n = name.trim();
+  if (n.isEmpty) return "Le nom de l'exercice est obligatoire.";
+  if (n.length > 100) return 'Le nom ne doit pas dépasser 100 caractères.';
+  return null;
+}
+
+/// Returns a French error message, or `null` when the image can be uploaded.
+String? validateExerciseImage(String extension, int sizeBytes) {
+  if (!exerciseImageExtensions.contains(extension.toLowerCase())) {
+    return "L'image doit être au format PNG, JPEG ou WEBP.";
+  }
+  if (sizeBytes > maxExerciseImageBytes) {
+    return "L'image ne doit pas dépasser 5 Mo.";
+  }
+  return null;
+}

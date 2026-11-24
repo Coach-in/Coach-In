@@ -28,4 +28,27 @@ void main() {
     expect(findExerciseByName([{'name': 'A'}], 'b'), isNull);
     expect(findExerciseByName([{'name': 'A'}], ' a ')?['name'], 'A');
   });
+
+  group('validateExerciseName', () {
+    test('requires a non-empty name of at most 100 characters', () {
+      expect(validateExerciseName('  '), isNotNull);
+      expect(validateExerciseName('a' * 101), isNotNull);
+      expect(validateExerciseName('Tractions'), isNull);
+    });
+  });
+
+  group('validateExerciseImage', () {
+    test('accepts png, jpg, jpeg and webp up to 5 MB', () {
+      for (final ext in ['png', 'JPG', 'jpeg', 'webp']) {
+        expect(validateExerciseImage(ext, 1000), isNull);
+      }
+      expect(validateExerciseImage('webp', maxExerciseImageBytes), isNull);
+    });
+
+    test('rejects other formats and oversized files', () {
+      expect(validateExerciseImage('gif', 1000), isNotNull);
+      expect(validateExerciseImage('pdf', 1000), isNotNull);
+      expect(validateExerciseImage('png', maxExerciseImageBytes + 1), isNotNull);
+    });
+  });
 }

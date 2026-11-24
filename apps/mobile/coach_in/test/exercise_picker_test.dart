@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:coach_in/screens/exercise_create_page.dart';
 import 'package:coach_in/utils/date_picker.dart';
 import 'package:coach_in/widgets/exercise_picker.dart';
 
@@ -16,12 +17,14 @@ void main() {
     expect(find.text('Squat barre'), findsOneWidget);
     expect(find.text('Suggestion'), findsNWidgets(3));
 
+    // "Créer un nouvel exercice" opens a full page, not a dialog.
     await tester.tap(find.text('Créer un nouvel exercice'));
     await tester.pumpAndSettle();
-    expect(find.text('Nouvel exercice'), findsOneWidget);
+    expect(find.byType(ExerciseCreatePage), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
 
     // Saving without a name is rejected before any request is made.
-    await tester.tap(find.text('Créer'));
+    await tester.tap(find.text("Créer l'exercice"));
     await tester.pump();
     expect(find.text("Le nom de l'exercice est obligatoire."), findsOneWidget);
   });
