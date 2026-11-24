@@ -43,6 +43,10 @@ class ApiException implements Exception {
       400 => apiMessage ?? 'Données invalides.',
       401 => apiMessage ?? 'Identifiants invalides.',
       403 => apiMessage ?? "Vous n'avez pas le droit d'effectuer cette action.",
+      // Nest answers an unknown route with "Cannot GET /path": the server is
+      // older than the app, which is different from a missing resource.
+      404 when apiMessage?.startsWith('Cannot ') ?? false =>
+        "Cette fonctionnalité n'est pas disponible sur ce serveur (API trop ancienne).",
       404 => 'Élément introuvable.',
       409 => apiMessage ?? 'Cette action a déjà été effectuée.',
       429 => 'Trop de tentatives. Réessayez dans quelques instants.',

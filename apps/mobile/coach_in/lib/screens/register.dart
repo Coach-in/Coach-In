@@ -3,12 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import './start_page.dart';
-import './explore_page.dart';
+import './main_shell.dart';
 import './login.dart';
 import 'register_info.dart';
 
 import '../services/api_service.dart';
 import '../services/oauth_service.dart';
+import '../utils/navigation.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -63,10 +64,7 @@ class _RegisterPageState extends State<RegisterPage> {
       await _storage.write(key: 'rememberMe', value: 'true');
 
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ExplorePage()),
-      );
+      openAsRoot(context, const MainShell());
     } else {
       setState(() {
         _errorMessage = result['message'] ?? 'Google registration failed';

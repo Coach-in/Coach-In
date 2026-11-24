@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
-import '../widgets/app_bottom_nav.dart';
 import './coach_detail_page.dart';
-import './start_page.dart';
-import './profile_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -166,6 +163,7 @@ class _ExplorePageState extends State<ExplorePage> {
       return Scaffold(
         backgroundColor: Theme.of(context).colorScheme.primary,
         appBar: AppBar(
+        automaticallyImplyLeading: false,
           title: const Text('Explore'),
           backgroundColor: Theme.of(context).colorScheme.primary,
         ),
@@ -175,13 +173,13 @@ class _ExplorePageState extends State<ExplorePage> {
             style: GoogleFonts.montserrat(color: Colors.white54),
           ),
         ),
-        bottomNavigationBar: const AppBottomNav(currentPage: 'explore'),
       );
     }
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Explore Coaches'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
@@ -224,7 +222,6 @@ class _ExplorePageState extends State<ExplorePage> {
                         ],
                       ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentPage: 'explore'),
     );
   }
 }

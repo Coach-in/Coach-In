@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
-import '../widgets/app_bottom_nav.dart';
 import './programme_create_page.dart';
 import './programme_detail_page.dart';
 
@@ -35,12 +34,12 @@ class _ProgrammesPageState extends State<ProgrammesPage> {
 
     try {
       final user = await _apiService.fetchCurrentUser();
+      if (!mounted) return;
+      // Set the role first so "Créer" stays available even if the list fails.
+      setState(() => _role = user['role']);
       final programmes = await _apiService.fetchProgrammes();
       if (!mounted) return;
-      setState(() {
-        _role = user['role'];
-        _programmes = List<Map<String, dynamic>>.from(programmes);
-      });
+      setState(() => _programmes = List<Map<String, dynamic>>.from(programmes));
     } catch (e) {
       if (!mounted) return;
       setState(() => _errorMessage =
@@ -155,6 +154,7 @@ class _ProgrammesPageState extends State<ProgrammesPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Programmes'),
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
@@ -168,7 +168,6 @@ class _ProgrammesPageState extends State<ProgrammesPage> {
               icon: const Icon(Icons.add),
               label: const Text('Créer'),
             ),
-      bottomNavigationBar: const AppBottomNav(currentPage: 'programmes'),
     );
   }
 }
