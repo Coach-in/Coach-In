@@ -66,6 +66,8 @@ Lues via `ConfigModule` (`isGlobal`). Voir `apps/api/.env.example`.
 | `CORS_ORIGINS` | origines autorisées, séparées par des virgules | tout hors production, rien en production |
 | `SWAGGER_ENABLED` | `true` pour exposer Swagger en production | exposé hors production |
 | `DB_SYNCHRONIZE` | `true` / `false` pour forcer `synchronize` | `true` hors production |
+| `NOTIFICATIONS_READ_RETENTION_DAYS` | supprime les notifications lues depuis N jours (`0` = jamais) | `30` |
+| `NOTIFICATIONS_UNREAD_RETENTION_DAYS` | supprime toute notification de plus de N jours (`0` = jamais) | `180` |
 | `MINIO_ENDPOINT` | S3 **interne** (conteneur) | `http://minio:9000` |
 | `MINIO_PUBLIC_ENDPOINT` | S3 **public** (navigateur) | `http://localhost:9000` |
 | `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | credentials S3 | `minioadmin` hors production, **requis** en production |

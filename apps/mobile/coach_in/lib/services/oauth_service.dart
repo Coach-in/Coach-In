@@ -104,7 +104,7 @@ extension OAuthApiService on ApiService {
       final oauth = OAuthService();
       final result = await oauth.loginWithGoogle();
 
-      await saveToken(result['access_token']);
+      await saveTokens(result['access_token']);
 
       return {
         'success': true,
