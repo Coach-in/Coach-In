@@ -486,8 +486,54 @@ class ApiService {
     return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
   }
 
-  Future<void> deleteProgramme(String id) async {
-    final response = await delete('/programmes/$id', withAuth: true);
+  Future<void> deleteProgramme(String id) => _deleteOrThrow('/programmes/$id');
+
+  Future<Map<String, dynamic>> updateProgramme(
+      String id, Map<String, dynamic> body) async {
+    final response = await patch('/programmes/$id', body: body, withAuth: true);
+    return await _decodeOrThrow(response) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> addProgrammeDay(
+      String programmeId, Map<String, dynamic> body) async {
+    final response = await post('/programmes/$programmeId/days', body, withAuth: true);
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateProgrammeDay(
+      String programmeId, String dayId, Map<String, dynamic> body) async {
+    final response = await patch('/programmes/$programmeId/days/$dayId',
+        body: body, withAuth: true);
+    return await _decodeOrThrow(response) as Map<String, dynamic>;
+  }
+
+  Future<void> deleteProgrammeDay(String programmeId, String dayId) =>
+      _deleteOrThrow('/programmes/$programmeId/days/$dayId');
+
+  Future<Map<String, dynamic>> addProgrammeExercise(
+      String programmeId, String dayId, Map<String, dynamic> body) async {
+    final response = await post(
+        '/programmes/$programmeId/days/$dayId/exercises', body,
+        withAuth: true);
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateProgrammeExercise(String programmeId,
+      String dayId, String exerciseId, Map<String, dynamic> body) async {
+    final response = await patch(
+        '/programmes/$programmeId/days/$dayId/exercises/$exerciseId',
+        body: body,
+        withAuth: true);
+    return await _decodeOrThrow(response) as Map<String, dynamic>;
+  }
+
+  Future<void> deleteProgrammeExercise(
+          String programmeId, String dayId, String exerciseId) =>
+      _deleteOrThrow(
+          '/programmes/$programmeId/days/$dayId/exercises/$exerciseId');
+
+  Future<void> _deleteOrThrow(String path) async {
+    final response = await delete(path, withAuth: true);
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw ApiException.fromResponse(response);
     }

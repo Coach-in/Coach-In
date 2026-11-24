@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 /// A catalogue exercise placed in a programme day, before it is sent to the API.
 class DraftExercise {
   final String exerciseId;
@@ -107,4 +109,81 @@ String describeProgrammeExercise(Map<String, dynamic> e) {
     if (e['rpe'] != null) 'RPE ${fmt(e['rpe'])}',
     if (e['restSeconds'] != null) 'repos ${e['restSeconds']} s',
   ].join(' · ');
+}
+
+/// The owner is the coach, or the athlete for a programme they created
+/// themself. The API enforces the same rule on every modification route.
+bool isProgrammeOwner(Map<String, dynamic> programme, String? userId) {
+  final owner = programme['coach'] ?? programme['athlete'];
+  return userId != null && owner?['user']?['id'] == userId;
+}
+
+/// Next free 1-based `dayIndex` (the API rejects duplicates with a 409).
+int nextDayIndex(List<dynamic> days) =>
+    days.fold<int>(0, (m, d) => math.max(m, d['dayIndex'] as int)) + 1;
+
+/// Next `order` for an exercise appended to a day.
+int nextExerciseOrder(List<dynamic> exercises) =>
+    exercises.fold<int>(0, (m, e) => math.max(m, e['order'] as int)) + 1;
+
+/// Body of `PATCH /programmes/:id`: only the fields that changed.
+/// A cleared end date is sent as `null`.
+Map<String, dynamic> buildProgrammePatch({
+  required Map<String, dynamic> current,
+  required String name,
+  String? objectives,
+  required DateTime startDate,
+  DateTime? endDate,
+}) {
+  final newObjectives = objectives?.trim() ?? '';
+  final newStart = formatApiDate(startDate);
+  final newEnd = endDate == null ? null : formatApiDate(endDate);
+
+  return {
+    if (name.trim() != current['name']) 'name': name.trim(),
+    if (newObjectives != (current['objectives'] ?? ''))
+      'objectives': newObjectives,
+    if (newStart != current['startDate']) 'startDate': newStart,
+    if (newEnd != current['endDate']) 'endDate': newEnd,
+  };
+}
+
+/// Fields of a day. For an update ([clearEmpty]) an emptied field is sent as
+/// `null`, because the API rejects an empty `name`; for a create it is omitted.
+Map<String, dynamic> buildDayFields({
+  required String name,
+  required String notes,
+  bool clearEmpty = false,
+}) {
+  final n = name.trim();
+  final t = notes.trim();
+  return {
+    if (n.isNotEmpty) 'name': n else if (clearEmpty) 'name': null,
+    if (t.isNotEmpty) 'notes': t else if (clearEmpty) 'notes': null,
+  };
+}
+
+/// Prescription fields of a programme exercise (same [clearEmpty] rule as
+/// [buildDayFields]).
+Map<String, dynamic> buildExerciseFields({
+  required int sets,
+  required int reps,
+  double? weight,
+  double? rpe,
+  int? restSeconds,
+  String notes = '',
+  bool clearEmpty = false,
+}) {
+  final t = notes.trim();
+  return {
+    'sets': sets,
+    'reps': reps,
+    if (weight != null) 'weight': weight else if (clearEmpty) 'weight': null,
+    if (rpe != null) 'rpe': rpe else if (clearEmpty) 'rpe': null,
+    if (restSeconds != null)
+      'restSeconds': restSeconds
+    else if (clearEmpty)
+      'restSeconds': null,
+    if (t.isNotEmpty) 'notes': t else if (clearEmpty) 'notes': null,
+  };
 }

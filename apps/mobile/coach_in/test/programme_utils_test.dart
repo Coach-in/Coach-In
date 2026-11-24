@@ -79,4 +79,87 @@ void main() {
     );
     expect(describeProgrammeExercise({'sets': 3, 'reps': 10}), '3 × 10');
   });
+
+  group('isProgrammeOwner', () {
+    test('coach owns a coach programme, athlete owns a personal one', () {
+      final coachProgramme = {
+        'coach': {'user': {'id': 'c'}},
+        'athlete': {'user': {'id': 'a'}},
+      };
+      expect(isProgrammeOwner(coachProgramme, 'c'), isTrue);
+      expect(isProgrammeOwner(coachProgramme, 'a'), isFalse);
+
+      final personal = {
+        'coach': null,
+        'athlete': {'user': {'id': 'a'}},
+      };
+      expect(isProgrammeOwner(personal, 'a'), isTrue);
+      expect(isProgrammeOwner(personal, null), isFalse);
+    });
+  });
+
+  test('nextDayIndex and nextExerciseOrder use the highest value + 1', () {
+    expect(nextDayIndex([]), 1);
+    expect(nextDayIndex([{'dayIndex': 1}, {'dayIndex': 4}]), 5);
+    expect(nextExerciseOrder([]), 1);
+    expect(nextExerciseOrder([{'order': 2}, {'order': 1}]), 3);
+  });
+
+  group('buildProgrammePatch', () {
+    final current = {
+      'name': 'Force',
+      'objectives': 'Squat +10 kg',
+      'startDate': '2026-10-05',
+      'endDate': '2026-11-15',
+    };
+
+    test('is empty when nothing changed', () {
+      expect(
+        buildProgrammePatch(
+          current: current,
+          name: ' Force ',
+          objectives: 'Squat +10 kg',
+          startDate: DateTime(2026, 10, 5),
+          endDate: DateTime(2026, 11, 15),
+        ),
+        isEmpty,
+      );
+    });
+
+    test('contains only changed fields and nulls a cleared end date', () {
+      expect(
+        buildProgrammePatch(
+          current: current,
+          name: 'Force 2',
+          objectives: '',
+          startDate: DateTime(2026, 10, 5),
+          endDate: null,
+        ),
+        {'name': 'Force 2', 'objectives': '', 'endDate': null},
+      );
+    });
+  });
+
+  group('field builders', () {
+    test('day: emptied fields are null on update, omitted on create', () {
+      expect(buildDayFields(name: '', notes: ' x '), {'notes': 'x'});
+      expect(buildDayFields(name: '', notes: '', clearEmpty: true),
+          {'name': null, 'notes': null});
+    });
+
+    test('exercise: emptied optionals are null on update, omitted on create', () {
+      expect(buildExerciseFields(sets: 3, reps: 10), {'sets': 3, 'reps': 10});
+      expect(
+        buildExerciseFields(sets: 3, reps: 10, weight: 50, clearEmpty: true),
+        {
+          'sets': 3,
+          'reps': 10,
+          'weight': 50.0,
+          'rpe': null,
+          'restSeconds': null,
+          'notes': null,
+        },
+      );
+    });
+  });
 }
