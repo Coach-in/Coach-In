@@ -5,14 +5,16 @@ import 'package:coach_in/utils/date_picker.dart';
 import 'package:coach_in/widgets/exercise_picker.dart';
 
 void main() {
-  testWidgets('an empty catalogue still offers to create an exercise',
+  testWidgets('an empty catalogue offers defaults and creating an exercise',
       (tester) async {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: ExercisePicker(catalogue: [])),
     ));
 
     expect(find.text('Créer un nouvel exercice'), findsOneWidget);
-    expect(find.textContaining('catalogue est vide'), findsOneWidget);
+    // An empty catalogue still offers the bundled defaults as suggestions.
+    expect(find.text('Squat barre'), findsOneWidget);
+    expect(find.text('Suggestion'), findsNWidgets(3));
 
     await tester.tap(find.text('Créer un nouvel exercice'));
     await tester.pumpAndSettle();

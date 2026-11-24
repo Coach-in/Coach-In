@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../config/api_config.dart';
+import '../utils/exercise_utils.dart';
 import '../screens/start_page.dart';
 
 import 'dart:developer' as developer;
@@ -554,6 +555,24 @@ class ApiService {
       withAuth: true,
     );
     return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  /// Copies a default exercise into the shared catalogue. If an exercise with
+  /// that name already exists (409, e.g. created by the web app or another
+  /// user) the existing one is returned instead.
+  Future<Map<String, dynamic>> materializeExercise(
+      Map<String, dynamic> template) async {
+    final name = template['name'] as String;
+    try {
+      return await createExercise(name,
+          description: template['description'] as String?);
+    } on ApiException catch (e) {
+      if (e.statusCode != 409) rethrow;
+      final existing = findExerciseByName(
+          List<Map<String, dynamic>>.from(await fetchExercises()), name);
+      if (existing == null) rethrow;
+      return existing;
+    }
   }
 
   /// The exercise catalogue (`GET /exercices`).

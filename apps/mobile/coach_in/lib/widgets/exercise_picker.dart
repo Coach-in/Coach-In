@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import '../utils/exercise_utils.dart';
 
 /// Searchable bottom-sheet content listing the exercise catalogue. Pops with
 /// the chosen exercise map, which may be a freshly created one: the catalogue
@@ -18,6 +19,28 @@ class ExercisePicker extends StatefulWidget {
 class _ExercisePickerState extends State<ExercisePicker> {
   final ApiService _apiService = ApiService();
   String _query = '';
+  String? _busyName;
+
+  /// A default is copied into the catalogue the first time it is chosen.
+  Future<void> _choose(Map<String, dynamic> exercise) async {
+    if (exercise['isTemplate'] != true) {
+      Navigator.pop(context, exercise);
+      return;
+    }
+    setState(() => _busyName = exercise['name']);
+    try {
+      final created = await _apiService.materializeExercise(exercise);
+      if (mounted) Navigator.pop(context, created);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _busyName = null);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMessage(e, fallback: "Impossible d'ajouter l'exercice.")),
+        ),
+      );
+    }
+  }
 
   Future<void> _createExercise() async {
     final created = await showDialog<Map<String, dynamic>>(
@@ -32,7 +55,7 @@ class _ExercisePickerState extends State<ExercisePicker> {
 
   @override
   Widget build(BuildContext context) {
-    final matches = widget.catalogue
+    final matches = mergeWithDefaults(widget.catalogue)
         .where((e) =>
             (e['name'] as String).toLowerCase().contains(_query.toLowerCase()))
         .toList();
@@ -72,9 +95,7 @@ class _ExercisePickerState extends State<ExercisePicker> {
               child: matches.isEmpty
                   ? Center(
                       child: Text(
-                        widget.catalogue.isEmpty
-                            ? "Le catalogue est vide. Créez le premier exercice."
-                            : 'Aucun exercice trouvé.',
+                        'Aucun exercice trouvé. Créez-le avec le bouton ci-dessus.',
                         textAlign: TextAlign.center,
                       ),
                     )
@@ -82,6 +103,7 @@ class _ExercisePickerState extends State<ExercisePicker> {
                       children: [
                         for (final e in matches)
                           ListTile(
+                            enabled: _busyName == null,
                             title: Text(e['name']),
                             subtitle: e['description'] == null
                                 ? null
@@ -90,7 +112,25 @@ class _ExercisePickerState extends State<ExercisePicker> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                   ),
-                            onTap: () => Navigator.pop(context, e),
+                            trailing: _busyName == e['name']
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xffffd398),
+                                    ),
+                                  )
+                                : e['isTemplate'] == true
+                                    ? const Text(
+                                        'Suggestion',
+                                        style: TextStyle(
+                                          color: Color(0xffffd398),
+                                          fontSize: 11,
+                                        ),
+                                      )
+                                    : null,
+                            onTap: () => _choose(e),
                           ),
                       ],
                     ),
