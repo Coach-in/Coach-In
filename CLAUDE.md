@@ -68,7 +68,7 @@ If a check fails or can't be run, say so explicitly.
 - **Secrets:** never read, print, or quote `.env` files or `info_admin_account.txt`. Use the `.env.example` files for variable names (`apps/api/.env.example`: `JWT_SECRET`, `DB_*`, `MINIO_*`).
 - **API contracts:** endpoints, DTOs, and response shapes are consumed by both web and mobile. Ask before changing them, and flag the change so the web/mobile devs can adapt.
 - **Dependencies:** ask before adding or upgrading packages (npm or `pubspec.yaml`).
-- **Database schema:** TypeORM currently runs with `synchronize: true` (`apps/api/src/app.module.ts`) and there are no migrations. Entity changes alter the schema automatically, which can drop or alter data. Ask before changing entities or relationships.
+- **Database schema:** outside production TypeORM runs with `synchronize: true` (`apps/api/src/app.module.ts`), so entity changes alter your local schema automatically and can drop or alter data. In production `synchronize` is off and migrations in `apps/api/src/database/migrations` run at startup, so every entity change needs a matching migration (`npm run migration:generate` against a database that only has the previous migrations applied, then review the SQL). Ask before changing entities or relationships.
 
 ## Known quirks
 
