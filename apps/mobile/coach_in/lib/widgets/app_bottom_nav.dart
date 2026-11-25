@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../screens/explore_page.dart';
 import '../screens/profile_page.dart';
+import '../screens/programmes_page.dart';
 import '../screens/relationships_page.dart';
 
 class AppBottomNav extends StatelessWidget {
@@ -27,13 +28,17 @@ class AppBottomNav extends StatelessWidget {
           );
         }
       },
-      child: Row(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: color),
-          const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(color: color, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -61,6 +66,13 @@ class AppBottomNav extends StatelessWidget {
             icon: Icons.people,
             label: 'Connections',
             builder: () => const RelationshipsPage(),
+          ),
+          _item(
+            context,
+            page: 'programmes',
+            icon: Icons.fitness_center,
+            label: 'Programmes',
+            builder: () => const ProgrammesPage(),
           ),
           _item(
             context,

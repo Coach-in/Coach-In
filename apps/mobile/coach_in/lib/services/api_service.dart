@@ -463,6 +463,43 @@ class ApiService {
   Future<void> updateCoach(String coachId, Map<String, dynamic> body) =>
       _patchResource('/coachs/$coachId', body);
 
+  // ---------- Programmes ----------
+
+  Future<dynamic> _decodeOrThrow(http.Response response, {int expected = 200}) {
+    if (response.statusCode != expected) throw ApiException.fromResponse(response);
+    return Future.value(jsonDecode(response.body));
+  }
+
+  /// Programmes you own or that are assigned to you, without their days.
+  Future<List<dynamic>> fetchProgrammes({bool? template}) async {
+    final query = template == null ? '' : '?template=$template';
+    final response = await get('/programmes$query', withAuth: true);
+    return await _decodeOrThrow(response) as List<dynamic>;
+  }
+
+  Future<Map<String, dynamic>> fetchProgramme(String id) async {
+    final response = await get('/programmes/$id', withAuth: true);
+    return await _decodeOrThrow(response) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> createProgramme(Map<String, dynamic> body) async {
+    final response = await post('/programmes', body, withAuth: true);
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  Future<void> deleteProgramme(String id) async {
+    final response = await delete('/programmes/$id', withAuth: true);
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw ApiException.fromResponse(response);
+    }
+  }
+
+  /// The exercise catalogue (`GET /exercices`).
+  Future<List<dynamic>> fetchExercises() async {
+    final response = await get('/exercices', withAuth: true);
+    return await _decodeOrThrow(response) as List<dynamic>;
+  }
+
 }
 
 class AuthService {
