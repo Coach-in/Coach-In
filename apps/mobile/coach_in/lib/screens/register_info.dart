@@ -7,6 +7,7 @@ import 'dart:io';
 import './explore_page.dart';
 
 import '../services/api_service.dart';
+import '../utils/tag_utils.dart';
 
 class RegisterInfoPage extends StatefulWidget {
   final String email;
@@ -210,11 +211,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
-          final Map<String, List<Map<String, dynamic>>> grouped = {};
-          for (final tag in _availableTags) {
-            final category = tag['category']['name'] as String;
-            grouped.putIfAbsent(category, () => []).add(tag);
-          }
+          final grouped = groupTagsByCategory(_availableTags);
 
           return DraggableScrollableSheet(
             expand: false,

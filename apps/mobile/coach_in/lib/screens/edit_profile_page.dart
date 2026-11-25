@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import '../utils/tag_utils.dart';
 
 class EditProfilePage extends StatefulWidget {
   final Map<String, dynamic> profile;
@@ -144,11 +145,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   void _showTagBottomSheet() {
-    final grouped = <String, List<Map<String, dynamic>>>{};
-    for (final tag in _availableTags) {
-      final category = tag['category']['name'] as String;
-      grouped.putIfAbsent(category, () => []).add(tag);
-    }
+    final grouped = groupTagsByCategory(_availableTags);
 
     showModalBottomSheet(
       context: context,
