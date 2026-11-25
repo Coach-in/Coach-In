@@ -60,7 +60,7 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not $action the request')),
+        SnackBar(content: Text(errorMessage(e, fallback: 'Could not $action the request'))),
       );
     } finally {
       if (mounted) setState(() => _busyId = null);

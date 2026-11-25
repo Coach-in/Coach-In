@@ -51,33 +51,16 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _redirectBasedOnRole() async {
-    try {
-      final loggedEmail = _emailController.text.trim().isNotEmpty
-          ? _emailController.text.trim()
-          : await _storage.read(key: 'userEmail');
-
-      final admins = await _apiService.fetchAdmins();
-      final isAdmin = admins.any(
-        (a) => (a['user']?['email'] as String?)?.toLowerCase() ==
-            loggedEmail?.toLowerCase(),
-      );
-
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) =>
-              isAdmin ? const CoachDocumentsPage() : const ExplorePage(),
-        ),
-      );
-    } catch (_) {
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const ExplorePage()),
-      );
-    }
+  void _redirectBasedOnRole(String? role) {
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => role == 'admin'
+            ? const CoachDocumentsPage()
+            : const ExplorePage(),
+      ),
+    );
   }
 
   Future<void> _login() async {
@@ -97,13 +80,13 @@ class _LoginPageState extends State<LoginPage> {
     if (result['success']) {
       final data = result['data'];
       final accessToken = data['token'];
+      final role = data['user']?['role'] as String?;
 
       await _storage.write(key: 'accessToken', value: accessToken);
       await _storage.write(key: 'rememberMe', value: _rememberMe.toString());
       await _storage.write(key: 'userEmail', value: _emailController.text.trim());
 
-      if (!mounted) return;
-      await _redirectBasedOnRole();
+      _redirectBasedOnRole(role);
     } else {
       setState(() {
         _errorMessage =

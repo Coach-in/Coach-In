@@ -5,12 +5,70 @@ import 'package:http_parser/http_parser.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:io';
 
+import 'package:flutter/material.dart';
+
 import '../config/api_config.dart';
+import '../screens/start_page.dart';
 
 import 'dart:developer' as developer;
 import 'package:pretty_json/pretty_json.dart';
 
+/// Thrown when the access token is expired or rejected. The API issues
+/// 10-day access tokens and has no refresh endpoint, so the user must log in again.
+class SessionExpiredException implements Exception {
+  @override
+  String toString() => 'Session expired. Please log in again.';
+}
+
+/// A non-success API response, carrying a user-facing (French) message.
+class ApiException implements Exception {
+  final int statusCode;
+  final String message;
+  ApiException(this.statusCode, this.message);
+
+  /// Uses the API's own message when it has one, otherwise a message based
+  /// on the status code. 404 and 429 always use our own wording.
+  factory ApiException.fromResponse(http.Response response) {
+    final status = response.statusCode;
+    String? apiMessage;
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map && decoded['message'] != null) {
+        final m = decoded['message'];
+        apiMessage = m is List ? m.join(', ') : m.toString();
+      }
+    } catch (_) {}
+
+    final message = switch (status) {
+      400 => apiMessage ?? 'Données invalides.',
+      401 => apiMessage ?? 'Identifiants invalides.',
+      403 => apiMessage ?? "Vous n'avez pas le droit d'effectuer cette action.",
+      404 => 'Élément introuvable.',
+      409 => apiMessage ?? 'Cette action a déjà été effectuée.',
+      429 => 'Trop de tentatives. Réessayez dans quelques instants.',
+      _ => apiMessage ?? 'Une erreur est survenue ($status).',
+    };
+    return ApiException(status, message);
+  }
+
+  @override
+  String toString() => message;
+}
+
+/// Returns a message safe to show the user for any thrown error.
+String errorMessage(Object e, {String fallback = 'Une erreur est survenue.'}) {
+  if (e is ApiException) return e.message;
+  if (e is SessionExpiredException) return 'Session expirée. Veuillez vous reconnecter.';
+  if (e is TimeoutException || e is SocketException) {
+    return 'Impossible de joindre le serveur.';
+  }
+  return fallback;
+}
+
 class ApiService {
+  /// Used to send the user back to the start page when the session expires.
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
@@ -28,6 +86,16 @@ class ApiService {
     await _storage.delete(key: 'accessToken');
     // Legacy key: the API no longer issues refresh tokens.
     await _storage.delete(key: 'refreshToken');
+  }
+
+  /// Clears the stored session and sends the user back to the start page.
+  Future<Never> _expireSession() async {
+    await clearTokens();
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const StartPage()),
+      (_) => false,
+    );
+    throw SessionExpiredException();
   }
 
   Map<String, dynamic>? _decodeJwt(String token) {
@@ -53,17 +121,6 @@ class ApiService {
     return DateTime.now().isAfter(expiryDate.subtract(const Duration(minutes: 1)));
   }
 
-  /// Builds a readable message from an API error body. NestJS validation
-  /// errors (400) return `message` as a list of strings.
-  String _errorText(http.Response response, String fallback) {
-    try {
-      final message = jsonDecode(response.body)['message'];
-      if (message is List) return message.join(', ');
-      if (message != null) return message.toString();
-    } catch (_) {}
-    return fallback;
-  }
-
   Future<http.Response> _sendRequest(
     Future<http.Response> Function(Map<String, String>) requestFn, {
     bool withAuth = false,
@@ -71,22 +128,15 @@ class ApiService {
     Map<String, String> headers = Map.from(ApiConfig.defaultHeaders);
 
     if (withAuth) {
-      if (await _isAccessTokenExpired()) {
-        await clearTokens();
-        throw Exception('Session expired. Please log in again.');
-      }
+      if (await _isAccessTokenExpired()) await _expireSession();
 
       final token = await getAccessToken();
       if (token != null) headers['Authorization'] = 'Bearer $token';
     }
 
-    final http.Response response = await requestFn(headers);
+    final response = await requestFn(headers);
 
-    // There is no refresh token: a 401 means the user must log in again.
-    if (withAuth && response.statusCode == 401) {
-      await clearTokens();
-      throw Exception('Session expired. Please log in again.');
-    }
+    if (withAuth && response.statusCode == 401) await _expireSession();
     return response;
   }
 
@@ -133,13 +183,15 @@ class ApiService {
     return http.Response.fromStream(streamed);
   }
 
-  Future<http.Response> patch(String endpoint, {bool withAuth = false}) async {
+  Future<http.Response> patch(String endpoint,
+      {Map<String, dynamic>? body, bool withAuth = false}) async {
     final baseUrl = ApiConfig.getBaseUrl();
     final url = Uri.parse('$baseUrl$endpoint');
 
     return _sendRequest(
       (headers) => http
-          .patch(url, headers: headers)
+          .patch(url,
+              headers: headers, body: body == null ? null : jsonEncode(body))
           .timeout(ApiConfig.requestTimeout),
       withAuth: withAuth,
     );
@@ -200,20 +252,30 @@ class ApiService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception(_errorText(response, 'Failed to fetch admins (${response.statusCode})'));
+        throw ApiException.fromResponse(response);
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
     }
   }
 
-  Future<List<dynamic>> fetchCoachDocuments() async {
+  /// Builds `endpoint?limit=..&offset=..`. The API accepts limit 1-100 and
+  /// offset >= 0, and returns everything when neither is given.
+  static String paginated(String endpoint, {int? limit, int? offset}) {
+    final params = <String, String>{
+      if (limit != null) 'limit': '${limit.clamp(1, 100)}',
+      if (offset != null) 'offset': '${offset < 0 ? 0 : offset}',
+    };
+    return params.isEmpty ? endpoint : Uri(path: endpoint, queryParameters: params).toString();
+  }
+
+  Future<List<dynamic>> fetchCoachDocuments({int? limit, int? offset}) async {
     try {
-      final response = await get('/coach-documents', withAuth: true);
+      final response = await get(paginated('/coach-documents', limit: limit, offset: offset), withAuth: true);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        throw Exception(_errorText(response, 'Failed to fetch coach documents (${response.statusCode})'));
+        throw ApiException.fromResponse(response);
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
@@ -254,16 +316,16 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return;
       } else {
-        throw Exception(_errorText(response, 'Failed to upload certification (${response.statusCode})'));
+        throw ApiException.fromResponse(response);
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
     }
   }
 
-  Future<List<dynamic>> fetchCoaches() async {
+  Future<List<dynamic>> fetchCoaches({int? limit, int? offset}) async {
     try {
-      final response = await get('/coachs', withAuth: true);
+      final response = await get(paginated('/coachs', limit: limit, offset: offset), withAuth: true);
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
@@ -328,7 +390,7 @@ class ApiService {
     );
 
     if (response.statusCode != 201 && response.statusCode != 200) {
-      throw Exception(_errorText(response, 'Failed to request relationship'));
+      throw ApiException.fromResponse(response);
     }
   }
 
@@ -347,7 +409,7 @@ class ApiService {
     final response = await post('/relationships/$id/$action', {}, withAuth: true);
 
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception(_errorText(response, 'Failed to $action relationship'));
+      throw ApiException.fromResponse(response);
     }
   }
 
@@ -377,6 +439,30 @@ class ApiService {
     }
   }
 
+  Future<void> _patchResource(String path, Map<String, dynamic> body) async {
+    final response = await patch(path, body: body, withAuth: true);
+
+    if (response.statusCode != 200) throw ApiException.fromResponse(response);
+  }
+
+  Future<void> updateUser(String userId, Map<String, dynamic> body) =>
+      _patchResource('/users/$userId', body);
+
+  /// Permanently deletes the account (`DELETE /users/:id`) and clears the session.
+  Future<void> deleteAccount(String userId) async {
+    final response = await delete('/users/$userId', withAuth: true);
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw ApiException.fromResponse(response);
+    }
+    await clearTokens();
+  }
+
+  Future<void> updateAthlete(String athleteId, Map<String, dynamic> body) =>
+      _patchResource('/athletes/$athleteId', body);
+
+  Future<void> updateCoach(String coachId, Map<String, dynamic> body) =>
+      _patchResource('/coachs/$coachId', body);
+
 }
 
 class AuthService {
@@ -404,7 +490,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${_apiService._errorText(response, 'Request failed')} (${response.statusCode})',
+          'message': ApiException.fromResponse(response).message,
           'details': response.body
         };
       }
@@ -431,7 +517,7 @@ class AuthService {
       } else {
         return {
           'success': false,
-          'message': '${_apiService._errorText(response, 'Request failed')} (${response.statusCode})',
+          'message': ApiException.fromResponse(response).message,
           'details': response.body
         };
       }
@@ -454,7 +540,7 @@ class AuthService {
         developer.log(response.body.toString());
         return {
           'success': false,
-          'message': '${_apiService._errorText(response, 'Request failed')} (${response.statusCode})',
+          'message': ApiException.fromResponse(response).message,
           'details': response.body
         };
       }

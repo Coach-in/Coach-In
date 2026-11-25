@@ -164,7 +164,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       widget.email,
       widget.password,
       {
-        'age': int.parse(_ageController.text.trim()),
+        'age': int.tryParse(_ageController.text.trim()) ?? 0,
         'goals': _goalController.text.trim(),
         'tagNames': _selectedTags.map((t) => t['name']).toList(),
       },
