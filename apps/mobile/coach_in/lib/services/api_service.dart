@@ -81,7 +81,6 @@ class ApiService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<String?> getAccessToken() async => await _storage.read(key: 'accessToken');
-  Future<String?> getIpAddress() async => await _storage.read(key: 'ip_address');
 
   Future<void> saveTokens(String access) async {
     await _storage.write(key: 'accessToken', value: access);
@@ -246,19 +245,6 @@ class ApiService {
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to fetch tags (${response.statusCode})');
-      }
-    } catch (e) {
-      throw Exception('An error occurred: $e');
-    }
-  }
-
-  Future<List<dynamic>> fetchAdmins() async {
-    try {
-      final response = await get('/admins', withAuth: true);
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else {
-        throw ApiException.fromResponse(response);
       }
     } catch (e) {
       throw Exception('An error occurred: $e');
@@ -690,11 +676,6 @@ class AuthService {
     } catch (e) {
       return {'success': false, 'message': 'An error occurred: $e'};
     }
-  }
-
-  Future<bool> isLoggedIn() async {
-    final token = await _apiService.getAccessToken();
-    return token != null && token.isNotEmpty && !(await _apiService._isAccessTokenExpired());
   }
 
 }
