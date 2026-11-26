@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../utils/date_picker.dart';
 import '../utils/programme_utils.dart';
 import '../widgets/exercise_picker.dart';
+import '../config/app_colors.dart';
 
 /// Programme builder. A coach can assign the programme to one of their
 /// athletes (accepted relationship) or save it as a template; an athlete
@@ -138,12 +139,12 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
         onPressed: () => _pickDate(isStart: isStart),
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 14),
-          side: const BorderSide(color: Color(0xffffd398)),
+          side: const BorderSide(color: AppColors.accent),
         ),
         child: Text(
           date == null ? label : '$label : ${formatApiDate(date)}',
           style: GoogleFonts.montserrat(
-            color: const Color(0xffffd398),
+            color: AppColors.accent,
             fontSize: 12,
           ),
         ),
@@ -246,7 +247,7 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -259,7 +260,7 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
                 child: Text(
                   'JOUR ${index + 1}',
                   style: GoogleFonts.montserrat(
-                    color: const Color(0xffffd398),
+                    color: AppColors.accent,
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
@@ -282,10 +283,10 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: () => _addExercise(day),
-            icon: const Icon(Icons.add, color: Color(0xffffd398)),
+            icon: const Icon(Icons.add, color: AppColors.accent),
             label: const Text(
               'Ajouter un exercice',
-              style: TextStyle(color: Color(0xffffd398)),
+              style: TextStyle(color: AppColors.accent),
             ),
           ),
         ],
@@ -345,10 +346,10 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
           for (var i = 0; i < _days.length; i++) _buildDay(i),
           TextButton.icon(
             onPressed: () => setState(() => _days.add(DraftDay())),
-            icon: const Icon(Icons.add, color: Color(0xffffd398)),
+            icon: const Icon(Icons.add, color: AppColors.accent),
             label: const Text(
               'Ajouter un jour',
-              style: TextStyle(color: Color(0xffffd398)),
+              style: TextStyle(color: AppColors.accent),
             ),
           ),
           if (_errorMessage != null)
@@ -364,7 +365,7 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
             onPressed: _isSaving ? null : _save,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15),
-              backgroundColor: const Color(0xffffd398),
+              backgroundColor: AppColors.accent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

@@ -6,6 +6,7 @@ import './screens/start_page.dart';
 import './screens/main_shell.dart';
 import './services/api_service.dart';
 import './utils/navigation.dart';
+import 'config/app_colors.dart';
 
 void main() {
   runApp(const CoachIn());
@@ -25,27 +26,27 @@ class CoachIn extends StatelessWidget {
           titleLarge: GoogleFonts.montserrat(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: const Color(0xffffd398)
+            color: AppColors.accent
           ),
           titleMedium: GoogleFonts.montserrat(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: const Color(0xffffd398)
+            color: AppColors.accent
           ),
           bodySmall: GoogleFonts.montserrat(
             fontSize: 12,
             fontWeight: FontWeight.w300,
-            color: const Color(0xffd1d5dc)
+            color: AppColors.muted
           ),
           labelSmall: GoogleFonts.montserrat(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: const Color(0xffffd398)
+            color: AppColors.accent
           ),
         ),
         textSelectionTheme: const TextSelectionThemeData(
-          cursorColor: Color(0xffffd398),
-          selectionHandleColor: Color(0xffffd398),
+          cursorColor: AppColors.accent,
+          selectionHandleColor: AppColors.accent,
         ),
         colorScheme: ColorScheme.dark(
           primary: const Color(0xff1c232d),
@@ -115,7 +116,7 @@ class _SplashScreenState extends State<SplashScreen> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            const CircularProgressIndicator(color: Color(0xffd1d5dc)),
+            const CircularProgressIndicator(color: AppColors.muted),
           ],
         ),
       ),

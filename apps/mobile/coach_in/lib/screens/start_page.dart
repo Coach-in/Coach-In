@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import './login.dart';
 import './register.dart';
+import '../config/app_colors.dart';
 
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
@@ -85,7 +86,7 @@ class StartPage extends StatelessWidget {
                     'Register',
                     style: GoogleFonts.montserrat(
                       fontSize: 16,
-                      color: Color(0xffd1d5dc),
+                      color: AppColors.muted,
                       fontWeight: FontWeight.bold
                     ),
                   ),

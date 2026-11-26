@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../config/app_colors.dart';
 
 /// Read-only athlete profile for coaches.
 ///
@@ -16,7 +17,7 @@ class AthleteDetailPage extends StatelessWidget {
       margin: const EdgeInsets.only(top: 18),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -26,7 +27,7 @@ class AthleteDetailPage extends StatelessWidget {
           Text(
             title,
             style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
+              color: AppColors.accent,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
@@ -48,12 +49,12 @@ class AthleteDetailPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xffffd398)),
+        border: Border.all(color: AppColors.accent),
       ),
       child: Text(
         label,
         style: GoogleFonts.montserrat(
-          color: const Color(0xffffd398),
+          color: AppColors.accent,
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),

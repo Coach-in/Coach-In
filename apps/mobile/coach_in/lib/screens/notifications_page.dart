@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import '../config/app_colors.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -105,17 +106,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
           margin: const EdgeInsets.only(bottom: 10),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: isSeen ? const Color(0xff1b2a41) : const Color(0xff263859),
+            color: isSeen ? AppColors.surface : AppColors.surfaceRaised,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSeen ? Colors.white12 : const Color(0xffffd398),
+              color: isSeen ? Colors.white12 : AppColors.accent,
             ),
           ),
           child: Row(
             children: [
               Icon(
                 Icons.notifications,
-                color: isSeen ? Colors.white38 : const Color(0xffffd398),
+                color: isSeen ? Colors.white38 : AppColors.accent,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -138,7 +139,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xffffd398)),
+        child: CircularProgressIndicator(color: AppColors.accent),
       );
     }
 
@@ -190,7 +191,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           if (hasUnread)
             IconButton(
               tooltip: 'Mark all as seen',
-              icon: const Icon(Icons.done_all, color: Color(0xffffd398)),
+              icon: const Icon(Icons.done_all, color: AppColors.accent),
               onPressed: _markAllSeen,
             ),
         ],

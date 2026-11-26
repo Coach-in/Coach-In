@@ -10,6 +10,7 @@ import '../services/api_service.dart';
 import '../services/oauth_service.dart';
 import '../utils/navigation.dart';
 import '../widgets/password_field.dart';
+import '../config/app_colors.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -75,7 +76,7 @@ class _RegisterPageState extends State<RegisterPage> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xffffd398)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
           onPressed: () => Navigator.maybePop(context),
           tooltip: 'Back',
         ),
@@ -131,9 +132,9 @@ class _RegisterPageState extends State<RegisterPage> {
                   onChanged: (val) {
                     setState(() => _isCoach = val ?? false);
                   },
-                  activeColor: Color(0xffffd398),
+                  activeColor: AppColors.accent,
                 ),
-                Text('I am a coach', style: GoogleFonts.montserrat(fontSize: 13, color: Color(0xffffd398))),
+                Text('I am a coach', style: GoogleFonts.montserrat(fontSize: 13, color: AppColors.accent)),
               ],
             ),
 
@@ -157,7 +158,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  backgroundColor: Color(0xffffd398),
+                  backgroundColor: AppColors.accent,
                 ),
                 child: Text(
                   'Continue',
@@ -174,9 +175,9 @@ class _RegisterPageState extends State<RegisterPage> {
             // Divider
             Row(
               children: <Widget>[
-                const Expanded(child: Divider(color: Color(0xffd1d5dc),)),
-                Text(" or ", style: GoogleFonts.montserrat(color: Color(0xffd1d5dc),)),
-                const Expanded(child: Divider(color: Color(0xffd1d5dc),)),
+                const Expanded(child: Divider(color: AppColors.muted,)),
+                Text(" or ", style: GoogleFonts.montserrat(color: AppColors.muted,)),
+                const Expanded(child: Divider(color: AppColors.muted,)),
               ],
             ),
             const SizedBox(height: 20),
@@ -198,7 +199,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  backgroundColor: Color(0xffffd398),
+                  backgroundColor: AppColors.accent,
                   foregroundColor: Colors.black,
                   side: const BorderSide(color: Colors.grey),
                 ),

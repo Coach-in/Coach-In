@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/app_colors.dart';
 
 /// `showDatePicker` themed for the app's dark palette.
 ///
@@ -20,7 +21,7 @@ Future<DateTime?> showAppDatePicker({
       return Theme(
         data: theme.copyWith(
           colorScheme: theme.colorScheme.copyWith(
-            primary: const Color(0xffffd398),
+            primary: AppColors.accent,
             onPrimary: Colors.black,
           ),
         ),

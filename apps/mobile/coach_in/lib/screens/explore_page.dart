@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../utils/tag_utils.dart';
 import './coach_detail_page.dart';
+import '../config/app_colors.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({super.key});
@@ -91,15 +92,15 @@ class _ExplorePageState extends State<ExplorePage> {
                 selected: _selectedTag == name,
                 onSelected: (on) =>
                     setState(() => _selectedTag = on ? name : null),
-                selectedColor: const Color(0xffffd398),
-                backgroundColor: const Color(0xff1b2a41),
+                selectedColor: AppColors.accent,
+                backgroundColor: AppColors.surface,
                 checkmarkColor: Colors.black,
                 labelStyle: GoogleFonts.montserrat(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: _selectedTag == name
                       ? Colors.black
-                      : const Color(0xffffd398),
+                      : AppColors.accent,
                 ),
               ),
             ),
@@ -125,7 +126,7 @@ class _ExplorePageState extends State<ExplorePage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.white12),
-          color: const Color(0xff1b2a41),
+          color: AppColors.surface,
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -133,7 +134,7 @@ class _ExplorePageState extends State<ExplorePage> {
             children: [
               CircleAvatar(
                 radius: 22,
-                backgroundColor: const Color(0xffffd398),
+                backgroundColor: AppColors.accent,
                 child: const Icon(Icons.person, color: Colors.black),
               ),
 
@@ -176,7 +177,7 @@ class _ExplorePageState extends State<ExplorePage> {
 
               const Icon(
                 Icons.chevron_right,
-                color: Color(0xffffd398),
+                color: AppColors.accent,
               )
             ],
           ),
@@ -190,12 +191,12 @@ class _ExplorePageState extends State<ExplorePage> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xffffd398)),
+        border: Border.all(color: AppColors.accent),
       ),
       child: Text(
         label,
         style: GoogleFonts.montserrat(
-          color: const Color(0xffffd398),
+          color: AppColors.accent,
           fontSize: 10,
           fontWeight: FontWeight.w600,
         ),
@@ -230,7 +231,7 @@ class _ExplorePageState extends State<ExplorePage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xffffd398)),
+            icon: const Icon(Icons.refresh, color: AppColors.accent),
             onPressed: _fetchExplore,
           )
         ],
@@ -240,7 +241,7 @@ class _ExplorePageState extends State<ExplorePage> {
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xffffd398),
+                  color: AppColors.accent,
                 ),
               )
             : _errorMessage != null

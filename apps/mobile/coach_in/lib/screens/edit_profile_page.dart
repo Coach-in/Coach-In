@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
 import '../utils/tag_utils.dart';
+import '../config/app_colors.dart';
 
 class EditProfilePage extends StatefulWidget {
   final Map<String, dynamic> profile;
@@ -255,7 +256,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             onPressed: _availableTags.isEmpty ? null : _showTagBottomSheet,
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 14),
-              side: const BorderSide(color: Color(0xffffd398)),
+              side: const BorderSide(color: AppColors.accent),
             ),
             child: Text(
               _selectedTagNames.isEmpty
@@ -275,7 +276,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               padding: const EdgeInsets.symmetric(vertical: 15),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8)),
-              backgroundColor: const Color(0xffffd398),
+              backgroundColor: AppColors.accent,
             ),
             child: _isSaving
                 ? const SizedBox(
