@@ -8,6 +8,7 @@ import './explore_page.dart';
 
 import '../services/api_service.dart';
 import '../utils/navigation.dart';
+import '../utils/tag_utils.dart';
 
 class RegisterInfoPage extends StatefulWidget {
   final String email;
@@ -165,7 +166,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       widget.email,
       widget.password,
       {
-        'age': int.parse(_ageController.text.trim()),
+        'age': int.tryParse(_ageController.text.trim()) ?? 0,
         'goals': _goalController.text.trim(),
         'tagNames': _selectedTags.map((t) => t['name']).toList(),
       },
@@ -211,11 +212,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       isScrollControlled: true,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setModalState) {
-          final Map<String, List<Map<String, dynamic>>> grouped = {};
-          for (final tag in _availableTags) {
-            final category = tag['category']['name'] as String;
-            grouped.putIfAbsent(category, () => []).add(tag);
-          }
+          final grouped = groupTagsByCategory(_availableTags);
 
           return DraggableScrollableSheet(
             expand: false,

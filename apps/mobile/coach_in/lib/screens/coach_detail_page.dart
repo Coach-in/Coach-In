@@ -71,9 +71,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            e.toString().replaceFirst('Exception: ', ''),
-          ),
+          content: Text(errorMessage(e, fallback: 'Failed to send request')),
           backgroundColor: Colors.red,
         ),
       );
