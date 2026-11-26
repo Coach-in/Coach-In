@@ -11,6 +11,7 @@ import '../services/oauth_service.dart';
 import '../utils/navigation.dart';
 import '../widgets/password_field.dart';
 import '../config/app_colors.dart';
+import '../widgets/form_error.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -175,14 +176,7 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 20),
 
             // Error message
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
+            FormError(_errorMessage),
 
             // Email/Password Login button
             SizedBox(
