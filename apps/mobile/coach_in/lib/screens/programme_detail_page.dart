@@ -23,6 +23,7 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
   Map<String, dynamic>? _programme;
   String? _userId;
   List<Map<String, dynamic>>? _catalogue;
+  List<Map<String, dynamic>>? _athletes;
 
   bool get _isOwner =>
       _programme != null && isProgrammeOwner(_programme!, _userId);
@@ -195,6 +196,51 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
     }
   }
 
+  bool get _isCoachOwner => _isOwner && _programme?['coach'] != null;
+
+  /// Duplicates the programme, or (coach only) assigns a copy to an athlete,
+  /// then opens the new programme.
+  Future<void> _copy({required bool assign}) async {
+    if (_isCoachOwner && _athletes == null) {
+      try {
+        _athletes = acceptedAthletes(await _apiService.fetchRelationships());
+      } catch (e) {
+        if (mounted) _showError(e, 'Impossible de charger vos athlètes.');
+        return;
+      }
+    }
+    if (!mounted) return;
+
+    final body = await showCopySheet(
+      context,
+      programme: _programme!,
+      athletes: _athletes ?? const [],
+      assign: assign,
+      isCoach: _isCoachOwner,
+    );
+    if (body == null) return;
+
+    try {
+      final copy = assign
+          ? await _apiService.assignProgramme(widget.programmeId, body)
+          : await _apiService.duplicateProgramme(widget.programmeId, body);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(assign ? 'Programme assigné.' : 'Programme dupliqué.')),
+      );
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProgrammeDetailPage(programmeId: copy['id']),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        _showError(e, assign ? 'Assignation impossible.' : 'Duplication impossible.');
+      }
+    }
+  }
+
   Widget _buildCard(String title, Widget content, {Widget? trailing}) {
     return Container(
       width: double.infinity,
@@ -364,10 +410,28 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
               tooltip: 'Modifier',
               onPressed: _editInfo,
             ),
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Color(0xffffd398)),
-              tooltip: 'Supprimer',
-              onPressed: _delete,
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: Color(0xffffd398)),
+              tooltip: 'Plus',
+              onSelected: (v) {
+                switch (v) {
+                  case 'duplicate':
+                    _copy(assign: false);
+                  case 'assign':
+                    _copy(assign: true);
+                  case 'delete':
+                    _delete();
+                }
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(value: 'duplicate', child: Text('Dupliquer')),
+                if (_isCoachOwner)
+                  const PopupMenuItem(
+                    value: 'assign',
+                    child: Text('Assigner à un athlète'),
+                  ),
+                const PopupMenuItem(value: 'delete', child: Text('Supprimer')),
+              ],
             ),
           ],
         ],

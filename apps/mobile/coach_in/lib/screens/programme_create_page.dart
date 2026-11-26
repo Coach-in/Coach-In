@@ -55,11 +55,7 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
       var athletes = <Map<String, dynamic>>[];
       if (_isCoach) {
         final relationships = await _apiService.fetchRelationships();
-        athletes = [
-          for (final r in relationships)
-            if (r['status'] == 'accepted' && r['athlete'] != null)
-              Map<String, dynamic>.from(r['athlete']),
-        ];
+        athletes = acceptedAthletes(relationships);
       }
       if (!mounted) return;
       setState(() {

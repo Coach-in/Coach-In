@@ -546,6 +546,21 @@ class ApiService {
     }
   }
 
+  /// Copies a programme for one of the coach's athletes (`POST /programmes/:id/assign`).
+  /// Returns the new programme; the source is unchanged.
+  Future<Map<String, dynamic>> assignProgramme(
+      String id, Map<String, dynamic> body) async {
+    final response = await post('/programmes/$id/assign', body, withAuth: true);
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  /// Duplicates a programme you own (`POST /programmes/:id/duplicate`).
+  Future<Map<String, dynamic>> duplicateProgramme(
+      String id, Map<String, dynamic> body) async {
+    final response = await post('/programmes/$id/duplicate', body, withAuth: true);
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
   /// Adds an exercise to the shared catalogue (`POST /exercices`).
   Future<Map<String, dynamic>> createExercise(String name,
       {String? description}) async {

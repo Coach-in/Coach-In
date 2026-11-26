@@ -187,3 +187,49 @@ Map<String, dynamic> buildExerciseFields({
     if (t.isNotEmpty) 'notes': t else if (clearEmpty) 'notes': null,
   };
 }
+
+/// The athletes a coach can assign programmes to: those with an accepted
+/// relationship (the API rejects the others with a 403).
+List<Map<String, dynamic>> acceptedAthletes(List<dynamic> relationships) => [
+      for (final r in relationships)
+        if (r['status'] == 'accepted' && r['athlete'] != null)
+          Map<String, dynamic>.from(r['athlete']),
+    ];
+
+/// Name proposed for a copy; kept within the API's 100 character limit.
+String defaultCopyName(String name) {
+  const suffix = ' (copie)';
+  final base = name.length > 100 - suffix.length
+      ? name.substring(0, 100 - suffix.length)
+      : name;
+  return '$base$suffix';
+}
+
+/// Body of `POST /programmes/:id/assign`. Dates left out keep the source's.
+Map<String, dynamic> buildAssignPayload({
+  required String athleteId,
+  DateTime? startDate,
+  DateTime? endDate,
+}) =>
+    {
+      'athleteId': athleteId,
+      if (startDate != null) 'startDate': formatApiDate(startDate),
+      if (endDate != null) 'endDate': formatApiDate(endDate),
+    };
+
+/// Body of `POST /programmes/:id/duplicate`. Without an athlete the copy keeps
+/// the source's athlete (or stays a template).
+Map<String, dynamic> buildDuplicatePayload({
+  String? name,
+  String? athleteId,
+  DateTime? startDate,
+  DateTime? endDate,
+}) {
+  final n = name?.trim() ?? '';
+  return {
+    if (n.isNotEmpty) 'name': n,
+    'athleteId': ?athleteId,
+    if (startDate != null) 'startDate': formatApiDate(startDate),
+    if (endDate != null) 'endDate': formatApiDate(endDate),
+  };
+}
