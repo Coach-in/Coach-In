@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import '../utils/tag_utils.dart';
 import './coach_detail_page.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -19,6 +20,7 @@ class _ExplorePageState extends State<ExplorePage> {
 
   List<Map<String, dynamic>> _coaches = [];
   String? _role;
+  String? _selectedTag;
 
   @override
   void initState() {
@@ -60,6 +62,50 @@ class _ExplorePageState extends State<ExplorePage> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  List<String> get _tagNames {
+    final names = <String>{};
+    for (final coach in _coaches) {
+      for (final t in (coach['tags'] as List? ?? [])) {
+        names.add(t['name'] as String);
+      }
+    }
+    return names.toList()..sort();
+  }
+
+  Widget _buildTagFilter() {
+    final names = _tagNames;
+    if (names.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 40,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          for (final name in names)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                label: Text(name),
+                selected: _selectedTag == name,
+                onSelected: (on) =>
+                    setState(() => _selectedTag = on ? name : null),
+                selectedColor: const Color(0xffffd398),
+                backgroundColor: const Color(0xff1b2a41),
+                checkmarkColor: Colors.black,
+                labelStyle: GoogleFonts.montserrat(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: _selectedTag == name
+                      ? Colors.black
+                      : const Color(0xffffd398),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _buildCoachCard(Map<String, dynamic> coach) {
@@ -210,15 +256,17 @@ class _ExplorePageState extends State<ExplorePage> {
                       )
                     : ListView(
                         children: [
+                          _buildTagFilter(),
+                          const SizedBox(height: 12),
                           Text(
-                            '${_coaches.length} verified coaches',
+                            '${filterCoachesByTag(_coaches, _selectedTag).length} verified coaches',
                             style: GoogleFonts.montserrat(
                               color: Colors.white54,
                               fontSize: 13,
                             ),
                           ),
                           const SizedBox(height: 16),
-                          ..._coaches.map(_buildCoachCard),
+                          ...filterCoachesByTag(_coaches, _selectedTag).map(_buildCoachCard),
                         ],
                       ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import './athlete_detail_page.dart';
 
 class RelationshipsPage extends StatefulWidget {
   const RelationshipsPage({super.key});
@@ -115,6 +116,23 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
   }
 
   Widget _buildTile(Map<String, dynamic> relationship) {
+    final athlete = relationship['athlete'];
+    final canOpenAthlete = _role == 'coach' && athlete is Map<String, dynamic>;
+
+    return GestureDetector(
+      onTap: canOpenAthlete
+          ? () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AthleteDetailPage(athlete: athlete),
+                ),
+              )
+          : null,
+      child: _buildTileBody(relationship),
+    );
+  }
+
+  Widget _buildTileBody(Map<String, dynamic> relationship) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
