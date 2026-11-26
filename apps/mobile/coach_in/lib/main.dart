@@ -42,6 +42,10 @@ class CoachIn extends StatelessWidget {
             color: const Color(0xffffd398)
           ),
         ),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: Color(0xffffd398),
+          selectionHandleColor: Color(0xffffd398),
+        ),
         colorScheme: ColorScheme.dark(
           primary: const Color(0xff1c232d),
           primaryContainer: const Color(0xff1c232d),

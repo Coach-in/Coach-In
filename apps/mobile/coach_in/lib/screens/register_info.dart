@@ -7,6 +7,7 @@ import 'dart:io';
 import './explore_page.dart';
 
 import '../services/api_service.dart';
+import '../utils/navigation.dart';
 import '../utils/tag_utils.dart';
 
 class RegisterInfoPage extends StatefulWidget {
@@ -151,7 +152,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       await _uploadCertification(id);
 
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ExplorePage()));
+      openAsRoot(context, const ExplorePage());
     } else {
       setState(() => _errorMessage = result['message'] ?? 'Registration failed. Please try again.');
     }
@@ -181,7 +182,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       await _storage.write(key: 'rememberMe', value: true.toString());
 
       if (!mounted) return;
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ExplorePage()));
+      openAsRoot(context, const ExplorePage());
     } else {
       setState(() => _errorMessage = result['message'] ?? 'Registration failed. Please try again.');
     }

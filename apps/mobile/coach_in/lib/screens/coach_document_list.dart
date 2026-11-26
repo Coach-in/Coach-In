@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import './admin_profile_page.dart';
 import './coach_document_detail.dart';
 
 class CoachDocumentsPage extends StatefulWidget {
@@ -182,6 +183,14 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
             icon: const Icon(Icons.refresh, color: Color(0xffffd398)),
             onPressed: _fetchDocuments,
             tooltip: 'Refresh',
+          ),
+          IconButton(
+            icon: const Icon(Icons.person, color: Color(0xffffd398)),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdminProfilePage()),
+            ),
+            tooltip: 'Profile',
           ),
         ],
       ),
