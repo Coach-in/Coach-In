@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../config/api_config.dart';
+import '../utils/exercise_utils.dart';
 import '../screens/start_page.dart';
 
 import 'dart:developer' as developer;
@@ -43,6 +44,10 @@ class ApiException implements Exception {
       400 => apiMessage ?? 'Données invalides.',
       401 => apiMessage ?? 'Identifiants invalides.',
       403 => apiMessage ?? "Vous n'avez pas le droit d'effectuer cette action.",
+      // Nest answers an unknown route with "Cannot GET /path": the server is
+      // older than the app, which is different from a missing resource.
+      404 when apiMessage?.startsWith('Cannot ') ?? false =>
+        "Cette fonctionnalité n'est pas disponible sur ce serveur (API trop ancienne).",
       404 => 'Élément introuvable.',
       409 => apiMessage ?? 'Cette action a déjà été effectuée.',
       429 => 'Trop de tentatives. Réessayez dans quelques instants.',
@@ -168,7 +173,8 @@ class ApiService {
       'pdf'           => 'application/pdf',
       'png'           => 'image/png',
       'jpg' || 'jpeg' => 'image/jpeg',
-      _ => throw Exception('Unsupported file type: $extension. Must be PDF, PNG, or JPEG.'),
+      'webp'          => 'image/webp',
+      _ => throw Exception('Unsupported file type: $extension. Must be PDF, PNG, JPEG, or WEBP.'),
     };
 
     final request = http.MultipartRequest('POST', url)
@@ -487,10 +493,95 @@ class ApiService {
     return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
   }
 
-  Future<void> deleteProgramme(String id) async {
-    final response = await delete('/programmes/$id', withAuth: true);
+  Future<void> deleteProgramme(String id) => _deleteOrThrow('/programmes/$id');
+
+  Future<Map<String, dynamic>> updateProgramme(
+      String id, Map<String, dynamic> body) async {
+    final response = await patch('/programmes/$id', body: body, withAuth: true);
+    return await _decodeOrThrow(response) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> addProgrammeDay(
+      String programmeId, Map<String, dynamic> body) async {
+    final response = await post('/programmes/$programmeId/days', body, withAuth: true);
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateProgrammeDay(
+      String programmeId, String dayId, Map<String, dynamic> body) async {
+    final response = await patch('/programmes/$programmeId/days/$dayId',
+        body: body, withAuth: true);
+    return await _decodeOrThrow(response) as Map<String, dynamic>;
+  }
+
+  Future<void> deleteProgrammeDay(String programmeId, String dayId) =>
+      _deleteOrThrow('/programmes/$programmeId/days/$dayId');
+
+  Future<Map<String, dynamic>> addProgrammeExercise(
+      String programmeId, String dayId, Map<String, dynamic> body) async {
+    final response = await post(
+        '/programmes/$programmeId/days/$dayId/exercises', body,
+        withAuth: true);
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> updateProgrammeExercise(String programmeId,
+      String dayId, String exerciseId, Map<String, dynamic> body) async {
+    final response = await patch(
+        '/programmes/$programmeId/days/$dayId/exercises/$exerciseId',
+        body: body,
+        withAuth: true);
+    return await _decodeOrThrow(response) as Map<String, dynamic>;
+  }
+
+  Future<void> deleteProgrammeExercise(
+          String programmeId, String dayId, String exerciseId) =>
+      _deleteOrThrow(
+          '/programmes/$programmeId/days/$dayId/exercises/$exerciseId');
+
+  Future<void> _deleteOrThrow(String path) async {
+    final response = await delete(path, withAuth: true);
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw ApiException.fromResponse(response);
+    }
+  }
+
+  /// Adds an exercise to the shared catalogue (`POST /exercices`).
+  Future<Map<String, dynamic>> createExercise(String name,
+      {String? description}) async {
+    final desc = description?.trim() ?? '';
+    final response = await post(
+      '/exercices',
+      {'name': name.trim(), if (desc.isNotEmpty) 'description': desc},
+      withAuth: true,
+    );
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  /// Uploads or replaces an exercise image (`POST /exercices/:id/image`).
+  /// Only the exercise's creator may do it. Returns the updated exercise.
+  Future<Map<String, dynamic>> uploadExerciseImage(
+      String exerciseId, File file, String extension) async {
+    final response = await filePost('/exercices/$exerciseId/image', file, extension,
+        withAuth: true);
+    return await _decodeOrThrow(response, expected: 201) as Map<String, dynamic>;
+  }
+
+  /// Copies a default exercise into the shared catalogue. If an exercise with
+  /// that name already exists (409, e.g. created by the web app or another
+  /// user) the existing one is returned instead.
+  Future<Map<String, dynamic>> materializeExercise(
+      Map<String, dynamic> template) async {
+    final name = template['name'] as String;
+    try {
+      return await createExercise(name,
+          description: template['description'] as String?);
+    } on ApiException catch (e) {
+      if (e.statusCode != 409) rethrow;
+      final existing = findExerciseByName(
+          List<Map<String, dynamic>>.from(await fetchExercises()), name);
+      if (existing == null) rethrow;
+      return existing;
     }
   }
 

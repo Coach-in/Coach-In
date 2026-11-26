@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
-import '../widgets/app_bottom_nav.dart';
+import '../utils/navigation.dart';
 import './admin_profile_page.dart';
 import './edit_profile_page.dart';
-import './explore_page.dart';
 import './notifications_page.dart';
 import './start_page.dart';
 
@@ -100,10 +99,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (!mounted) return;
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => StartPage()),
-    );
+    openAsRoot(context, const StartPage());
   }
 
   Future<void> _deleteAccount() async {
@@ -518,6 +514,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('My Profile'),
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
@@ -603,7 +600,6 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                       ),
       ),
-      bottomNavigationBar: const AppBottomNav(currentPage: 'profile'),
     );
   }
 }

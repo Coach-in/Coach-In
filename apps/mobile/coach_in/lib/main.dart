@@ -3,8 +3,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import './screens/start_page.dart';
-import './screens/explore_page.dart';
+import './screens/main_shell.dart';
 import './services/api_service.dart';
+import './utils/navigation.dart';
 
 void main() {
   runApp(const CoachIn());
@@ -92,10 +93,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (accessToken != null && rememberMe == 'true') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const ExplorePage()),
-      );
+      openAsRoot(context, const MainShell());
     } else {
       Navigator.pushReplacement(
         context,

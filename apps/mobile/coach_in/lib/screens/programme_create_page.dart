@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import '../utils/date_picker.dart';
 import '../utils/programme_utils.dart';
+import '../widgets/exercise_picker.dart';
 
 /// Programme builder. A coach can assign the programme to one of their
 /// athletes (accepted relationship) or save it as a template; an athlete
@@ -73,12 +75,7 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
 
   Future<void> _pickDate({required bool isStart}) async {
     final initial = (isStart ? _startDate : _endDate) ?? DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
+    final picked = await showAppDatePicker(context: context, initialDate: initial);
     if (picked == null) return;
     setState(() => isStart ? _startDate = picked : _endDate = picked);
   }
@@ -88,9 +85,10 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Theme.of(context).colorScheme.primary,
-      builder: (_) => _ExercisePicker(catalogue: _catalogue),
+      builder: (_) => ExercisePicker(catalogue: _catalogue),
     );
     if (chosen == null) return;
+    if (!_catalogue.any((e) => e['id'] == chosen['id'])) _catalogue.add(chosen);
     setState(() => day.exercises.add(
           DraftExercise(exerciseId: chosen['id'], name: chosen['name']),
         ));
@@ -287,7 +285,7 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
           for (final e in day.exercises) _buildExercise(day, e),
           const SizedBox(height: 8),
           TextButton.icon(
-            onPressed: _catalogue.isEmpty ? null : () => _addExercise(day),
+            onPressed: () => _addExercise(day),
             icon: const Icon(Icons.add, color: Color(0xffffd398)),
             label: const Text(
               'Ajouter un exercice',
@@ -394,71 +392,6 @@ class _ProgrammeCreatePageState extends State<ProgrammeCreatePage> {
                   ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ExercisePicker extends StatefulWidget {
-  final List<Map<String, dynamic>> catalogue;
-
-  const _ExercisePicker({required this.catalogue});
-
-  @override
-  State<_ExercisePicker> createState() => _ExercisePickerState();
-}
-
-class _ExercisePickerState extends State<_ExercisePicker> {
-  String _query = '';
-
-  @override
-  Widget build(BuildContext context) {
-    final matches = widget.catalogue
-        .where((e) =>
-            (e['name'] as String).toLowerCase().contains(_query.toLowerCase()))
-        .toList();
-
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
-      ),
-      child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.6,
-        child: Column(
-          children: [
-            TextField(
-              autofocus: true,
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Rechercher un exercice',
-              ),
-              onChanged: (v) => setState(() => _query = v),
-            ),
-            Expanded(
-              child: matches.isEmpty
-                  ? const Center(child: Text('Aucun exercice trouvé.'))
-                  : ListView(
-                      children: [
-                        for (final e in matches)
-                          ListTile(
-                            title: Text(e['name']),
-                            subtitle: e['description'] == null
-                                ? null
-                                : Text(
-                                    e['description'],
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                            onTap: () => Navigator.pop(context, e),
-                          ),
-                      ],
-                    ),
-            ),
-          ],
-        ),
       ),
     );
   }

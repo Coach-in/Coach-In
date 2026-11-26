@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'register.dart';
-import './explore_page.dart';
+import './main_shell.dart';
 import 'coach_document_list.dart';
 
 import '../services/api_service.dart';
@@ -43,7 +43,8 @@ class _LoginPageState extends State<LoginPage> {
       final accessToken = await _storage.read(key: 'accessToken');
       if (accessToken != null) {
         if (!mounted) return;
-        openAsRoot(context, const ExplorePage());
+        openAsRoot(context, const MainShell());
+        return;
       }
       setState(() => _rememberMe = true);
     }
@@ -53,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!mounted) return;
     openAsRoot(
       context,
-      role == 'admin' ? const CoachDocumentsPage() : const ExplorePage(),
+      role == 'admin' ? const CoachDocumentsPage() : const MainShell(),
     );
   }
 
@@ -105,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
       await _storage.write(key: 'rememberMe', value: _rememberMe.toString());
 
       if (!mounted) return;
-      openAsRoot(context, const ExplorePage());
+      openAsRoot(context, const MainShell());
     } else {
       setState(() {
         _errorMessage = result['message'] ?? 'Google login failed';

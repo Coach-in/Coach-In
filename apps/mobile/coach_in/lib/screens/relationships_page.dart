@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
-import '../widgets/app_bottom_nav.dart';
 import './athlete_detail_page.dart';
 
 class RelationshipsPage extends StatefulWidget {
@@ -236,6 +235,7 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.primary,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Connections'),
         backgroundColor: Theme.of(context).colorScheme.primary,
       ),
@@ -243,7 +243,6 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
         padding: const EdgeInsets.all(20),
         child: _buildBody(),
       ),
-      bottomNavigationBar: const AppBottomNav(currentPage: 'connections'),
     );
   }
 }

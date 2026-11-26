@@ -17,6 +17,16 @@ void main() {
       expect(e.message, contains('Trop de tentatives'));
     });
 
+    test('tells a missing route (old API) apart from a missing resource', () {
+      final route = ApiException.fromResponse(http.Response(
+          '{"message":"Cannot GET /programmes","error":"Not Found","statusCode":404}', 404));
+      expect(route.message, contains('API trop ancienne'));
+
+      final resource = ApiException.fromResponse(
+          http.Response('{"message":"Programme #1 not found"}', 404));
+      expect(resource.message, 'Élément introuvable.');
+    });
+
     test('falls back to a status based message on an unparsable body', () {
       expect(ApiException.fromResponse(http.Response('<html>', 404)).message,
           'Élément introuvable.');

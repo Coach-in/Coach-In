@@ -4,7 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 
-import './explore_page.dart';
+import './main_shell.dart';
 
 import '../services/api_service.dart';
 import '../utils/navigation.dart';
@@ -152,7 +152,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       await _uploadCertification(id);
 
       if (!mounted) return;
-      openAsRoot(context, const ExplorePage());
+      openAsRoot(context, const MainShell());
     } else {
       setState(() => _errorMessage = result['message'] ?? 'Registration failed. Please try again.');
     }
@@ -182,7 +182,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       await _storage.write(key: 'rememberMe', value: true.toString());
 
       if (!mounted) return;
-      openAsRoot(context, const ExplorePage());
+      openAsRoot(context, const MainShell());
     } else {
       setState(() => _errorMessage = result['message'] ?? 'Registration failed. Please try again.');
     }

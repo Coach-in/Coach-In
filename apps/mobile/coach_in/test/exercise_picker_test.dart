@@ -1,0 +1,53 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:coach_in/screens/exercise_create_page.dart';
+import 'package:coach_in/utils/date_picker.dart';
+import 'package:coach_in/widgets/exercise_picker.dart';
+
+void main() {
+  testWidgets('an empty catalogue offers defaults and creating an exercise',
+      (tester) async {
+    await tester.pumpWidget(const MaterialApp(
+      home: Scaffold(body: ExercisePicker(catalogue: [])),
+    ));
+
+    expect(find.text('Créer un nouvel exercice'), findsOneWidget);
+    // An empty catalogue still offers the bundled defaults as suggestions.
+    expect(find.text('Squat barre'), findsOneWidget);
+    expect(find.text('Suggestion'), findsNWidgets(3));
+
+    // "Créer un nouvel exercice" opens a full page, not a dialog.
+    await tester.tap(find.text('Créer un nouvel exercice'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ExerciseCreatePage), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+
+    // Saving without a name is rejected before any request is made.
+    await tester.tap(find.text("Créer l'exercice"));
+    await tester.pump();
+    expect(find.text("Le nom de l'exercice est obligatoire."), findsOneWidget);
+  });
+
+  testWidgets('date picker confirm button is not drawn in the dark primary',
+      (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: ThemeData(
+        colorScheme: const ColorScheme.dark(primary: Color(0xff1c232d)),
+      ),
+      home: Builder(
+        builder: (context) => TextButton(
+          onPressed: () => showAppDatePicker(
+              context: context, initialDate: DateTime(2026, 11, 24)),
+          child: const Text('open'),
+        ),
+      ),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('OK'), findsOneWidget);
+    final color = Theme.of(tester.element(find.text('OK'))).colorScheme.primary;
+    expect(color, const Color(0xffffd398));
+  });
+}

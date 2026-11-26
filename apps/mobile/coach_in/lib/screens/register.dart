@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import './explore_page.dart';
+import './main_shell.dart';
 import './login.dart';
 import 'register_info.dart';
 
@@ -58,7 +58,7 @@ class _RegisterPageState extends State<RegisterPage> {
       await _storage.write(key: 'rememberMe', value: 'true');
 
       if (!mounted) return;
-      openAsRoot(context, const ExplorePage());
+      openAsRoot(context, const MainShell());
     } else {
       setState(() {
         _errorMessage = result['message'] ?? 'Google registration failed';
