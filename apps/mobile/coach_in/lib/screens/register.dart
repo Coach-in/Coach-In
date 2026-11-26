@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import './start_page.dart';
 import './main_shell.dart';
 import './login.dart';
 import 'register_info.dart';
@@ -10,6 +9,7 @@ import 'register_info.dart';
 import '../services/api_service.dart';
 import '../services/oauth_service.dart';
 import '../utils/navigation.dart';
+import '../widgets/password_field.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -24,7 +24,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _userController = TextEditingController();
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  bool _isLoading = false;
   bool _isOAuthLoading = false;
   bool _isCoach = false;
   String? _errorMessage;
@@ -32,12 +31,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final ApiService _apiService = ApiService();
 
   Future<void> _continue() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    Navigator.pushReplacement(
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => RegisterInfoPage(
         email: _emailController.text.trim(),
@@ -82,12 +76,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xffffd398)),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => StartPage()),
-            );
-          },
+          onPressed: () => Navigator.maybePop(context),
           tooltip: 'Back',
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -117,6 +106,9 @@ class _RegisterPageState extends State<RegisterPage> {
             // Email field
             TextField(
               controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: InputDecoration(
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 labelText: 'Email',
@@ -130,19 +122,7 @@ class _RegisterPageState extends State<RegisterPage> {
             const SizedBox(height: 20),
 
             // Password field
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-                labelText: 'Password',
-                labelStyle: Theme.of(context).textTheme.labelSmall,
-                prefixIcon: const Icon(Icons.lock),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
+            PasswordField(controller: _passwordController),
 
             Row(
               children: [
@@ -171,7 +151,7 @@ class _RegisterPageState extends State<RegisterPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _isLoading || _isOAuthLoading ? null : _continue,
+                onPressed: _isOAuthLoading ? null : _continue,
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
@@ -179,16 +159,14 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   backgroundColor: Color(0xffffd398),
                 ),
-                child: _isLoading
-                    ? const CircularProgressIndicator(color: Color(0xffd1d5dc))
-                    : Text(
-                        'Continue',
-                        style: GoogleFonts.montserrat(
-                          fontSize: 16,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                child: Text(
+                  'Continue',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 16,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -207,7 +185,7 @@ class _RegisterPageState extends State<RegisterPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: _isLoading || _isOAuthLoading ? null : _registerWithGoogle,
+                onPressed: _isOAuthLoading ? null : _registerWithGoogle,
                 icon: _isOAuthLoading
                     ? const SizedBox(
                         width: 20,
@@ -236,12 +214,10 @@ class _RegisterPageState extends State<RegisterPage> {
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                  );
-                },
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                ),
                 child: Text(
                   'Already have an account? Log in here.',
                   style: Theme.of(context).textTheme.bodySmall

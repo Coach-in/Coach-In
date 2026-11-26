@@ -3,13 +3,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'register.dart';
-import 'start_page.dart';
 import './main_shell.dart';
 import 'coach_document_list.dart';
 
 import '../services/api_service.dart';
 import '../services/oauth_service.dart';
 import '../utils/navigation.dart';
+import '../widgets/password_field.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -124,12 +124,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Color(0xffffd398)),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => StartPage()),
-            );
-          },
+          onPressed: () => Navigator.maybePop(context),
           tooltip: 'Back',
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -144,6 +139,9 @@ class _LoginPageState extends State<LoginPage> {
             // Email field
             TextField(
               controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
+              enableSuggestions: false,
               decoration: InputDecoration(
                 floatingLabelBehavior: FloatingLabelBehavior.always,
                 labelText: 'Email',
@@ -157,19 +155,7 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 20),
 
             // Password field
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: InputDecoration(
-                floatingLabelBehavior: FloatingLabelBehavior.always,
-                labelText: 'Password',
-                labelStyle: Theme.of(context).textTheme.labelSmall,
-                prefixIcon: const Icon(Icons.lock),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
+            PasswordField(controller: _passwordController),
 
             // Remember me checkbox
             Row(
@@ -264,13 +250,10 @@ class _LoginPageState extends State<LoginPage> {
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const RegisterPage()),
-                  );
-                },
+                onPressed: () => Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RegisterPage()),
+                ),
                 child: Text(
                   'New to Coach\'In? Sign up here.',
                   style: Theme.of(context).textTheme.bodySmall
