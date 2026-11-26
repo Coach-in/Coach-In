@@ -31,7 +31,7 @@
     "@nestjs/core": "^11.0.1",
     "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/platform-express": "^11.0.1",
-    "@nestjs/swagger": "^11.2.6",
+    "@nestjs/swagger": "^12.0.4",
     "@nestjs/typeorm": "^11.0.0",
     "@swc/cli": "^0.7.10",
     "@swc/core": "^1.15.18",
