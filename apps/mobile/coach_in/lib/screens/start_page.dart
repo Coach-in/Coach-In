@@ -41,12 +41,12 @@ class StartPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xffefd6a2),
+                    backgroundColor: AppColors.accent,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    side: const BorderSide(width: 1.3, color: Color(0xffedf6a2)),
+                    side: const BorderSide(width: 1.3, color: AppColors.accent),
                   ),
                   child: Text(
                     'Log in',
@@ -80,7 +80,7 @@ class StartPage extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    side: const BorderSide(width: 1.3, color: Color(0xffedf6a2)),
+                    side: const BorderSide(width: 1.3, color: AppColors.accent),
                   ),
                   child: Text(
                     'Register',
