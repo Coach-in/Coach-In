@@ -15,6 +15,7 @@ class AppBottomNav extends StatelessWidget {
   static const items = <({IconData icon, String label})>[
     (icon: Icons.explore, label: 'Explore'),
     (icon: Icons.people, label: 'Connections'),
+    (icon: Icons.chat, label: 'Messages'),
     (icon: Icons.fitness_center, label: 'Programmes'),
     (icon: Icons.person, label: 'Profile'),
   ];
