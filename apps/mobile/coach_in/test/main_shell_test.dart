@@ -32,7 +32,7 @@ void main() {
     expect(find.byType(AppBottomNav), findsOneWidget);
     expect(find.byType(BackButton), findsNothing);
 
-    for (final label in ['Connections', 'Programmes', 'Profile', 'Explore']) {
+    for (final label in ['Connections', 'Messages', 'Programmes', 'Profile', 'Explore']) {
       await tester.tap(find.text(label));
       await tester.pumpAndSettle();
       expect(find.byType(AppBottomNav), findsOneWidget);
