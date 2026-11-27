@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config/app_colors.dart';
+import '../data/notes_repository.dart';
+import '../widgets/athlete_notes_section.dart';
 
 /// Read-only athlete profile for coaches.
 ///
@@ -9,7 +11,15 @@ import '../config/app_colors.dart';
 class AthleteDetailPage extends StatelessWidget {
   final Map<String, dynamic> athlete;
 
-  const AthleteDetailPage({super.key, required this.athlete});
+  /// Notes source. Defaults to an in-memory store until the notes API (#72)
+  /// is available.
+  final NotesRepository? notesRepository;
+
+  const AthleteDetailPage({
+    super.key,
+    required this.athlete,
+    this.notesRepository,
+  });
 
   Widget _buildCard(String title, Widget content) {
     return Container(
@@ -99,8 +109,15 @@ class AthleteDetailPage extends StatelessWidget {
                     tags.map<Widget>((t) => _buildTagChip(t['name'])).toList(),
               ),
             ),
+          AthleteNotesSection(
+            athleteId: '${athlete['id']}',
+            repository: notesRepository ?? _sharedNotes,
+          ),
         ],
       ),
     );
   }
 }
+
+/// Survives page rebuilds so notes persist while the app runs (mock only).
+final NotesRepository _sharedNotes = InMemoryNotesRepository();
