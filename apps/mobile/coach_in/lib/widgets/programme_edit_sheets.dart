@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../utils/date_picker.dart';
 import '../utils/programme_utils.dart';
+import '../config/app_colors.dart';
 
 InputDecoration _decoration(BuildContext context, String label) =>
     InputDecoration(
@@ -33,7 +34,7 @@ Widget _saveButton(VoidCallback onPressed, {String label = 'Enregistrer'}) =>
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 14),
-        backgroundColor: const Color(0xffffd398),
+        backgroundColor: AppColors.accent,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
       child: Text(
@@ -113,13 +114,13 @@ class _ProgrammeInfoFormState extends State<_ProgrammeInfoForm> {
         child: OutlinedButton(
           onPressed: () => _pick(isStart),
           style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xffffd398)),
+            side: const BorderSide(color: AppColors.accent),
             padding: const EdgeInsets.symmetric(vertical: 14),
           ),
           child: Text(
             date == null ? label : '$label : ${formatApiDate(date)}',
             style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
+              color: AppColors.accent,
               fontSize: 12,
             ),
           ),
@@ -461,13 +462,13 @@ class _CopyFormState extends State<_CopyForm> {
             child: OutlinedButton(
               onPressed: () => _pick(isStart),
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xffffd398)),
+                side: const BorderSide(color: AppColors.accent),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(
                 date == null ? label : '$label : ${formatApiDate(date)}',
                 style: GoogleFonts.montserrat(
-                  color: const Color(0xffffd398),
+                  color: AppColors.accent,
                   fontSize: 11,
                 ),
               ),

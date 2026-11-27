@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../utils/programme_utils.dart';
 import '../widgets/exercise_picker.dart';
 import '../widgets/programme_edit_sheets.dart';
+import '../config/app_colors.dart';
 
 class ProgrammeDetailPage extends StatefulWidget {
   final String programmeId;
@@ -247,7 +248,7 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -260,7 +261,7 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
                 child: Text(
                   title,
                   style: GoogleFonts.montserrat(
-                    color: const Color(0xffffd398),
+                    color: AppColors.accent,
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
                   ),
@@ -336,10 +337,10 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
           if (_isOwner)
             TextButton.icon(
               onPressed: () => _addExercise(day),
-              icon: const Icon(Icons.add, color: Color(0xffffd398)),
+              icon: const Icon(Icons.add, color: AppColors.accent),
               label: const Text(
                 'Ajouter un exercice',
-                style: TextStyle(color: Color(0xffffd398)),
+                style: TextStyle(color: AppColors.accent),
               ),
             ),
         ],
@@ -385,10 +386,10 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
           if (_isOwner)
             TextButton.icon(
               onPressed: _addDay,
-              icon: const Icon(Icons.add, color: Color(0xffffd398)),
+              icon: const Icon(Icons.add, color: AppColors.accent),
               label: const Text(
                 'Ajouter un jour',
-                style: TextStyle(color: Color(0xffffd398)),
+                style: TextStyle(color: AppColors.accent),
               ),
             ),
         ],
@@ -406,12 +407,12 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
         actions: [
           if (_isOwner) ...[
             IconButton(
-              icon: const Icon(Icons.edit, color: Color(0xffffd398)),
+              icon: const Icon(Icons.edit, color: AppColors.accent),
               tooltip: 'Modifier',
               onPressed: _editInfo,
             ),
             PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: Color(0xffffd398)),
+              icon: const Icon(Icons.more_vert, color: AppColors.accent),
               tooltip: 'Plus',
               onSelected: (v) {
                 switch (v) {
@@ -440,7 +441,7 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
         padding: const EdgeInsets.all(20),
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: Color(0xffffd398)),
+                child: CircularProgressIndicator(color: AppColors.accent),
               )
             : _errorMessage != null
                 ? Center(child: Text(_errorMessage!))

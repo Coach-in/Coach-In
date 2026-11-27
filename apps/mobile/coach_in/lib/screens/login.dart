@@ -10,6 +10,8 @@ import '../services/api_service.dart';
 import '../services/oauth_service.dart';
 import '../utils/navigation.dart';
 import '../widgets/password_field.dart';
+import '../config/app_colors.dart';
+import '../widgets/form_error.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -123,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xffffd398)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
           onPressed: () => Navigator.maybePop(context),
           tooltip: 'Back',
         ),
@@ -165,23 +167,16 @@ class _LoginPageState extends State<LoginPage> {
                   onChanged: (val) {
                     setState(() => _rememberMe = val ?? false);
                   },
-                  activeColor: Color(0xffffd398),
+                  activeColor: AppColors.accent,
                 ),
-                Text('Remember me', style: GoogleFonts.montserrat(fontSize: 13, color: Color(0xffffd398))),
+                Text('Remember me', style: GoogleFonts.montserrat(fontSize: 13, color: AppColors.accent)),
               ],
             ),
 
             const SizedBox(height: 20),
 
             // Error message
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  _errorMessage!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
+            FormError(_errorMessage),
 
             // Email/Password Login button
             SizedBox(
@@ -193,7 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    backgroundColor: Color(0xffffd398)),
+                    backgroundColor: AppColors.accent),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : Text('Log in',
@@ -210,9 +205,9 @@ class _LoginPageState extends State<LoginPage> {
             // Divider
             Row(
               children: <Widget>[
-                const Expanded(child: Divider(color: Color(0xffd1d5dc),)),
-                Text(" or ", style: GoogleFonts.montserrat(color: Color(0xffd1d5dc),)),
-                const Expanded(child: Divider(color: Color(0xffd1d5dc),)),
+                const Expanded(child: Divider(color: AppColors.muted,)),
+                Text(" or ", style: GoogleFonts.montserrat(color: AppColors.muted,)),
+                const Expanded(child: Divider(color: AppColors.muted,)),
               ],
             ),
             const SizedBox(height: 20),
@@ -234,7 +229,7 @@ class _LoginPageState extends State<LoginPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  backgroundColor: Color(0xffffd398),
+                  backgroundColor: AppColors.accent,
                   foregroundColor: Colors.black,
                   side: const BorderSide(color: Colors.grey),
                 ),

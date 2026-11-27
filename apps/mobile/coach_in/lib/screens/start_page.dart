@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import './login.dart';
 import './register.dart';
+import '../config/app_colors.dart';
 
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
@@ -40,12 +41,12 @@ class StartPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xffefd6a2),
+                    backgroundColor: AppColors.accent,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    side: const BorderSide(width: 1.3, color: Color(0xffedf6a2)),
+                    side: const BorderSide(width: 1.3, color: AppColors.accent),
                   ),
                   child: Text(
                     'Log in',
@@ -79,13 +80,13 @@ class StartPage extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    side: const BorderSide(width: 1.3, color: Color(0xffedf6a2)),
+                    side: const BorderSide(width: 1.3, color: AppColors.accent),
                   ),
                   child: Text(
                     'Register',
                     style: GoogleFonts.montserrat(
                       fontSize: 16,
-                      color: Color(0xffd1d5dc),
+                      color: AppColors.muted,
                       fontWeight: FontWeight.bold
                     ),
                   ),

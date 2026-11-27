@@ -7,6 +7,7 @@ import './admin_profile_page.dart';
 import './edit_profile_page.dart';
 import './notifications_page.dart';
 import './start_page.dart';
+import '../config/app_colors.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -171,7 +172,7 @@ class _ProfilePageState extends State<ProfilePage> {
       children: [
         CircleAvatar(
           radius: 32,
-          backgroundColor: const Color(0xffffd398),
+          backgroundColor: AppColors.accent,
           child: const Icon(Icons.person, color: Colors.black, size: 32),
         ),
         const SizedBox(width: 14),
@@ -201,7 +202,7 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.edit, color: Color(0xffffd398)),
+          icon: const Icon(Icons.edit, color: AppColors.accent),
           onPressed: _openEditProfile,
           tooltip: 'Edit profile',
         ),
@@ -219,7 +220,7 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: const EdgeInsets.only(top: 18),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -229,7 +230,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             title,
             style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
+              color: AppColors.accent,
               fontWeight: FontWeight.w700,
               fontSize: 13,
               letterSpacing: 1,
@@ -255,7 +256,7 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: const EdgeInsets.only(top: 18),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -265,7 +266,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             'SPECIALTY',
             style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
+              color: AppColors.accent,
               fontWeight: FontWeight.w700,
               fontSize: 13,
               letterSpacing: 1,
@@ -289,7 +290,7 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: const EdgeInsets.only(top: 18),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -299,7 +300,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             'TAGS',
             style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
+              color: AppColors.accent,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
@@ -322,12 +323,12 @@ class _ProfilePageState extends State<ProfilePage> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xffffd398)),
+        border: Border.all(color: AppColors.accent),
       ),
       child: Text(
         label,
         style: GoogleFonts.montserrat(
-          color: const Color(0xffffd398),
+          color: AppColors.accent,
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
@@ -342,7 +343,7 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: const EdgeInsets.only(top: 18),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -352,7 +353,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             'ACCOUNT',
             style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
+              color: AppColors.accent,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
@@ -411,17 +412,17 @@ class _ProfilePageState extends State<ProfilePage> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSeen ? const Color(0xff1b2a41) : const Color(0xff263859),
+          color: isSeen ? AppColors.surface : AppColors.surfaceRaised,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSeen ? Colors.white12 : const Color(0xffffd398),
+            color: isSeen ? Colors.white12 : AppColors.accent,
           ),
         ),
         child: Row(
           children: [
             Icon(
               Icons.notifications,
-              color: isSeen ? Colors.white38 : const Color(0xffffd398),
+              color: isSeen ? Colors.white38 : AppColors.accent,
             ),
 
             const SizedBox(width: 10),
@@ -457,7 +458,7 @@ class _ProfilePageState extends State<ProfilePage> {
       margin: const EdgeInsets.only(top: 18),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -470,7 +471,7 @@ class _ProfilePageState extends State<ProfilePage> {
               Text(
                 unread > 0 ? 'NOTIFICATIONS ($unread new)' : 'NOTIFICATIONS',
                 style: GoogleFonts.montserrat(
-                  color: const Color(0xffffd398),
+                  color: AppColors.accent,
                   fontWeight: FontWeight.w700,
                   fontSize: 13,
                 ),
@@ -519,7 +520,7 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xffffd398)),
+            icon: const Icon(Icons.refresh, color: AppColors.accent),
             onPressed: _fetchProfile,
           )
         ],
@@ -529,7 +530,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xffffd398),
+                  color: AppColors.accent,
                 ),
               )
             : _errorMessage != null
@@ -568,8 +569,8 @@ class _ProfilePageState extends State<ProfilePage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              side: const BorderSide(width: 1.3, color: Color(0xffffd398)),
-                              backgroundColor: const Color(0xffffd398),
+                              side: const BorderSide(width: 1.3, color: AppColors.accent),
+                              backgroundColor: AppColors.accent,
                             ),
                             child: _isLoggingOut
                                 ? const SizedBox(

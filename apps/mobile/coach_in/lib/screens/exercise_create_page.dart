@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
 import '../utils/exercise_utils.dart';
+import '../config/app_colors.dart';
 
 /// Creates an exercise in the shared catalogue, with an optional image.
 /// Pops with the created exercise (including its `imageUrl` when uploaded).
@@ -116,7 +117,7 @@ class _ExerciseCreatePageState extends State<ExerciseCreatePage> {
         height: 160,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xff1b2a41),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.white12),
         ),
@@ -126,7 +127,7 @@ class _ExerciseCreatePageState extends State<ExerciseCreatePage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.add_photo_alternate_outlined,
-                      size: 36, color: Color(0xffffd398)),
+                      size: 36, color: AppColors.accent),
                   const SizedBox(height: 8),
                   Text(
                     'Ajouter une image (facultatif)',
@@ -208,7 +209,7 @@ class _ExerciseCreatePageState extends State<ExerciseCreatePage> {
             onPressed: _isSaving ? null : _save,
             style: ElevatedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 15),
-              backgroundColor: const Color(0xffffd398),
+              backgroundColor: AppColors.accent,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),

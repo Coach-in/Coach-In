@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../screens/exercise_create_page.dart';
 import '../services/api_service.dart';
 import '../utils/exercise_utils.dart';
+import '../config/app_colors.dart';
 
 /// Searchable bottom-sheet content listing the exercise catalogue. Pops with
 /// the chosen exercise map, which may be a freshly created one: the catalogue
@@ -81,11 +82,11 @@ class _ExercisePickerState extends State<ExercisePicker> {
             ),
             ListTile(
               leading: const Icon(Icons.add_circle_outline,
-                  color: Color(0xffffd398)),
+                  color: AppColors.accent),
               title: Text(
                 'Créer un nouvel exercice',
                 style: GoogleFonts.montserrat(
-                  color: const Color(0xffffd398),
+                  color: AppColors.accent,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -131,14 +132,14 @@ class _ExercisePickerState extends State<ExercisePicker> {
                                     height: 18,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: Color(0xffffd398),
+                                      color: AppColors.accent,
                                     ),
                                   )
                                 : e['isTemplate'] == true
                                     ? const Text(
                                         'Suggestion',
                                         style: TextStyle(
-                                          color: Color(0xffffd398),
+                                          color: AppColors.accent,
                                           fontSize: 11,
                                         ),
                                       )

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
 import './start_page.dart';
+import '../config/app_colors.dart';
 
 class AdminProfilePage extends StatefulWidget {
   const AdminProfilePage({super.key});
@@ -60,7 +61,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
       children: [
         const CircleAvatar(
           radius: 32,
-          backgroundColor: Color(0xffffd398),
+          backgroundColor: AppColors.accent,
           child: Icon(Icons.admin_panel_settings, color: Colors.black, size: 32),
         ),
         const SizedBox(width: 14),
@@ -116,7 +117,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
       margin: const EdgeInsets.only(top: 18),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -126,7 +127,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
           Text(
             'ACCOUNT',
             style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
+              color: AppColors.accent,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
@@ -148,8 +149,8 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 15),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        side: const BorderSide(width: 1.3, color: Color(0xffffd398)),
-        backgroundColor: const Color(0xffffd398),
+        side: const BorderSide(width: 1.3, color: AppColors.accent),
+        backgroundColor: AppColors.accent,
       ),
       child: _isLoggingOut
           ? const SizedBox(
@@ -180,7 +181,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xffffd398)),
+            icon: const Icon(Icons.refresh, color: AppColors.accent),
             onPressed: _fetchUser,
             tooltip: 'Refresh',
           ),
@@ -190,7 +191,7 @@ class _AdminProfilePageState extends State<AdminProfilePage> {
         padding: const EdgeInsets.all(20),
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: Color(0xffffd398)),
+                child: CircularProgressIndicator(color: AppColors.accent),
               )
             : _errorMessage != null
                 ? Center(

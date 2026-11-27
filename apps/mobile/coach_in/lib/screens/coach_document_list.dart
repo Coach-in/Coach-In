@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import './admin_profile_page.dart';
 import './coach_document_detail.dart';
+import '../config/app_colors.dart';
 
 class CoachDocumentsPage extends StatefulWidget {
   const CoachDocumentsPage({super.key});
@@ -106,12 +107,12 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xffffd398),
+                  color: AppColors.accent,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   isImage ? Icons.image_outlined : Icons.picture_as_pdf_outlined,
-                  color: const Color(0xffffd398),
+                  color: AppColors.accent,
                   size: 24,
                 ),
               ),
@@ -157,7 +158,7 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
                   const SizedBox(height: 8),
                   const Icon(
                     Icons.chevron_right,
-                    color: Color(0xffffd398),
+                    color: AppColors.accent,
                     size: 20,
                   ),
                 ],
@@ -180,12 +181,12 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Color(0xffffd398)),
+            icon: const Icon(Icons.refresh, color: AppColors.accent),
             onPressed: _fetchDocuments,
             tooltip: 'Refresh',
           ),
           IconButton(
-            icon: const Icon(Icons.person, color: Color(0xffffd398)),
+            icon: const Icon(Icons.person, color: AppColors.accent),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const AdminProfilePage()),
@@ -199,7 +200,7 @@ class _CoachDocumentsPageState extends State<CoachDocumentsPage> {
         padding: const EdgeInsets.all(20),
         child: _isLoading
             ? const Center(
-                child: CircularProgressIndicator(color: Color(0xffffd398)),
+                child: CircularProgressIndicator(color: AppColors.accent),
               )
             : _errorMessage != null
                 ? Center(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import '../config/app_colors.dart';
 
 class CoachDetailPage extends StatefulWidget {
   final String coachId;
@@ -63,7 +64,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Relationship request sent'),
-          backgroundColor: Color(0xffffd398),
+          backgroundColor: AppColors.accent,
         ),
       );
     } catch (e) {
@@ -88,12 +89,12 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xffffd398)),
+        border: Border.all(color: AppColors.accent),
       ),
       child: Text(
         label,
         style: GoogleFonts.montserrat(
-          color: const Color(0xffffd398),
+          color: AppColors.accent,
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
@@ -106,7 +107,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
       margin: const EdgeInsets.only(top: 18),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -116,7 +117,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
           Text(
             title,
             style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
+              color: AppColors.accent,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
@@ -141,7 +142,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
         child: _isLoading
             ? const Center(
                 child: CircularProgressIndicator(
-                  color: Color(0xffffd398),
+                  color: AppColors.accent,
                 ),
               )
             : _errorMessage != null
@@ -154,7 +155,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
                             children: [
                               const CircleAvatar(
                                 radius: 30,
-                                backgroundColor: Color(0xffffd398),
+                                backgroundColor: AppColors.accent,
                                 child: Icon(Icons.person, color: Colors.black),
                               ),
                               const SizedBox(width: 12),
@@ -177,7 +178,7 @@ class _CoachDetailPageState extends State<CoachDetailPage> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              backgroundColor: Color(0xffffd398),
+                              backgroundColor: AppColors.accent,
                             ),
                             child: _isLoading
                                 ? const CircularProgressIndicator(color: Colors.black)

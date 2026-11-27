@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import './programme_create_page.dart';
 import './programme_detail_page.dart';
+import '../config/app_colors.dart';
 
 class ProgrammesPage extends StatefulWidget {
   const ProgrammesPage({super.key});
@@ -73,7 +74,7 @@ class _ProgrammesPageState extends State<ProgrammesPage> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xff1b2a41),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.white12),
         ),
@@ -95,7 +96,7 @@ class _ProgrammesPageState extends State<ProgrammesPage> {
                   Text(
                     _subtitle(p),
                     style: GoogleFonts.montserrat(
-                      color: const Color(0xffffd398),
+                      color: AppColors.accent,
                       fontSize: 12,
                     ),
                   ),
@@ -110,7 +111,7 @@ class _ProgrammesPageState extends State<ProgrammesPage> {
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: Color(0xffffd398)),
+            const Icon(Icons.chevron_right, color: AppColors.accent),
           ],
         ),
       ),
@@ -120,7 +121,7 @@ class _ProgrammesPageState extends State<ProgrammesPage> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xffffd398)),
+        child: CircularProgressIndicator(color: AppColors.accent),
       );
     }
     if (_errorMessage != null) {
@@ -163,7 +164,7 @@ class _ProgrammesPageState extends State<ProgrammesPage> {
           ? null
           : FloatingActionButton.extended(
               onPressed: () => _open(ProgrammeCreatePage(role: _role!)),
-              backgroundColor: const Color(0xffffd398),
+              backgroundColor: AppColors.accent,
               foregroundColor: Colors.black,
               icon: const Icon(Icons.add),
               label: const Text('Créer'),

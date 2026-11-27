@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
 import './athlete_detail_page.dart';
+import '../config/app_colors.dart';
 
 class RelationshipsPage extends StatefulWidget {
   const RelationshipsPage({super.key});
@@ -80,7 +81,7 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
         width: 20,
         height: 20,
         child: CircularProgressIndicator(
-          color: Color(0xffffd398),
+          color: AppColors.accent,
           strokeWidth: 2.5,
         ),
       );
@@ -97,7 +98,7 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
           ),
           IconButton(
             tooltip: 'Accept',
-            icon: const Icon(Icons.check, color: Color(0xffffd398)),
+            icon: const Icon(Icons.check, color: AppColors.accent),
             onPressed: () => _review(relationship, 'accept'),
           ),
         ],
@@ -108,7 +109,7 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
     return Text(
       status[0].toUpperCase() + status.substring(1),
       style: GoogleFonts.montserrat(
-        color: status == 'accepted' ? const Color(0xffffd398) : Colors.white54,
+        color: status == 'accepted' ? AppColors.accent : Colors.white54,
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
@@ -137,7 +138,7 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xff1b2a41),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.white12),
       ),
@@ -173,7 +174,7 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
           child: Text(
             title,
             style: GoogleFonts.montserrat(
-              color: const Color(0xffffd398),
+              color: AppColors.accent,
               fontWeight: FontWeight.w700,
               fontSize: 13,
             ),
@@ -187,7 +188,7 @@ class _RelationshipsPageState extends State<RelationshipsPage> {
   Widget _buildBody() {
     if (_isLoading) {
       return const Center(
-        child: CircularProgressIndicator(color: Color(0xffffd398)),
+        child: CircularProgressIndicator(color: AppColors.accent),
       );
     }
 

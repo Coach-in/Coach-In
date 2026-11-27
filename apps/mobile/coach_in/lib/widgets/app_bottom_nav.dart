@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../config/app_colors.dart';
 
 /// Bottom bar of the main shell. Stateless: the shell owns the selected tab.
 class AppBottomNav extends StatelessWidget {
@@ -22,7 +23,7 @@ class AppBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 60,
-      decoration: const BoxDecoration(color: Color(0xffffd398)),
+      decoration: const BoxDecoration(color: AppColors.accent),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [

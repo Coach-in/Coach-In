@@ -9,6 +9,8 @@ import './main_shell.dart';
 import '../services/api_service.dart';
 import '../utils/navigation.dart';
 import '../utils/tag_utils.dart';
+import '../config/app_colors.dart';
+import '../widgets/form_error.dart';
 
 class RegisterInfoPage extends StatefulWidget {
   final String email;
@@ -231,7 +233,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Done', style: TextStyle(color: Color(0xffffd398))),
+                        child: const Text('Done', style: TextStyle(color: AppColors.accent)),
                       ),
                     ],
                   ),
@@ -249,7 +251,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
                               child: Text(
                                 entry.key.toUpperCase(),
                                 style: const TextStyle(
-                                  color: Color(0xffffd398),
+                                  color: AppColors.accent,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1.2,
@@ -274,7 +276,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
                                     color: isDisabled ? Colors.white38 : Colors.white,
                                   ),
                                 ),
-                                activeColor: const Color(0xffffd398),
+                                activeColor: AppColors.accent,
                                 checkColor: Colors.black,
                               );
                             }),
@@ -294,7 +296,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
 
   Widget _buildTagSelector() {
     if (_isLoadingTags) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xffffd398)));
+      return const Center(child: CircularProgressIndicator(color: AppColors.accent));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,7 +340,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
                   tag['name'] as String,
                   style: const TextStyle(fontSize: 12, color: Colors.black),
                 ),
-                backgroundColor: const Color(0xffffd398),
+                backgroundColor: AppColors.accent,
                 deleteIconColor: Colors.black54,
                 onDeleted: () => _toggleTag(tag),
               );
@@ -355,7 +357,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
       appBar: AppBar(
         title: Text('Register', style: Theme.of(context).textTheme.titleMedium),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xffffd398)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
           onPressed: () => Navigator.pop(context),
           tooltip: 'Back',
         ),
@@ -401,7 +403,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                   decoration: BoxDecoration(
                     border: Border.all(
-                      color: _certificationFile != null ? const Color(0xffffd398) : Colors.white54,
+                      color: _certificationFile != null ? AppColors.accent : Colors.white54,
                     ),
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -409,7 +411,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
                     children: [
                       Icon(
                         _certificationFile != null ? Icons.check_circle : Icons.upload_file,
-                        color: _certificationFile != null ? const Color(0xffffd398) : Colors.white54,
+                        color: _certificationFile != null ? AppColors.accent : Colors.white54,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -466,11 +468,7 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
             _buildTagSelector(),
             const SizedBox(height: 20),
 
-            if (_errorMessage != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-              ),
+            FormError(_errorMessage),
 
             SizedBox(
               width: double.infinity,
@@ -479,10 +477,10 @@ class _RegisterInfoPageState extends State<RegisterInfoPage> {
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  backgroundColor: const Color(0xffffd398),
+                  backgroundColor: AppColors.accent,
                 ),
                 child: _isLoading
-                    ? const CircularProgressIndicator(color: Color(0xffd1d5dc))
+                    ? const CircularProgressIndicator(color: AppColors.muted)
                     : Text(
                         'Register',
                         style: GoogleFonts.montserrat(

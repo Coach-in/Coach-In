@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../services/api_service.dart';
+import '../config/app_colors.dart';
 
 class CoachDocumentDetailPage extends StatefulWidget {
   final Map<String, dynamic> document;
@@ -172,7 +173,7 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
                         ? child
                         : const Center(
                             child: CircularProgressIndicator(
-                              color: Color(0xffffd398),
+                              color: AppColors.accent,
                             ),
                           ),
                     errorBuilder: (context, error, stackTrace) => _buildPreviewFallback(
@@ -197,7 +198,7 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, color: const Color(0xffffd398), size: 48),
+          Icon(icon, color: AppColors.accent, size: 48),
           const SizedBox(height: 12),
           Text(
             message,
@@ -214,10 +215,10 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
               child: Text(
                 'View document',
                 style: GoogleFonts.montserrat(
-                  color: const Color(0xffffd398),
+                  color: AppColors.accent,
                   fontSize: 13,
                   decoration: TextDecoration.underline,
-                  decorationColor: const Color(0xffffd398),
+                  decorationColor: AppColors.accent,
                 ),
               ),
             ),
@@ -241,7 +242,7 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xffffd398)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.accent),
           onPressed: () => Navigator.pop(context),
           tooltip: 'Back',
         ),
@@ -381,7 +382,7 @@ class _CoachDocumentDetailPageState extends State<CoachDocumentDetailPage> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xffffd398),
+                          backgroundColor: AppColors.accent,
                           foregroundColor: Colors.black,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
