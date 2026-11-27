@@ -104,14 +104,27 @@ class _ProgrammeDetailPageState extends State<ProgrammeDetailPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
+        backgroundColor: AppColors.surface,
+        title: Text(
+          title,
+          style: GoogleFonts.montserrat(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+            fontSize: 16,
+          ),
+        ),
+        content: Text(
+          message,
+          style: GoogleFonts.montserrat(color: Colors.white70, fontSize: 13),
+        ),
         actions: [
           TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.accent),
             onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Annuler'),
           ),
           TextButton(
+            style: TextButton.styleFrom(foregroundColor: AppColors.accent),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Supprimer'),
           ),
